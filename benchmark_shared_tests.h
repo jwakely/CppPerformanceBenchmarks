@@ -1,5 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
+	Copyright 2018 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
     
@@ -12,10 +13,26 @@
 template<typename T>
 inline bool tolerance_equal(T &a, T &b) {
 	T diff = a - b;
-	return (abs(diff) < 1.0e-6);
+	return (abs(diff) < 1);
 }
 
 
+template<>
+inline bool tolerance_equal(int8_t &a, int8_t &b) {
+	return (a == b);
+}
+template<>
+inline bool tolerance_equal(uint8_t &a, uint8_t &b) {
+	return (a == b);
+}
+template<>
+inline bool tolerance_equal(int16_t &a, int16_t &b) {
+	return (a == b);
+}
+template<>
+inline bool tolerance_equal(uint16_t &a, uint16_t &b) {
+	return (a == b);
+}
 template<>
 inline bool tolerance_equal(int32_t &a, int32_t &b) {
 	return (a == b);
@@ -25,16 +42,16 @@ inline bool tolerance_equal(uint32_t &a, uint32_t &b) {
 	return (a == b);
 }
 template<>
-inline bool tolerance_equal(uint64_t &a, uint64_t &b) {
+inline bool tolerance_equal(int64_t &a, int64_t &b) {
 	return (a == b);
 }
 template<>
-inline bool tolerance_equal(int64_t &a, int64_t &b) {
+inline bool tolerance_equal(uint64_t &a, uint64_t &b) {
 	return (a == b);
 }
 
 template<>
-inline bool tolerance_equal(double &a, double &b) {
+inline bool tolerance_equal( double &a,  double &b) {
 	double diff = a - b;
 	double reldiff = diff;
 	if (fabs(a) > 1.0e-8)
@@ -43,7 +60,25 @@ inline bool tolerance_equal(double &a, double &b) {
 }
 
 template<>
-inline bool tolerance_equal(float &a, float &b) {
+inline bool tolerance_equal( float &a,  float &b) {
+	float diff = a - b;
+	double reldiff = diff;
+	if (fabs(a) > 1.0e-4)
+		reldiff = diff / a;
+	return (fabs(reldiff) < 1.0e-3);		// single precision divide test is really imprecise
+}
+
+template<>
+inline bool tolerance_equal(const double &a, const double &b) {
+	double diff = a - b;
+	double reldiff = diff;
+	if (fabs(a) > 1.0e-8)
+		reldiff = diff / a;
+	return (fabs(reldiff) < 1.0e-6);
+}
+
+template<>
+inline bool tolerance_equal(const float &a, const float &b) {
 	float diff = a - b;
 	double reldiff = diff;
 	if (fabs(a) > 1.0e-4)
@@ -70,6 +105,21 @@ inline void check_shifted_sum_CSE(T result) {
 template <typename T, typename Shifter>
 inline void check_shifted_variable_sum(T result, T var) {
 	T temp = (T)SIZE * Shifter::do_shift((T)init_value, var);
+	if (!tolerance_equal<T>(result,temp))
+		printf("test %i failed\n", current_test);
+}
+
+template <typename T, typename T2, typename Shifter>
+inline void check_shifted_variable_sum(T result, T2 var) {
+	T temp = (T)SIZE * Shifter::do_shift((T)init_value, var);
+	if (!tolerance_equal<T>(result,temp))
+		printf("test %i failed\n", current_test);
+}
+
+template <typename T, typename T2, typename Shifter>
+inline void check_shifted_variable_sumptr(T result, T2 var) {
+	T2 temp2 = var;
+	T temp = (T)SIZE * Shifter::do_shift((T)init_value, &temp2);
 	if (!tolerance_equal<T>(result,temp))
 		printf("test %i failed\n", current_test);
 }

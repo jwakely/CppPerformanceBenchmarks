@@ -1,5 +1,6 @@
 #
 #    Copyright 2007-2009 Adobe Systems Incorporated
+#    Copyright 2018 Chris Cox
 #    Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
 #    or a copy at http://stlab.adobe.com/licenses.html)
 #
@@ -28,8 +29,13 @@
 #CPP = g++ -mwindows
 
 
-CFLAGS = /nologo /Ox /D "WIN32" /D "NDEBUG" /Wp64 /I "$(INCLUDE)"
-CPPFLAGS = /nologo /Ox /TP /EHsc /D "WIN32" /D "NDEBUG" /Wp64 /I "$(INCLUDE)"
+
+
+# don't show a logo each time, full optimization, define WIN32 and NDEBUG
+CFLAGS = /nologo /Ox /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
+# same as above, forcing C++ and normal exception handling
+CPPFLAGS = /nologo /Ox /TP /EHsc /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
+
 
 
 
@@ -43,7 +49,12 @@ stepanov_vector.exe \
 loop_unroll.exe \
 simple_types_loop_invariant.exe \
 functionobjects.exe \
-simple_types_constant_folding.exe
+simple_types_constant_folding.exe \
+atol.exe \
+ctype.exe \
+scalar_replacement_arrays.exe \
+scalar_replacement_array_reduction.exe \
+scalar_replacement_struct.exe
 
 
 
@@ -85,6 +96,11 @@ report:  $(BINARIES)
 	.\simple_types_constant_folding >> $(REPORT_FILE)
 	.\simple_types_loop_invariant >> $(REPORT_FILE)
 	.\loop_unroll >> $(REPORT_FILE)
+	.\atol >> $(REPORT_FILE)
+	.\ctype >> $(REPORT_FILE)
+	.\scalar_replacement_arrays >> $(REPORT_FILE)
+	.\scalar_replacement_array_reduction >> $(REPORT_FILE)
+	.\scalar_replacement_struct  >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 

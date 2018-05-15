@@ -1,9 +1,12 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
+	Copyright 2018 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html)
     
     Source file for shared result reporting used by most of the benchmarks
+	This file must work for C and C++ code.
+
 */
 
 /******************************************************************************/
@@ -94,15 +97,33 @@ void summarize(const char *name, int size, int iterations, int show_gmeans, int 
 	printf("\ntest %*s description   absolute   operations   ratio with\n", longest_label_len-12, " ");
 	printf("number %*s time       per second   test0\n\n", longest_label_len, " ");
 
-	for (i = 0; i < current_test; ++i)
+	for (i = 0; i < current_test; ++i) {
+		const double timeThreshold = 1.0e-4;
+		double timeRatio = 1.0;
+		double speed = 1.0;
+		
+		if (results[0].time < timeThreshold) {
+			if(results[i].time < timeThreshold)
+				timeRatio = 1.0;
+			else
+				timeRatio = INFINITY;
+		} else
+			timeRatio = results[i].time/results[0].time;
+		
+		if (results[i].time < timeThreshold) {
+			speed = INFINITY;
+		} else
+			speed = millions/results[i].time;
+		
 		printf("%2i %*s\"%s\"  %5.2f sec   %5.2f M     %.2f\n",
 				i,
 				(int)(longest_label_len - strlen(results[i].label)),
 				"",
 				results[i].label,
 				results[i].time,
-				millions/results[i].time,
-				results[i].time/results[0].time);
+				speed,
+				timeRatio);
+	}
 
 	// calculate total time
 	for (i = 0; i < current_test; ++i) {
