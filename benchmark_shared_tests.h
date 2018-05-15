@@ -1,7 +1,7 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
-    or a copy at http://stlab.adobe.com/licenses.html)
+    or a copy at http://stlab.adobe.com/licenses.html )
     
     
     Source file for tests shared among several benchmarks
@@ -48,45 +48,51 @@ inline bool tolerance_equal(float &a, float &b) {
 	double reldiff = diff;
 	if (fabs(a) > 1.0e-4)
 		reldiff = diff / a;
-	return (fabs(reldiff) < 1.0e-3);		// single precision divide test is really inaccurate
+	return (fabs(reldiff) < 1.0e-3);		// single precision divide test is really imprecise
 }
 
 /******************************************************************************/
 
 template <typename T, typename Shifter>
 inline void check_shifted_sum(T result) {
-  T temp = (T)SIZE * Shifter::do_shift((T)init_value);
-  if (!tolerance_equal<T>(result,temp)) printf("test %i failed\n", current_test);
+	T temp = (T)SIZE * Shifter::do_shift((T)init_value);
+	if (!tolerance_equal<T>(result,temp))
+		printf("test %i failed\n", current_test);
 }
 
 template <typename T, typename Shifter>
 inline void check_shifted_sum_CSE(T result) {
-  T temp = (T)0.0;
-  if (!tolerance_equal<T>(result,temp)) printf("test %i failed\n", current_test);
+	T temp = (T)0.0;
+	if (!tolerance_equal<T>(result,temp))
+		printf("test %i failed\n", current_test);
 }
 
 template <typename T, typename Shifter>
 inline void check_shifted_variable_sum(T result, T var) {
-  T temp = (T)SIZE * Shifter::do_shift((T)init_value, var);
-  if (!tolerance_equal<T>(result,temp)) printf("test %i failed\n", current_test);
+	T temp = (T)SIZE * Shifter::do_shift((T)init_value, var);
+	if (!tolerance_equal<T>(result,temp))
+		printf("test %i failed\n", current_test);
 }
 
 template <typename T, typename Shifter>
 inline void check_shifted_variable_sum(T result, T var1, T var2, T var3, T var4) {
-  T temp = (T)SIZE * Shifter::do_shift((T)init_value, var1, var2, var3, var4);
-  if (!tolerance_equal<T>(result,temp)) printf("test %i failed\n", current_test);
+	T temp = (T)SIZE * Shifter::do_shift((T)init_value, var1, var2, var3, var4);
+	if (!tolerance_equal<T>(result,temp))
+		printf("test %i failed\n", current_test);
 }
 
 template <typename T, typename Shifter>
 inline void check_shifted_variable_sum_CSE(T result, T var) {
-  T temp = (T)0.0;
-  if (!tolerance_equal<T>(result,temp)) printf("test %i failed\n", current_test);
+	T temp = (T)0.0;
+	if (!tolerance_equal<T>(result,temp))
+		printf("test %i failed\n", current_test);
 }
 
 template <typename T, typename Shifter>
 inline void check_shifted_variable_sum_CSE(T result, T var1, T var2, T var3, T var4) {
-  T temp = (T)0.0;
-  if (!tolerance_equal<T>(result,temp)) printf("test %i failed\n", current_test);
+	T temp = (T)0.0;
+	if (!tolerance_equal<T>(result,temp))
+		printf("test %i failed\n", current_test);
 }
 
 
@@ -94,7 +100,7 @@ inline void check_shifted_variable_sum_CSE(T result, T var1, T var2, T var3, T v
 
 template <typename Iterator, typename T>
 void fill(Iterator first, Iterator last, T value) {
-  while (first != last) *first++ = value;
+	while (first != last) *first++ = value;
 }
 
 /******************************************************************************/
@@ -134,9 +140,18 @@ template <typename T>
 
 /******************************************************************************/
 
+// this should result in a single multiply
 template <typename T>
 	struct custom_multiple_constant_multiply {
 	  static T do_shift(T input) { return (input * T(2) * T(3) * T(4) * T(5)); }
+	};
+
+/******************************************************************************/
+
+// this should result in a single add
+template <typename T>
+	struct custom_multiple_constant_multiply2 {
+	  static T do_shift(T input) { return (input + T(2) * T(3) * T(4) * T(5)); }
 	};
 
 /******************************************************************************/
@@ -151,6 +166,21 @@ template <typename T>
 template <typename T>
 	struct custom_multiple_constant_divide {
 	  static T do_shift(T input) { return ((((input / T(2) ) / T(3) ) / T(4)) / T(5)); }
+	};
+
+/******************************************************************************/
+
+// this more likely to have constants fused than the version above
+template <typename T>
+	struct custom_multiple_constant_divide2 {
+	  static T do_shift(T input) { return (input + (((T(120) / T(3) ) / T(4)) / T(5))); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_multiple_constant_mixed {
+	  static T do_shift(T input) { return (input + T(2) - T(3) * T(4) / T(5)); }
 	};
 
 /******************************************************************************/
@@ -193,6 +223,111 @@ template <typename T>
 template <typename T>
 	struct custom_multiple_constant_xor {
 	  static T do_shift(T input) { return (input ^ T(15) ^ T(30) ^ T(31) ^ T(63)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_two {
+	  static T do_shift(T input) { return (T(2)); }
+	};
+
+/******************************************************************************/
+	
+template <typename T>
+	struct custom_add_constants {
+	  static T do_shift(T input) { return (T(1) + T(2)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_sub_constants {
+	  static T do_shift(T input) { return (T(2) - T(1)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_multiply_constants {
+	  static T do_shift(T input) { return (T(2) * T(3)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_divide_constants {
+	  static T do_shift(T input) { return (T(20) / T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_mod_constants {
+	  static T do_shift(T input) { return (T(23) % T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_and_constants {
+	  static T do_shift(T input) { return (T(23) & T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_or_constants {
+	  static T do_shift(T input) { return (T(23) | T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_xor_constants {
+	  static T do_shift(T input) { return (T(23) ^ T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_equal_constants {
+	  static T do_shift(T input) { return (T(23) == T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_notequal_constants {
+	  static T do_shift(T input) { return (T(23) != T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_greaterthan_constants {
+	  static T do_shift(T input) { return (T(23) > T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_lessthan_constants {
+	  static T do_shift(T input) { return (T(23) < T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_greaterthanequal_constants {
+	  static T do_shift(T input) { return (T(23) >= T(10)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_lessthanequal_constants {
+	  static T do_shift(T input) { return (T(23) <= T(10)); }
 	};
 
 /******************************************************************************/
@@ -246,9 +381,28 @@ template <typename T>
 
 /******************************************************************************/
 
+// something more likely to be moved out of loops, and a sanity check
+template <typename T>
+	struct custom_multiply_multiple_variable2 {
+	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + v1 * v2 * v3 * v4); }
+	};
+
+/******************************************************************************/
+
+// this can NOT have CSE and loop invariant motion applied in integer math
+// and can only be optimized in float if inexact math is allowed
 template <typename T>
 	struct custom_divide_multiple_variable {
 	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return ((((input / v1 ) / v2 ) / v3) / v4); }
+	};
+
+/******************************************************************************/
+
+// this can have CSE and loop invariant motion applied in integer math
+// this should be optimizeable without inexact math
+template <typename T>
+	struct custom_divide_multiple_variable2 {
+	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + (((v1 / v2 ) / v3) / v4)); }
 	};
 
 /******************************************************************************/
@@ -417,6 +571,83 @@ template <typename T>
 template <typename T>
 	struct custom_xor_self {
 	  static T do_shift(T input) { return (input ^ input); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_or_zero {
+	  static T do_shift(T input) { return (input | T(0)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_xor_zero {
+	  static T do_shift(T input) { return (input ^ T(0)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_andnot_zero {
+	  static T do_shift(T input) { return (input & ~ T(0)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_and_zero {
+	  static T do_shift(T input) { return (input & T(0)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_mod_one {
+	  static T do_shift(T input) { return (input % T(1)); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_equal_self {
+	  static T do_shift(T input) { return (input == input); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_notequal_self {
+	  static T do_shift(T input) { return (input != input); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_greaterthan_self {
+	  static T do_shift(T input) { return (input > input); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_lessthan_self {
+	  static T do_shift(T input) { return (input < input); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_greaterthanequal_self {
+	  static T do_shift(T input) { return (input >= input); }
+	};
+
+/******************************************************************************/
+
+template <typename T>
+	struct custom_lessthanequal_self {
+	  static T do_shift(T input) { return (input <= input); }
 	};
 
 /******************************************************************************/

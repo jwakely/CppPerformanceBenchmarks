@@ -1,7 +1,7 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
-    or a copy at http://stlab.adobe.com/licenses.html)
+    or a copy at http://stlab.adobe.com/licenses.html )
 
 
 Goal:  examine any change in performance when adding abstraction to simple data types
@@ -29,11 +29,11 @@ History:
 
 */
 
-#include <stddef.h>
-#include <stdio.h>
-#include <time.h>
-#include <math.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdio>
+#include <ctime>
+#include <cmath>
+#include <cstdlib>
 #include "benchmark_results.h"
 #include "benchmark_timer.h"
 #include "benchmark_algorithms.h"
@@ -169,8 +169,7 @@ int iterations = 2000000;
 
 // 2000 items, or about 16k of data
 // this is intended to remain within the L2 cache of most common CPUs
-#define SIZE 	2000
-
+const int SIZE = 2000;
 
 // initial value for filling our arrays, may be changed from the command line
 double init_value = 3.0;
@@ -259,6 +258,7 @@ void test_heap_sort(Iterator firstSource, Iterator lastSource, Iterator firstDes
 	record_result( timer(), label );
 }
 
+/******************************************************************************/
 /******************************************************************************/
 
 // our global arrays of numbers to be summed

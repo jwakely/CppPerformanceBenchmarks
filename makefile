@@ -1,6 +1,6 @@
 #
-#    Copyright 2007-2008 Adobe Systems Incorporated
-#    Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
+#   Copyright 2007-2008 Adobe Systems Incorporated
+#   Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
 #   or a copy at http://stlab.adobe.com/licenses.html )
 #
 
@@ -24,9 +24,19 @@ INCLUDE = -I.
 #CXX = /usr/bin/g++
 
 
-# LLVM-gcc
+# GCC 4.2
+#CC = /usr/bin/gcc-4.2
+#CXX = /usr/bin/g++-4.2
+
+
+# LLVM-gcc old
 #CC = /usr/local/bin/llvm-gcc
 #CXX = /usr/local/bin/llvm-g++
+
+
+# LLVM-gcc-4.2
+#CC = /usr/bin/llvm-gcc-4.2
+#CXX = /usr/bin/llvm-g++-4.2
 
 
 # Intel compiler
@@ -52,8 +62,11 @@ DEPENDENCYFLAG = -M
 
 BINARIES = machine \
 stepanov_abstraction \
+stepanov_vector \
 loop_unroll \
-simple_types_loop_invariant
+simple_types_loop_invariant \
+functionobjects \
+simple_types_constant_folding
 
 
 #
@@ -100,6 +113,9 @@ report:  $(BINARIES)
 	echo "##CPPFlags: $(CPPFLAGS)" >> $(REPORT_FILE)
 	./machine >> $(REPORT_FILE)
 	./stepanov_abstraction >> $(REPORT_FILE)
+	./stepanov_vector >> $(REPORT_FILE)
+	./functionobjects >> $(REPORT_FILE)
+	./simple_types_constant_folding >> $(REPORT_FILE)
 	./simple_types_loop_invariant >> $(REPORT_FILE)
 	./loop_unroll >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)

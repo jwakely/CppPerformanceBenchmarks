@@ -1,7 +1,7 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
-    or a copy at http://stlab.adobe.com/licenses.html )
+    or a copy at http://stlab.adobe.com/licenses.html)
 
 
 The purpose of this source file is to report information about the compiler,
@@ -155,7 +155,7 @@ void ReportCompiler()
 void ReportHeaders() 
 {
 
-#if 0 && defined(_MACHTYPES_H_)
+#if defined(_MACHTYPES_H_)
 
 	printf("Includes preliminary TR1 unordered_map\n");
 	printf("Includes preliminary TR1 unordered_set\n");
