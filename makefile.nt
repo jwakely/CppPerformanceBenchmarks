@@ -54,7 +54,7 @@ atol.exe \
 ctype.exe \
 scalar_replacement_arrays.exe \
 scalar_replacement_array_reduction.exe \
-scalar_replacement_struct.exe
+scalar_replacement_structs.exe
 
 
 
@@ -100,7 +100,7 @@ report:  $(BINARIES)
 	.\ctype >> $(REPORT_FILE)
 	.\scalar_replacement_arrays >> $(REPORT_FILE)
 	.\scalar_replacement_array_reduction >> $(REPORT_FILE)
-	.\scalar_replacement_struct  >> $(REPORT_FILE)
+	.\scalar_replacement_structs  >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 
