@@ -53,7 +53,7 @@ atol \
 ctype \
 scalar_replacement_arrays \
 scalar_replacement_array_reduction \
-scalar_replacement_struct
+scalar_replacement_structs
 
 
 #
@@ -109,7 +109,7 @@ report:  $(BINARIES)
 	./ctype >> $(REPORT_FILE)
 	./scalar_replacement_arrays >> $(REPORT_FILE)
 	./scalar_replacement_array_reduction >> $(REPORT_FILE)
-	./scalar_replacement_struct  >> $(REPORT_FILE)
+	./scalar_replacement_structs  >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 
