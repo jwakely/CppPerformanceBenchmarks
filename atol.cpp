@@ -20,60 +20,6 @@ Assumptions:
 	5) library routines should be the same speed or faster than simple source versions of functions
 
 
-MacOS 10.12.6
-test   description   absolute   operations   ratio with
-number               time       per second   test0
-
- 0          "atol"   1.02 sec   24.43 M     1.00
- 1          "atoi"   1.03 sec   24.26 M     1.01
- 2        "strtol"   1.07 sec   23.44 M     1.04
- 3       "strtoul"   0.98 sec   25.40 M     0.96
- 4      "sscanf d"   3.96 sec    6.31 M     3.87
- 5         "atoll"   1.01 sec   24.64 M     0.99
- 6       "strtoll"   1.05 sec   23.81 M     1.03
- 7      "strtoull"   1.03 sec   24.24 M     1.01
- 8     "sscanf ll"   4.04 sec    6.18 M     3.95
- 9 "simple_strtol"   0.47 sec   53.44 M     0.46
-
-
-test       description   absolute   operations   ratio with
-number                   time       per second   test0
-
- 0        "strtol hex"   1.42 sec   17.62 M     1.00
- 1       "strtoul hex"   1.31 sec   19.07 M     0.92
- 2          "sscanf X"   4.49 sec    5.57 M     3.17
- 3       "strtoll hex"   1.37 sec   18.20 M     0.97
- 4      "strtoull hex"   1.35 sec   18.50 M     0.95
- 5        "sscanf llX"   4.60 sec    5.44 M     3.24
- 6 "simple_strtol hex"   0.39 sec   63.73 M     0.28
-
-
-test     description   absolute   operations   ratio with
-number                 time       per second   test0
-
- 0            "atof"   1.67 sec   14.93 M     1.00
- 1          "strtof"   3.67 sec    6.81 M     2.19
- 2          "strtod"   1.68 sec   14.90 M     1.00
- 3  "sscanf f float"   9.06 sec    2.76 M     5.41
- 4  "sscanf g float"   9.06 sec    2.76 M     5.41
- 5 "sscanf f double"   7.06 sec    3.54 M     4.22
- 6 "sscanf g double"   7.04 sec    3.55 M     4.21
- 7   "simple_strtod"   0.54 sec   46.73 M     0.32
-
-
-test       description   absolute   operations   ratio with
-number                   time       per second   test0
-
- 0            "atof E"   1.65 sec   15.17 M     1.00
- 1          "strtof E"   3.81 sec    6.56 M     2.31
- 2          "strtod E"   1.64 sec   15.23 M     1.00
- 3  "sscanf f float E"   9.52 sec    2.63 M     5.78
- 4  "sscanf g float E"   9.53 sec    2.62 M     5.78
- 5 "sscanf f double E"   7.23 sec    3.46 M     4.38
- 6 "sscanf g double E"   7.24 sec    3.45 M     4.40
- 7   "simple_strtod E"   0.60 sec   41.49 M     0.37
-
- 
 */
 
 #include <cstdio>
@@ -106,10 +52,6 @@ uint64_t global_u64_sum = 0;
 float global_float_sum = 0.0;
 double global_double_sum = 0.0;
 
-#if WIN32
-#define snprintf	_snprintf
-#define atoll	_atoi64
-#endif
 
 void CreateNumberStrings() {
 	long i;
@@ -565,8 +507,6 @@ int main (int argc, char *argv[])
 	record_result( timer(), "atoll");
 	
 
-#if !WIN32
-// does not exist in MSDEV
 	start_timer();
 	for (i = 0; i != iterations; ++i)
 		{
@@ -578,10 +518,8 @@ int main (int argc, char *argv[])
 		check_sum64(sum);
 		}
 	record_result( timer(), "strtoll");
-#endif
-	
-#if !WIN32
-// does not exist in MSDEV
+
+
 	start_timer();
 	for (i = 0; i != iterations; ++i)
 		{
@@ -593,7 +531,6 @@ int main (int argc, char *argv[])
 		check_sum64(sum);
 		}
 	record_result( timer(), "strtoull");
-#endif
 	
 	
 	start_timer();
@@ -670,8 +607,6 @@ int main (int argc, char *argv[])
 	record_result( timer(), "sscanf X");
 
 
-#if !WIN32
-// does not exist in MSDEV
 	start_timer();
 	for (i = 0; i != iterations; ++i)
 		{
@@ -683,10 +618,8 @@ int main (int argc, char *argv[])
 		check_sum64(sum);
 		}
 	record_result( timer(), "strtoll hex");
-#endif
-	
-#if !WIN32
-// does not exist in MSDEV
+
+
 	start_timer();
 	for (i = 0; i != iterations; ++i)
 		{
@@ -698,7 +631,6 @@ int main (int argc, char *argv[])
 		check_sum64(sum);
 		}
 	record_result( timer(), "strtoull hex");
-#endif
 	
 	
 	start_timer();
@@ -745,8 +677,7 @@ int main (int argc, char *argv[])
 		}
 	record_result( timer(), "atof");
 	
-#if !WIN32
-// does not exist in MSDEV
+	
 	start_timer();
 	for (i = 0; i != iterations; ++i)
 		{
@@ -758,7 +689,7 @@ int main (int argc, char *argv[])
 		check_sum_float(sum);
 		}
 	record_result( timer(), "strtof");
-#endif
+
 
 	start_timer();
 	for (i = 0; i != iterations; ++i)
@@ -862,8 +793,7 @@ int main (int argc, char *argv[])
 		}
 	record_result( timer(), "atof E");
 	
-#if !WIN32
-// does not exist in MSDEV
+	
 	start_timer();
 	for (i = 0; i != iterations; ++i)
 		{
@@ -875,7 +805,7 @@ int main (int argc, char *argv[])
 		check_sum_float(sum);
 		}
 	record_result( timer(), "strtof E");
-#endif
+
 
 	start_timer();
 	for (i = 0; i != iterations; ++i)

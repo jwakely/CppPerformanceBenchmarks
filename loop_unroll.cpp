@@ -1,5 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
+	Copyright 2018 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html)
 
@@ -23,6 +24,7 @@ Assumptions:
 
 	4) The compiler should recognize and unroll all loop styles with the same efficiency
 		in other words: do, while, for, and goto should have identical performance
+
 
 */
 
@@ -317,6 +319,10 @@ int main(int argc, char** argv) {
 	if (argc > 2) init_value = (double) atof(argv[2]);
 
 
+// TODO - are any compilers so sloppy that we need to test all data types?
+//	or are int32_t and double enough to show the pattern?
+
+
 // int32_t
 	::fill(data32, data32+SIZE, int32_t(init_value));
 	
@@ -349,6 +355,7 @@ int main(int argc, char** argv) {
 
 	goto_loop_tests<UnrollLimit, double>::do_test( dataDouble, "double goto loop unroll" );	
 	summarize("double goto loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+
 
 
 	return 0;
