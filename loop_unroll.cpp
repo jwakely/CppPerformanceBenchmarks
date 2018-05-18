@@ -227,7 +227,7 @@ loop_start:
 
 double dataDouble[SIZE];
 
-int32_t data32[SIZE];
+uint32_t data32[SIZE];
 
 // not elegant, but I need strings to hang around until we print the results
 // and I don't want to pull in STL
@@ -320,23 +320,23 @@ int main(int argc, char** argv) {
 
 
 // TODO - are any compilers so sloppy that we need to test all data types?
-//	or are int32_t and double enough to show the pattern?
+//	or are uint32_t and double enough to show the pattern?
 
 
-// int32_t
-	::fill(data32, data32+SIZE, int32_t(init_value));
+// uint32_t
+	::fill(data32, data32+SIZE, uint32_t(init_value));
 	
-	for_loop_tests<UnrollLimit, int32_t>::do_test( data32, "int32_t for loop unroll" );
-	summarize("int32_t for loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+	for_loop_tests<UnrollLimit, uint32_t>::do_test( data32, "uint32_t for loop unroll" );
+	summarize("uint32_t for loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 	
-	while_loop_tests<UnrollLimit, int32_t>::do_test( data32, "int32_t while loop unroll" );
-	summarize("int32_t while loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+	while_loop_tests<UnrollLimit, uint32_t>::do_test( data32, "uint32_t while loop unroll" );
+	summarize("uint32_t while loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
-	do_loop_tests<UnrollLimit, int32_t>::do_test( data32, "int32_t do loop unroll" );
-	summarize("int32_t do loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+	do_loop_tests<UnrollLimit, uint32_t>::do_test( data32, "uint32_t do loop unroll" );
+	summarize("uint32_t do loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
-	goto_loop_tests<UnrollLimit, int32_t>::do_test( data32, "int32_t goto loop unroll" );	
-	summarize("int32_t goto loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+	goto_loop_tests<UnrollLimit, uint32_t>::do_test( data32, "uint32_t goto loop unroll" );	
+	summarize("uint32_t goto loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
 
 // double
