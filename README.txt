@@ -32,8 +32,8 @@ Not to use specialized optimization flags per test.
     If another option improves optimization, then why isn't it on for -O3?
     If an optimization flag doesn't always improve performance, that is
         most likely a bug in the optimization code that needs to be fixed.
-	In the real world, developers can't test all permutations of all
-		optimization flags.  They expect the standard flags to work.
+    In the real world, developers can't test all permutations of all
+        optimization flags.  They expect the standard flags to work.
 
 /******************************************************************************/
 
