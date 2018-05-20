@@ -9,7 +9,7 @@
 Goals:
 
 To help compiler vendors identify places where they may be able to improve
-the performance of the code they generate.
+the performance of the code they generate, or the libraries they supply.
 
 To help developers understand the performance impact of using different
 data types, operations, and C++ langugage features with their
@@ -20,12 +20,12 @@ target compilers and OSes.
 Secondary goals:
 
 To take performance problems found in real world code and turn them
-    into benchmarks for compiler vendors and other developers to learn from.
+into benchmarks for compiler vendors and other developers to learn from.
 
-Keep the benchmark portable to as many compilers and OSes as possible
-    This means keeping things simple and external dependencies minimal
+Keep the benchmark portable to as many compilers and OSes as possible.
+This means keeping things simple and external dependencies minimal.
 
-Not to use specialized optimization flags per test
+Not to use specialized optimization flags per test.
     No pragmas or other compiler directives are allowed in the source.
     All source files should use the same compilation flags.
     Use the common optimization flags (-O, -O1, -O2, -O3, or -Os).
