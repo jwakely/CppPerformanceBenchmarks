@@ -2,7 +2,7 @@
     Copyright 2007-2008 Adobe Systems Incorporated
 	Copyright 2018 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
-    or a copy at http://stlab.adobe.com/licenses.html)
+    or a copy at http://stlab.adobe.com/licenses.html )
     
     Source file for shared result reporting used by most of the benchmarks
 	This file must work for C and C++ code.
