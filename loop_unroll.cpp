@@ -1,7 +1,8 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
+	Copyright 2018 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
-    or a copy at http://stlab.adobe.com/licenses.html)
+    or a copy at http://stlab.adobe.com/licenses.html )
 
 
 Goal:  Test compiler optimizations related to loop unrolling
@@ -23,6 +24,7 @@ Assumptions:
 
 	4) The compiler should recognize and unroll all loop styles with the same efficiency
 		in other words: do, while, for, and goto should have identical performance
+
 
 */
 
@@ -225,7 +227,7 @@ loop_start:
 
 double dataDouble[SIZE];
 
-int32_t data32[SIZE];
+uint32_t data32[SIZE];
 
 // not elegant, but I need strings to hang around until we print the results
 // and I don't want to pull in STL
@@ -317,20 +319,24 @@ int main(int argc, char** argv) {
 	if (argc > 2) init_value = (double) atof(argv[2]);
 
 
-// int32_t
-	::fill(data32, data32+SIZE, int32_t(init_value));
-	
-	for_loop_tests<UnrollLimit, int32_t>::do_test( data32, "int32_t for loop unroll" );
-	summarize("int32_t for loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-	
-	while_loop_tests<UnrollLimit, int32_t>::do_test( data32, "int32_t while loop unroll" );
-	summarize("int32_t while loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+// TODO - are any compilers so sloppy that we need to test all data types?
+//	or are uint32_t and double enough to show the pattern?
 
-	do_loop_tests<UnrollLimit, int32_t>::do_test( data32, "int32_t do loop unroll" );
-	summarize("int32_t do loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
-	goto_loop_tests<UnrollLimit, int32_t>::do_test( data32, "int32_t goto loop unroll" );	
-	summarize("int32_t goto loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+// uint32_t
+	::fill(data32, data32+SIZE, uint32_t(init_value));
+	
+	for_loop_tests<UnrollLimit, uint32_t>::do_test( data32, "uint32_t for loop unroll" );
+	summarize("uint32_t for loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+	
+	while_loop_tests<UnrollLimit, uint32_t>::do_test( data32, "uint32_t while loop unroll" );
+	summarize("uint32_t while loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+
+	do_loop_tests<UnrollLimit, uint32_t>::do_test( data32, "uint32_t do loop unroll" );
+	summarize("uint32_t do loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+
+	goto_loop_tests<UnrollLimit, uint32_t>::do_test( data32, "uint32_t goto loop unroll" );	
+	summarize("uint32_t goto loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
 
 // double
@@ -349,6 +355,7 @@ int main(int argc, char** argv) {
 
 	goto_loop_tests<UnrollLimit, double>::do_test( dataDouble, "double goto loop unroll" );	
 	summarize("double goto loop unrolling", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+
 
 
 	return 0;

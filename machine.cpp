@@ -1,21 +1,24 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
+	Copyright 2018 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
-    or a copy at http://stlab.adobe.com/licenses.html)
+    or a copy at http://stlab.adobe.com/licenses.html )
 
 
 The purpose of this source file is to report information about the compiler,
-OS and machine running the benchmark
+OS and machine running the benchmark.
 
 When adding reporting for your compiler, OS and CPU:
 	Please remember that this source file has to compile everywhere else as well.
 
-See http://predef.sourceforge.net/precomp.html for some older compilers
-and architectures.
-See source for Unix hostinfo.
 
 All trademarks used herein are the property of their owner, and are only used
-for correct identification of their products
+for correct identification of their products.
+
+
+See https://sourceforge.net/p/predef/wiki/OperatingSystems/ for some older compilers and architectures.
+See source for Unix hostinfo.
+See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 
 */
 
@@ -25,9 +28,21 @@ for correct identification of their products
 #include <sys/types.h>
 #include "benchmark_stdint.hpp"
 
+
 // this should be defined on Mach derived OSes (MacOS, FreeBSD, etc.)
 #if defined(_MACHTYPES_H_)
 #include <sys/sysctl.h>
+#endif
+
+// one of these should be defined on Linux derived OSes
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#include <sys/utsname.h>
+#include <sys/sysinfo.h>
+#include <unistd.h>
+#endif
+
+#if _WIN32
+#include <windows.h>
 #endif
 
 
@@ -66,24 +81,20 @@ void ReportCompiler()
 	printf("Intel Compiler version %d\n", __INTEL_COMPILER );
 	printf("Build %d\n", __INTEL_COMPILER_BUILD_DATE );
 
-	#if defined(__WIN32__) || defined(_WIN32)
-		printf("Compiling for Windows 32 bit\n" );
-	#endif
-	
-	#if __WIN64__
+	#if defined(_M_X64) || defined(__x86_64__) || defined(__WIN64__)
 		printf("Compiling for Windows 64 bit\n" );
+	#elif defined(__WIN32__) || defined(_WIN32)
+		printf("Compiling for Windows 32 bit\n" );
 	#endif
 
 #elif _MSC_VER
 
 	printf("Microsoft VisualC++ version %d\n", _MSC_VER );
 	
-	#if defined(__WIN32__) || defined(_WIN32)
-		printf("Compiling for Windows 32 bit\n" );
-	#endif
-	
-	#if __WIN64__
+	#if defined(_M_X64) || defined(__x86_64__) || defined(__WIN64__)
 		printf("Compiling for Windows 64 bit\n" );
+	#elif defined(__WIN32__) || defined(_WIN32)
+		printf("Compiling for Windows 32 bit\n" );
 	#endif
 	
 	#if defined(__CLR_VER)
@@ -116,6 +127,8 @@ void ReportCompiler()
 	__OPTIMIZE__
 	__OPTIMIZE_SIZE__
 	__NO_INLINE__
+	
+	See http://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
 
 	See http://developer.apple.com/documentation/DeveloperTools/gcc-4.0.1/cpp/Common-Predefined-Macros.html
 	*/
@@ -130,43 +143,6 @@ void ReportCompiler()
 	printf("********\n" );
 	printf("Unknown compiler, please update %s for your compiler\n", __FILE__ );
 	printf("********\n" );
-#endif
-
-}
-
-/******************************************************************************/
-
-// these seem to be available on most current Mach derived OSes
-// TODO - ccox - disabled because some Linux distros have incomplete sets of headers
-#if 0 && defined(_MACHTYPES_H_)
-// if the headers are not present, these includes will break
-// then the macro test above and the report below need to be updated
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
-#endif
-
-#if defined(_MSC_VER)
-#include <hash_map>
-#include <hash_set>
-#endif
-
-
-// STL and optional bits
-void ReportHeaders() 
-{
-
-#if defined(_MACHTYPES_H_)
-
-	printf("Includes preliminary TR1 unordered_map\n");
-	printf("Includes preliminary TR1 unordered_set\n");
-	printf("Includes preliminary TR1 unordered_multimap\n");
-	printf("Includes preliminary TR1 unordered_multiset\n");
-
-#endif
-
-#if defined(_MSC_VER)
-	printf("Includes preliminary TR1 hash_set\n");
-	printf("Includes preliminary TR1 hash_map\n");
 #endif
 
 }
@@ -246,9 +222,9 @@ void ReportEndian()
 	unsigned char *testPtr = (unsigned char *) &cookie;
 	
 	if (*testPtr == 0x01) {
-		printf( "Big Endian\n" );
+		printf( "CPU is Big Endian\n" );
 	} else if (*testPtr == 0x04) {
-		printf( "Little Endian\n" );
+		printf( "CPU is Little Endian\n" );
 	} else {
 		printf("********\n" );
 		printf("Unknown byteorder, please update %s for your cpu\n", __FILE__ );
@@ -274,6 +250,9 @@ void ReportCPUPhysical()
 
 // this should work for any Mach based OS (MacOS, FreeBSD, etc.)
 #if defined(_MACHTYPES_H_)
+
+// NOTE - use command line "sysctl hw"
+// to get a list of known strings
 
 // see sysctl.h for the definitions
 	{
@@ -344,7 +323,32 @@ void ReportCPUPhysical()
 	retval = sysctlbyname("hw.cpufrequency_max", &bigBuffer, &len, NULL, 0);
 	if (retval == 0)
 		printf("CPU frequency: %.2f Mhz\n", (double)bigBuffer/one_million );
+
+	len = 8;
+	retval = sysctlbyname("hw.cachelinesize", &bigBuffer, &len, NULL, 0);
+	if (retval == 0)
+		printf("CPU cache linesize: %lld bytes\n", bigBuffer );
 	
+	len = 8;
+	retval = sysctlbyname("hw.l1dcachesize", &bigBuffer, &len, NULL, 0);
+	if (retval == 0)
+		printf("CPU L1 Dcache: %lld bytes\n", bigBuffer );
+		
+	len = 8;
+	retval = sysctlbyname("hw.l1icachesize", &bigBuffer, &len, NULL, 0);
+	if (retval == 0)
+		printf("CPU L1 Icache: %lld bytes\n", bigBuffer );
+		
+	len = 8;
+	retval = sysctlbyname("hw.l2cachesize", &bigBuffer, &len, NULL, 0);
+	if (retval == 0)
+		printf("CPU L2 cache: %lld bytes\n", bigBuffer );
+		
+	len = 8;
+	retval = sysctlbyname("hw.l3cachesize", &bigBuffer, &len, NULL, 0);
+	if (retval == 0)
+		printf("CPU L3 cache: %lld bytes\n", bigBuffer );
+
 	
 	// PowerPC CPU extensions
 	len = 4;
@@ -390,14 +394,44 @@ void ReportCPUPhysical()
 		printf("CPU has SSE3 instructions\n" );
 	
 	len = 4;
+	retval = sysctlbyname("hw.optional.supplementalsse3", &returnBuffer, &len, NULL, 0);
+	if (retval == 0 && returnBuffer != 0)
+		printf("CPU has supplemental SSE3 instructions\n" );
+	
+	len = 4;
 	retval = sysctlbyname("hw.optional.sse4", &returnBuffer, &len, NULL, 0);
 	if (retval == 0 && returnBuffer != 0)
 		printf("CPU has SSE4 instructions\n" );
 	
 	len = 4;
+	retval = sysctlbyname("hw.optional.sse4_1", &returnBuffer, &len, NULL, 0);
+	if (retval == 0 && returnBuffer != 0)
+		printf("CPU has SSE4_1 instructions\n" );
+	
+	len = 4;
+	retval = sysctlbyname("hw.optional.sse4_2", &returnBuffer, &len, NULL, 0);
+	if (retval == 0 && returnBuffer != 0)
+		printf("CPU has SSE4_2 instructions\n" );
+	
+	len = 4;
 	retval = sysctlbyname("hw.optional.sse5", &returnBuffer, &len, NULL, 0);
 	if (retval == 0 && returnBuffer != 0)
 		printf("CPU has SSE5 instructions\n" );
+	
+	len = 4;
+	retval = sysctlbyname("hw.optional.avx1_0", &returnBuffer, &len, NULL, 0);
+	if (retval == 0 && returnBuffer != 0)
+		printf("CPU has AVX1_0 instructions\n" );
+	
+	len = 4;
+	retval = sysctlbyname("hw.optional.avx2_0", &returnBuffer, &len, NULL, 0);
+	if (retval == 0 && returnBuffer != 0)
+		printf("CPU has AVX2_0 instructions\n" );
+
+	len = 4;
+	retval = sysctlbyname("hw.optional.rdrand", &returnBuffer, &len, NULL, 0);
+	if (retval == 0 && returnBuffer != 0)
+		printf("CPU has rdrand\n" );
 	
 	len = 4;
 	retval = sysctlbyname("hw.optional.x86_64", &returnBuffer, &len, NULL, 0);
@@ -407,6 +441,13 @@ void ReportCPUPhysical()
 	}
 	
 #endif	// _MACHTYPES_H_
+
+
+// TODO - Linux
+
+
+// TODO - Windows
+
 	
 	// useful information, and not so dependent
 	ReportEndian();
@@ -457,10 +498,8 @@ void ReportMachinePhysical()
 	len = 4;
 	returnBuffer = 0;
 	retval = sysctlbyname("hw.ncpu", &returnBuffer, &len, NULL, 0);
-	if (retval == 0) {
+	if (retval == 0)
 		printf("Machine has %ld CPUs\n", returnBuffer );
-		}
-
 	
 	len = 4;
 	retval = sysctlbyname("hw.physicalcpu_max", &returnBuffer, &len, NULL, 0);
@@ -493,6 +532,96 @@ void ReportMachinePhysical()
 	
 #endif	// _MACHTYPES_H_
 
+
+// this should work on Linux
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+
+	int nprocs = get_nprocs();
+	if (nprocs != 0)
+		printf("Machine has %d CPUs\n", nprocs );
+	
+	int nprocs_conf = get_nprocs_conf();
+	if (nprocs_conf != 0)
+		printf("Machine has %d CPUs configured\n", nprocs_conf );
+
+	struct sysinfo info;
+	int retval = sysinfo(&info);
+	if (retval == 0) {
+		long long temp = info.mem_unit * (long long)info.totalram;
+		printf("Machine has ");
+		printMemSize( temp );
+		printf(" of RAM\n");
+	}
+
+	int pageSize = getpagesize();
+	if (pageSize != 0) {
+		printf("Machine using ");
+		printMemSize( pageSize );
+		printf(" pagesize\n");
+	}
+	
+#endif
+
+
+#ifdef _WIN32
+
+	SYSTEM_INFO info;
+	GetSystemInfo(&info);
+
+	if (info.dwNumberOfProcessors != 0)
+		printf("Machine has %d CPUs\n", info.dwNumberOfProcessors );
+	
+	switch (info.wProcessorArchitecture) {
+		case PROCESSOR_ARCHITECTURE_AMD64:
+			printf("CPU_TYPE AMD64\n");
+			break;
+		case PROCESSOR_ARCHITECTURE_INTEL:
+			printf("CPU_TYPE x86\n");
+			break;
+		case PROCESSOR_ARCHITECTURE_IA64:
+			printf("CPU_TYPE IA64\n");
+			break;
+		case PROCESSOR_ARCHITECTURE_ARM:
+			printf("CPU_TYPE ARM32\n");
+			break;
+		case PROCESSOR_ARCHITECTURE_ARM64:
+			printf("CPU_TYPE ARM64\n");
+			break;
+		default:
+			printf("********\n" );
+			printf("Unknown Win CPU architecture, please update %s for your cpu\n", __FILE__ );
+			printf("********\n" );
+			break;
+	
+	}
+
+	if (info.dwPageSize != 0) {
+		printf("Machine using ");
+		printMemSize( info.dwPageSize  );
+		printf(" pagesize\n");
+		}
+	
+
+	unsigned long long totalRam = 0;	// in kilobytes
+	if (GetPhysicallyInstalledSystemMemory( &totalRam )) {		// This is failing on Windows 10 VM
+		totalRam *=1024;
+	} else {
+		MEMORYSTATUSEX gmem;
+		gmem.dwLength = sizeof(gmem);
+		if (GlobalMemoryStatusEx( &gmem )) {	// this works on Windows 10 VM
+			totalRam = gmem.ullTotalPhys;
+		}
+	}
+	
+	if (totalRam != 0) {
+		printf("Machine has ");
+		printMemSize( totalRam );
+		printf(" of RAM\n");
+	}
+	
+	
+
+#endif
 	
 }
 
@@ -501,15 +630,38 @@ void ReportMachinePhysical()
 void ReportOS()
 {
 	printf("##Operating System\n");
-	
+
+
+// this should work on various flavors of Linux
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+
+	struct utsname buf;
+	int retval = uname( &buf );
+	if (retval == 0) {
+		if (buf.sysname[0] != 0)
+			printf("Kernel OS Name: %s\n", buf.sysname );
+		// nodename is useless
+		if (buf.release[0] != 0)
+			printf("Kernel OS Release: %s\n", buf.release );
+		if (buf.version[0] != 0)
+			printf("Kernel OS Version: %s\n", buf.version );
+		if (buf.machine[0] != 0)
+			printf("Kernel OS Machine: %s\n", buf.machine );
+	}
+
+#endif	// _LINUX_TYPES_H
+
+
+#if defined(__ANDROID_API__)
+	printf("Android API version: %\n", __ANDROID_API__ );
+#endif
+
 
 // this should work for any Mach based OS (MacOS, FreeBSD, etc.)
 #if defined(_MACHTYPES_H_)
 
 // see sysctl.h for the definitions
 	{
-	//long returnBuffer;
-	//long long bigBuffer;
 	char string_buffer[1024];
 	long retval=0;
 	int mib[4];
@@ -525,6 +677,20 @@ void ReportOS()
 	}
 	
 #endif	// _MACHTYPES_H_
+
+
+#if _WIN32
+	OSVERSIONINFO verInfo;
+	verInfo.dwOSVersionInfoSize = sizeof(verInfo);
+	
+	if (GetVersionEx(&verInfo)) {
+		printf("Windows OS Version: %d.%d, build %d\n", verInfo.dwMajorVersion, verInfo.dwMinorVersion, verInfo.dwBuildNumber );
+		if (verInfo.szCSDVersion[0] != 0)
+			printf("Windows update %s\n", verInfo.szCSDVersion );
+	}
+
+#endif
+
 }
 
 /******************************************************************************/

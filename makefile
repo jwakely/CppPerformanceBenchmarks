@@ -1,7 +1,8 @@
 #
-#   Copyright 2007-2008 Adobe Systems Incorporated
-#   Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
-#   or a copy at http://stlab.adobe.com/licenses.html )
+#    Copyright 2007-2010 Adobe Systems Incorporated
+#    Copyright 2018 Chris Cox
+#    Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
+#     or a copy at http://stlab.adobe.com/licenses.html )
 #
 
 ###################################################
@@ -11,17 +12,15 @@
 ###################################################
 
 
-
 #
 # Macros
 #
 
 INCLUDE = -I.
 
-
 # GCC
-#CC = /usr/bin/gcc
-#CXX = /usr/bin/g++
+CC = /usr/bin/gcc
+CXX = /usr/bin/g++
 
 
 # GCC 4.2
@@ -29,26 +28,9 @@ INCLUDE = -I.
 #CXX = /usr/bin/g++-4.2
 
 
-# LLVM-gcc old
-#CC = /usr/local/bin/llvm-gcc
-#CXX = /usr/local/bin/llvm-g++
 
-
-# LLVM-gcc-4.2
-#CC = /usr/bin/llvm-gcc-4.2
-#CXX = /usr/bin/llvm-g++-4.2
-
-
-# Intel compiler
-# NOTE - incorrectly installed on MacOS, links to 64 bit compiler by mistake, so needs to be forced to 32 bit default
-#CC = icc -m32
-#CXX = icpc -m32
-
-
-
-
-CFLAGS = 
-CPPFLAGS = $(INCLUDE) -O3
+CFLAGS = $(INCLUDE) -O3
+CPPFLAGS = -std=c++11 $(INCLUDE) -O3
 
 CLIBS = -lm
 CPPLIBS = -lm
@@ -66,7 +48,12 @@ stepanov_vector \
 loop_unroll \
 simple_types_loop_invariant \
 functionobjects \
-simple_types_constant_folding
+simple_types_constant_folding \
+atol \
+ctype \
+scalar_replacement_arrays \
+scalar_replacement_array_reduction \
+scalar_replacement_structs
 
 
 #
@@ -118,6 +105,11 @@ report:  $(BINARIES)
 	./simple_types_constant_folding >> $(REPORT_FILE)
 	./simple_types_loop_invariant >> $(REPORT_FILE)
 	./loop_unroll >> $(REPORT_FILE)
+	./atol >> $(REPORT_FILE)
+	./ctype >> $(REPORT_FILE)
+	./scalar_replacement_arrays >> $(REPORT_FILE)
+	./scalar_replacement_array_reduction >> $(REPORT_FILE)
+	./scalar_replacement_structs  >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

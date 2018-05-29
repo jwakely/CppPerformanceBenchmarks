@@ -1,5 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
+	Copyright 2018 Chris COx
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -10,14 +11,15 @@ Goal:  examine any change in performance when moving from pointers to vector ite
 Assumptions:
 	1) Vector iterators should not perform worse than raw pointers.
 	
-		Programmers should never be tempted to write
+		Programmers should never be tempted(forced!) to write
 			std::sort( &*vec.begin(), &*( vec.begin() + vec.size() ) )
 		instead of
 			std::sort( vec.begin(), vec.end() )
 
-HIstory:
+History:
 	This is an extension to Alex Stepanov's original abstraction penalty benchmark
 	to test the compiler vendor implementation of vector iterators.
+
 
 */
 
@@ -56,7 +58,7 @@ inline void check_sum(double result) {
 
 template <typename Iterator>
 void verify_sorted(Iterator first, Iterator last) {
-	if (!is_sorted(first,last))
+	if (!benchmark::is_sorted(first,last))
 		printf("sort test %i failed\n", current_test);
 }
 
