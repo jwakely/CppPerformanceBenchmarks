@@ -1,9 +1,11 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
+	Copyright 2018 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
-    or a copy at http://stlab.adobe.com/licenses.html)
+    or a copy at http://stlab.adobe.com/licenses.html )
     
     Shared source file for algorithms used in multiple benchmark files
+
 */
 
 namespace benchmark {
@@ -211,6 +213,8 @@ void heapsort(Iterator begin, Iterator end)
 		sift_in< Iterator, T>(j, begin, 0, next);
 	}
 }
+
+/******************************************************************************/
 
 }	// end namespace benchmark
 

@@ -23,9 +23,9 @@ CC = /usr/bin/gcc
 CXX = /usr/bin/g++
 
 
-# GCC 4.2
-#CC = /usr/bin/gcc-4.2
-#CXX = /usr/bin/g++-4.2
+# GCC 8.1
+#CC = /usr/bin/gcc-8
+#CXX = /usr/bin/g++-8
 
 
 
@@ -53,7 +53,14 @@ atol \
 ctype \
 scalar_replacement_arrays \
 scalar_replacement_array_reduction \
-scalar_replacement_structs
+scalar_replacement_structs \
+byte_order \
+exceptions \
+exceptions_cpp \
+mathlib \
+shift
+
+
 
 
 #
@@ -86,6 +93,17 @@ dependencies :   $(SOURCES)
 	$(CXX) $(DEPENDENCYFLAG) $(CPPFLAGS) $^
 
 
+#
+# special case compiles
+#
+
+exceptions : exceptions.c
+	$(CC) $(CFLAGS) -o $@ $< $(CLIBS)
+
+exceptions_cpp : exceptions.c
+	$(CXX) $(CPPFLAGS) -D TEST_WITH_EXCEPTIONS=1 -o $@ $< $(CPPLIBS)
+
+
 
 
 #
@@ -110,6 +128,11 @@ report:  $(BINARIES)
 	./scalar_replacement_arrays >> $(REPORT_FILE)
 	./scalar_replacement_array_reduction >> $(REPORT_FILE)
 	./scalar_replacement_structs  >> $(REPORT_FILE)
+	./byte_order >> $(REPORT_FILE)
+	./exceptions >> $(REPORT_FILE)
+	./exceptions_cpp >> $(REPORT_FILE)
+	./mathlib >> $(REPORT_FILE)
+	./shift >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

@@ -54,7 +54,12 @@ atol.exe \
 ctype.exe \
 scalar_replacement_arrays.exe \
 scalar_replacement_array_reduction.exe \
-scalar_replacement_structs.exe
+scalar_replacement_structs.exe \
+byte_order.exe \
+exceptions.exe \
+exceptions_cpp.exe \
+mathlib.exe \
+shift.exe
 
 
 
@@ -80,6 +85,15 @@ clean :
 
 
 #
+# special case compiles
+#
+
+exceptions_cpp.exe : exceptions.c
+	$(CPP) $(CPPFLAGS) /D "TEST_WITH_EXCEPTIONS=1" -o exceptions_cpp.exe exceptions.c
+
+
+
+#
 # Run the benchmarks and generate a report
 #
 REPORT_FILE = report.txt
@@ -101,6 +115,11 @@ report:  $(BINARIES)
 	.\scalar_replacement_arrays >> $(REPORT_FILE)
 	.\scalar_replacement_array_reduction >> $(REPORT_FILE)
 	.\scalar_replacement_structs  >> $(REPORT_FILE)
+	.\byte_order >> $(REPORT_FILE)
+	.\exceptions >> $(REPORT_FILE)
+	.\exceptions_cpp >> $(REPORT_FILE)
+	.\mathlib >> $(REPORT_FILE)
+	.\shift >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 

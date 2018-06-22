@@ -16,7 +16,6 @@ inline bool tolerance_equal(T &a, T &b) {
 	return (abs(diff) < 1);
 }
 
-
 template<>
 inline bool tolerance_equal(int8_t &a, int8_t &b) {
 	return (a == b);
@@ -145,7 +144,19 @@ inline void check_shifted_variable_sum_CSE(T result, T var1, T var2, T var3, T v
 		printf("test %i failed\n", current_test);
 }
 
+template <typename T, typename RT, class Shifter>
+inline void check_shifted_sum_result(int result) {
+  RT temp = (RT)SIZE * Shifter::do_shift((T)init_value);
+  if (result != temp) printf("test %i failed\n", current_test);
+}
 
+template <typename T, typename RT, class Shifter>
+inline void check_shifted_sum_variable_result(int result) {
+  RT temp = (RT)SIZE * Shifter::do_shift((T)init_value);
+  if (result != temp) printf("test %i failed\n", current_test);
+}
+
+/******************************************************************************/
 /******************************************************************************/
 
 template <typename Iterator, typename T>
@@ -213,6 +224,7 @@ template <typename T>
 
 /******************************************************************************/
 
+// oops, this can't optimize for floats without imprecise math
 template <typename T>
 	struct custom_multiple_constant_divide {
 	  static T do_shift(T input) { return ((((input / T(2) ) / T(3) ) / T(4)) / T(5)); }
@@ -412,21 +424,21 @@ template <typename T>
 
 template <typename T>
 	struct custom_add_multiple_variable {
-	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + v1 + v2 + v3 + v4); }
+	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + (v1 + v2 + v3 + v4)); }
 	};
 
 /******************************************************************************/
 
 template <typename T>
 	struct custom_sub_multiple_variable {
-	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input - v1 - v2 - v3 - v4); }
+	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input - (v1 + v2 + v3 + v4)); }
 	};
 
 /******************************************************************************/
 
 template <typename T>
 	struct custom_multiply_multiple_variable {
-	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input * v1 * v2 * v3 * v4); }
+	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input * (v1 * v2 * v3 * v4)); }
 	};
 
 /******************************************************************************/
@@ -434,7 +446,7 @@ template <typename T>
 // something more likely to be moved out of loops, and a sanity check
 template <typename T>
 	struct custom_multiply_multiple_variable2 {
-	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + v1 * v2 * v3 * v4); }
+	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + (v1 * v2 * v3 * v4)); }
 	};
 
 /******************************************************************************/
@@ -449,7 +461,7 @@ template <typename T>
 /******************************************************************************/
 
 // this can have CSE and loop invariant motion applied in integer math
-// this should be optimizeable without inexact math
+// this should be optimizeable for float without inexact math
 template <typename T>
 	struct custom_divide_multiple_variable2 {
 	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + (((v1 / v2 ) / v3) / v4)); }
@@ -459,7 +471,7 @@ template <typename T>
 
 template <typename T>
 	struct custom_mixed_multiple_variable {
-	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + v1 - v2 * v3 / v4); }
+	  static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + (v1 - v2 * v3 / v4)); }
 	};
 
 /******************************************************************************/
@@ -701,6 +713,7 @@ template <typename T>
 	};
 
 /******************************************************************************/
+/******************************************************************************/
 
 template <typename T, typename Shifter>
 void test_constant(T* first, int count, const char *label) {
@@ -800,6 +813,83 @@ void test_CSE(T* first, int count, T v1, const char *label) {
 		result -= first[n] + Shifter::do_shift( v1, first[n-1], first[n] ) + Shifter::do_shift( v1, first[n-1], first[n] );
 	}
     check_shifted_variable_sum_CSE<T, Shifter>(result, v1);
+  }
+  
+  record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T, typename RT, class Shifter>
+void test_constant_result(T* first, int count, const char *label) {
+  int i;
+  
+  start_timer();
+  
+  for(i = 0; i < iterations; ++i) {
+    RT result = 0;
+    for (int n = 0; n < count; ++n) {
+		result += Shifter::do_shift( first[n] );
+	}
+    check_shifted_sum_result<T, RT, Shifter>(result);
+  }
+  
+  record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T, typename T2, typename Shifter>
+void test_variable1(T* first, int count, T2 v1, const char *label) {
+  int i;
+  
+  start_timer();
+  
+  for(i = 0; i < iterations; ++i) {
+    T result = 0;
+    for (int n = 0; n < count; ++n) {
+		result += Shifter::do_shift( first[n], v1 );
+	}
+    check_shifted_variable_sum<T, T2, Shifter>(result, v1);
+  }
+  
+  record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T, typename T2, typename Shifter>
+void test_variable1ptr(T* first, int count, T2 v1, const char *label) {
+  int i;
+  
+  start_timer();
+  
+  for(i = 0; i < iterations; ++i) {
+    T result = 0;
+    for (int n = 0; n < count; ++n) {
+		T2 temp = v1;
+		result += Shifter::do_shift( first[n], &temp );
+	}
+    check_shifted_variable_sumptr<T, T2, Shifter>(result, v1);
+  }
+  
+  record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T, typename RT, class Shifter>
+void test_variable_result(T* first, int count, T v1, const char *label) {
+  int i;
+  
+  start_timer();
+  
+  for(i = 0; i < iterations; ++i) {
+    T result = 0;
+    for (int n = 0; n < count; ++n) {
+		result += (T)Shifter::do_shift( first[n], v1 );
+	}
+    check_shifted_variable_sum<T, Shifter>(result, v1);
   }
   
   record_result( timer(), label );
