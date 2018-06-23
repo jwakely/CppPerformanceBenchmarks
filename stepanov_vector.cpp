@@ -1,11 +1,11 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-	Copyright 2018 Chris COx
+	Copyright 2018 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
 
-Goal:  examine any change in performance when moving from pointers to vector iterators
+Goal:  Examine any change in performance when moving from pointers to vector iterators.
 
 
 Assumptions:
@@ -38,7 +38,7 @@ History:
 
 // this constant may need to be adjusted to give reasonable minimum times
 // For best results, times should be about 1.0 seconds for the minimum test run
-int iterations = 1500000;
+int iterations = 3000000;
 
 // 2000 items, or about 16k of data
 // this is intended to remain within the L2 cache of most common CPUs
@@ -51,7 +51,8 @@ double init_value = 3.0;
 /******************************************************************************/
 
 inline void check_sum(double result) {
-  if (result != SIZE * init_value) printf("test %i failed\n", current_test);
+	if (result != SIZE * init_value)
+		printf("test %i failed\n", current_test);
 }
 
 /******************************************************************************/
@@ -166,9 +167,8 @@ typedef std::vector<double>::iterator vdp;
 typedef std::vector<double>::reverse_iterator rvdp;
 typedef std::reverse_iterator< vdp > rtvdp;
 
-typedef std::reverse_iterator<rvdp> rtrvdp;
+typedef std::reverse_iterator< rvdp > rtrvdp;
 typedef std::reverse_iterator< rtvdp > rtrtvdp;
-
 
 /******************************************************************************/
 /******************************************************************************/
@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
 
 
 	// the sorting tests are much slower than the accumulation tests - O(N^2)
-	iterations = iterations / 1000;
+	iterations = iterations / 2000;
 	
 	std::vector<double>   vec_dataMaster;
 	vec_dataMaster.resize(SIZE);
@@ -254,7 +254,7 @@ int main(int argc, char** argv) {
 
 	
 	// these are slightly faster - O(NLog2(N))
-	iterations = iterations * 8;
+	iterations = iterations * 16;
 	
 	test_quicksort(dMpb, dMpe, dpb, dpe, dZero, "quicksort double pointer verify2");
 	test_quicksort(vec_dataMaster.begin(), vec_dataMaster.end(), vec_data.begin(), vec_data.end(), dZero, "quicksort double vector iterator");

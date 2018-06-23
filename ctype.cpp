@@ -23,6 +23,9 @@ NOTE -  isdigit and isxdigit are locale dependent
 		inline versions do not work with locales
 		table versions mimic use of locales
 
+
+TODO - wctype.h - iswascii, iswdigit, iswblank, etc.
+
 */
 
 #include "benchmark_stdint.hpp"
@@ -170,6 +173,10 @@ inline bool table_isdigit( int value )
 inline bool table_isascii( int value )
     { return (value >= 0 && value <= 255 && (char_type_table[value] & kASCIIFlag) == kASCIIFlag); }
 
+inline bool table_isascii2( int value )
+    { if (value < 0 || value > 255) return false;
+	  return ((char_type_table[value] & kASCIIFlag) != 0); }
+
 inline int table_tolower( int value )
     { if (value < 0 || value > 255 || value == EOF) return value;
 	  return tolower_table[ value ]; }
@@ -207,7 +214,7 @@ template <typename T>
 	};
 
 #if !WIN32
-// function missing in MSDEV
+// function missing in MSVC
 template <typename T>
 	struct ctype_isblank {
 	  static bool do_shift(T input) { return (isblank(input)); }
@@ -275,6 +282,11 @@ template <typename T>
 	};
 
 template <typename T>
+	struct ctype_table_isascii2 {
+	  static bool do_shift(T input) { return (table_isascii2(input)); }
+	};
+
+template <typename T>
 	struct ctype_tolower {
 	  static int do_shift(T input) { return (tolower(input)); }
 	};
@@ -293,6 +305,44 @@ template <typename T>
 	struct ctype_table_toupper {
 	  static int do_shift(T input) { return (table_toupper(input)); }
 	};
+
+/******************************************************************************/
+
+// missing on Linux and Windows
+// present in Mach and BSD
+#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !WIN32
+
+template <typename T>
+	struct ctype_isnumber {
+	  static bool do_shift(T input) { return (isnumber(input)); }
+	};
+
+template <typename T>
+	struct ctype_ishexnumber{
+	  static bool do_shift(T input) { return (ishexnumber(input)); }
+	};
+
+template <typename T>
+	struct ctype_isideogram{
+	  static bool do_shift(T input) { return (isideogram(input)); }
+	};
+
+template <typename T>
+	struct ctype_isphonogram{
+	  static bool do_shift(T input) { return (isphonogram(input)); }
+	};
+
+template <typename T>
+	struct ctype_isrune{
+	  static bool do_shift(T input) { return (isrune(input)); }
+	};
+
+template <typename T>
+	struct ctype_isspecial{
+	  static bool do_shift(T input) { return (isspecial(input)); }
+	};
+
+#endif
 
 /******************************************************************************/
 /******************************************************************************/
@@ -314,6 +364,10 @@ const int kExpected_isxdigit = 22;
 const int kExpected_isascii = 128;
 const int kExpected_tolower = 33472;
 const int kExpected_toupper = 31808;
+const int kExpected_isideogram = 0;
+const int kExpected_isphonogram = 0;
+const int kExpected_isrune = 128;
+const int kExpected_isspecial = 0;
 
 /******************************************************************************/
 /******************************************************************************/
@@ -327,7 +381,8 @@ int main(int argc, char** argv) {
 	printf("\n");
 
 	if (argc > 1) iterations = atoi(argv[1]);
-	
+
+
 	// seed the random number generator, so we get repeatable results
 	srand( iterations + 123 );
 	
@@ -338,7 +393,6 @@ int main(int argc, char** argv) {
 	// randomize the order
 	::random_shuffle( data, data+SIZE );
 
-
 	test_bool_expected<uint8_t, ctype_isdigit<uint8_t> >(data,SIZE, kExpected_isdigit*(SIZE/256), "uint8_t isdigit");
 	test_bool_expected<uint8_t, ctype_cheap_isdigit<uint8_t> >(data,SIZE, kExpected_isdigit*(SIZE/256), "uint8_t inline isdigit");
 	test_bool_expected<uint8_t, ctype_table_isdigit<uint8_t> >(data,SIZE, kExpected_isdigit*(SIZE/256), "uint8_t table isdigit");
@@ -346,10 +400,12 @@ int main(int argc, char** argv) {
 	test_bool_expected<uint8_t, ctype_cheap_isascii<uint8_t> >(data,SIZE, kExpected_isascii*(SIZE/256), "uint8_t inline isascii");
 	test_bool_expected<uint8_t, ctype_cheap_isascii2<uint8_t> >(data,SIZE, kExpected_isascii*(SIZE/256), "uint8_t inline isascii2");
 	test_bool_expected<uint8_t, ctype_table_isascii<uint8_t> >(data,SIZE, kExpected_isascii*(SIZE/256), "uint8_t table isascii");
+	test_bool_expected<uint8_t, ctype_table_isascii2<uint8_t> >(data,SIZE, kExpected_isascii*(SIZE/256), "uint8_t table isascii2");
+
 	test_bool_expected<uint8_t, ctype_isalnum<uint8_t> >(data,SIZE, kExpected_isalnum*(SIZE/256), "uint8_t isalnum");
 	test_bool_expected<uint8_t, ctype_isalpha<uint8_t> >(data,SIZE, kExpected_isalpha*(SIZE/256), "uint8_t isalpha");
 #if !WIN32
-// function missing under MSDEV
+// function missing under MSVC
 	test_bool_expected<uint8_t, ctype_isblank<uint8_t> >(data,SIZE, kExpected_isblank*(SIZE/256), "uint8_t isblank");
 #endif
 	test_bool_expected<uint8_t, ctype_iscntrl<uint8_t> >(data,SIZE, kExpected_iscntrl*(SIZE/256), "uint8_t iscntrl");
@@ -360,6 +416,17 @@ int main(int argc, char** argv) {
 	test_bool_expected<uint8_t, ctype_isspace<uint8_t> >(data,SIZE, kExpected_isspace*(SIZE/256), "uint8_t isspace");
 	test_bool_expected<uint8_t, ctype_isupper<uint8_t> >(data,SIZE, kExpected_isupper*(SIZE/256), "uint8_t isupper");
 	test_bool_expected<uint8_t, ctype_isxdigit<uint8_t> >(data,SIZE, kExpected_isxdigit*(SIZE/256), "uint8_t isxdigit");
+
+// missing on Linux and Windows
+// present in Mach and BSD
+#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !WIN32
+	test_bool_expected<uint8_t, ctype_ishexnumber<uint8_t> >(data,SIZE, kExpected_isxdigit*(SIZE/256), "uint8_t ishexnumber");
+	test_bool_expected<uint8_t, ctype_isnumber<uint8_t> >(data,SIZE, kExpected_isdigit*(SIZE/256), "uint8_t isnumber");
+	test_bool_expected<uint8_t, ctype_isideogram<uint8_t> >(data,SIZE, kExpected_isideogram*(SIZE/256), "uint8_t isideogram");
+	test_bool_expected<uint8_t, ctype_isphonogram<uint8_t> >(data,SIZE, kExpected_isphonogram*(SIZE/256), "uint8_t isphonogram");
+	test_bool_expected<uint8_t, ctype_isrune<uint8_t> >(data,SIZE, kExpected_isrune*(SIZE/256), "uint8_t isrune");
+	test_bool_expected<uint8_t, ctype_isspecial<uint8_t> >(data,SIZE, kExpected_isspecial*(SIZE/256), "uint8_t isspecial");
+#endif
 
 	summarize("uint8_t ctype", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
