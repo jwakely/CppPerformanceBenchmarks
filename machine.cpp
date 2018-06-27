@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-	Copyright 2018 Chris Cox
+    Copyright 2018 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -9,7 +9,7 @@ The purpose of this source file is to report information about the compiler,
 OS and machine running the benchmark.
 
 When adding reporting for your compiler, OS and CPU:
-	Please remember that this source file has to compile everywhere else as well.
+    Please remember that this source file has to compile everywhere else as well.
 
 
 All trademarks used herein are the property of their owner, and are only used
@@ -50,22 +50,22 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 
 void VerifyTypeSizes()
 {
-	if (sizeof(int8_t) != 1)
-		printf("Found size of int8_t was %d instead of 1\n", (int)sizeof(int8_t) );
-	if (sizeof(uint8_t) != 1)
-		printf("Found size of uint8_t was %d instead of 1\n", (int)sizeof(uint8_t) );
-	if (sizeof(int16_t) != 2)
-		printf("Found size of int16_t was %d instead of 2\n", (int)sizeof(int16_t) );
-	if (sizeof(uint16_t) != 2)
-		printf("Found size of uint16_t was %d instead of 2\n", (int)sizeof(uint16_t) );
-	if (sizeof(int32_t) != 4)
-		printf("Found size of int32_t was %d instead of 4\n", (int)sizeof(int32_t) );
-	if (sizeof(uint32_t) != 4)
-		printf("Found size of uint32_t was %d instead of 4\n", (int)sizeof(uint32_t) );
-	if (sizeof(int64_t) != 8)
-		printf("Found size of int64_t was %d instead of 8\n", (int)sizeof(int64_t) );
-	if (sizeof(uint64_t) != 8)
-		printf("Found size of uint64_t was %d instead of 8\n", (int)sizeof(uint64_t) );
+    if (sizeof(int8_t) != 1)
+        printf("Found size of int8_t was %d instead of 1\n", (int)sizeof(int8_t) );
+    if (sizeof(uint8_t) != 1)
+        printf("Found size of uint8_t was %d instead of 1\n", (int)sizeof(uint8_t) );
+    if (sizeof(int16_t) != 2)
+        printf("Found size of int16_t was %d instead of 2\n", (int)sizeof(int16_t) );
+    if (sizeof(uint16_t) != 2)
+        printf("Found size of uint16_t was %d instead of 2\n", (int)sizeof(uint16_t) );
+    if (sizeof(int32_t) != 4)
+        printf("Found size of int32_t was %d instead of 4\n", (int)sizeof(int32_t) );
+    if (sizeof(uint32_t) != 4)
+        printf("Found size of uint32_t was %d instead of 4\n", (int)sizeof(uint32_t) );
+    if (sizeof(int64_t) != 8)
+        printf("Found size of int64_t was %d instead of 8\n", (int)sizeof(int64_t) );
+    if (sizeof(uint64_t) != 8)
+        printf("Found size of uint64_t was %d instead of 8\n", (int)sizeof(uint64_t) );
 }
 
 /******************************************************************************/
@@ -74,75 +74,75 @@ void VerifyTypeSizes()
 void ReportCompiler() 
 {
 
-	printf("##Compiler\n");
+    printf("##Compiler\n");
 
 #if __INTEL_COMPILER
 
-	printf("Intel Compiler version %d\n", __INTEL_COMPILER );
-	printf("Build %d\n", __INTEL_COMPILER_BUILD_DATE );
+    printf("Intel Compiler version %d\n", __INTEL_COMPILER );
+    printf("Build %d\n", __INTEL_COMPILER_BUILD_DATE );
 
-	#if defined(_M_X64) || defined(__x86_64__) || defined(__WIN64__)
-		printf("Compiling for Windows 64 bit\n" );
-	#elif defined(__WIN32__) || defined(_WIN32)
-		printf("Compiling for Windows 32 bit\n" );
-	#endif
+    #if defined(_M_X64) || defined(__x86_64__) || defined(__WIN64__)
+        printf("Compiling for Windows 64 bit\n" );
+    #elif defined(__WIN32__) || defined(_WIN32)
+        printf("Compiling for Windows 32 bit\n" );
+    #endif
 
 #elif _MSC_VER
 
-	printf("Microsoft VisualC++ version %d\n", _MSC_VER );
-	
-	#if defined(_M_X64) || defined(__x86_64__) || defined(__WIN64__)
-		printf("Compiling for Windows 64 bit\n" );
-	#elif defined(__WIN32__) || defined(_WIN32)
-		printf("Compiling for Windows 32 bit\n" );
-	#endif
-	
-	#if defined(__CLR_VER)
-		printf("CLR version %s\n", __CLR_VER );
-	#endif
+    printf("Microsoft VisualC++ version %d\n", _MSC_VER );
+    
+    #if defined(_M_X64) || defined(__x86_64__) || defined(__WIN64__)
+        printf("Compiling for Windows 64 bit\n" );
+    #elif defined(__WIN32__) || defined(_WIN32)
+        printf("Compiling for Windows 32 bit\n" );
+    #endif
+    
+    #if defined(__CLR_VER)
+        printf("CLR version %s\n", __CLR_VER );
+    #endif
 
-	/*
-	See http://msdn2.microsoft.com/en-us/library/b0084kay(VS.80).aspx#_predir_table_1..3
-	*/
+    /*
+    See http://msdn2.microsoft.com/en-us/library/b0084kay(VS.80).aspx#_predir_table_1..3
+    */
 
 #elif __GNUC__
 
-	printf("GCC version %s\n", __VERSION__ );
-	
-	/*
-	printf("%d.%d", __GNUC__, __GNUC_MINOR__ );
-	#if defined(__GNUC_PATCHLEVEL__)
-		printf(" . %d", __GNUC_PATCHLEVEL__ );
-	#endif
-	printf("\n");
-	*/
-	
-	#if __LP64__
-		printf("Compiled for LP64\n");
-	#endif
-	
-	
-	/*
-	Other useful macros:
-	__OPTIMIZE__
-	__OPTIMIZE_SIZE__
-	__NO_INLINE__
-	
-	See http://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
+    printf("GCC version %s\n", __VERSION__ );
+    
+    /*
+    printf("%d.%d", __GNUC__, __GNUC_MINOR__ );
+    #if defined(__GNUC_PATCHLEVEL__)
+        printf(" . %d", __GNUC_PATCHLEVEL__ );
+    #endif
+    printf("\n");
+    */
+    
+    #if __LP64__
+        printf("Compiled for LP64\n");
+    #endif
+    
+    
+    /*
+    Other useful macros:
+    __OPTIMIZE__
+    __OPTIMIZE_SIZE__
+    __NO_INLINE__
+    
+    See http://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
 
-	See http://developer.apple.com/documentation/DeveloperTools/gcc-4.0.1/cpp/Common-Predefined-Macros.html
-	*/
-	
+    See http://developer.apple.com/documentation/DeveloperTools/gcc-4.0.1/cpp/Common-Predefined-Macros.html
+    */
+    
 #elif __MWERKS__
-	printf("Metrowerks CodeWarrior version 0x%8.8lX\n", __MWERKS__ );
+    printf("Metrowerks CodeWarrior version 0x%8.8lX\n", __MWERKS__ );
 #elif __MRC__
-	printf("Apple MrC[pp] version 0x%8.8lX\n", __MRC__ );
+    printf("Apple MrC[pp] version 0x%8.8lX\n", __MRC__ );
 #elif __MOTO__
-	printf("Motorola MCC version 0x%8.8lX\n", __MOTO__ );
+    printf("Motorola MCC version 0x%8.8lX\n", __MOTO__ );
 #else
-	printf("********\n" );
-	printf("Unknown compiler, please update %s for your compiler\n", __FILE__ );
-	printf("********\n" );
+    printf("********\n" );
+    printf("Unknown compiler, please update %s for your compiler\n", __FILE__ );
+    printf("********\n" );
 #endif
 
 }
@@ -153,62 +153,62 @@ void ReportCompiler()
 void ReportCPUTarget()
 {
 
-	printf("##Target CPU\n");
+    printf("##Target CPU\n");
 
 #if _MANAGED
 
-	printf("Compiled for Microsoft managed code (CLR)\n" );
+    printf("Compiled for Microsoft managed code (CLR)\n" );
 
 #elif defined(__ppc64__)
 
-	printf("Compiled for PowerPC 64bit\n");
+    printf("Compiled for PowerPC 64bit\n");
 
 #elif defined(__powerc) || defined(__ppc__) || defined(powerpc) || defined(ppc)
 
-	printf("Compiled for PowerPC 32bit\n");
+    printf("Compiled for PowerPC 32bit\n");
 
 #elif defined(_M_IA64)
 
-	printf("Compiled for Intel Architecture 64\n" );
+    printf("Compiled for Intel Architecture 64\n" );
 
 #elif defined(_M_X64) || defined(__x86_64__)
 
-	printf("Compiled for x86 64bit\n" );
+    printf("Compiled for x86 64bit\n" );
 
 #elif defined(__i386__) || defined(i386) || defined(_X86_) || defined(_M_IX86)
 
-	printf("Compiled for x86 32bit\n" );
+    printf("Compiled for x86 32bit\n" );
 
-	#if _M_IX86
-	switch( _M_IX86) {
-	case 300:
-		printf("Compiled for 80386\n" );
-		break;
-	case 400:
-		printf("Compiled for 80486\n" );
-		break;
-	case 500:
-		printf("Compiled for Pentium\n" );
-		break;
-	case 600:
-		printf("Compiled for PentiumII\n" );
-		break;
-	default:	
-		printf("********\n" );
-		printf("Unknown x86 target, please update %s for your cpu\n", __FILE__ );
-		printf("********\n" );
-		break;
-	}
-	#endif
+    #if _M_IX86
+    switch( _M_IX86) {
+    case 300:
+        printf("Compiled for 80386\n" );
+        break;
+    case 400:
+        printf("Compiled for 80486\n" );
+        break;
+    case 500:
+        printf("Compiled for Pentium\n" );
+        break;
+    case 600:
+        printf("Compiled for PentiumII\n" );
+        break;
+    default:    
+        printf("********\n" );
+        printf("Unknown x86 target, please update %s for your cpu\n", __FILE__ );
+        printf("********\n" );
+        break;
+    }
+    #endif
 
 #elif defined(_ALPHA_)
 
-	printf("Compiled for Alpha\n" );
-	
+    printf("Compiled for Alpha\n" );
+    
 #else
-	printf("********\n" );
-	printf("Unknown target CPU, please update %s for your cpu\n", __FILE__ );
-	printf("********\n" );
+    printf("********\n" );
+    printf("Unknown target CPU, please update %s for your cpu\n", __FILE__ );
+    printf("********\n" );
 #endif
 
 }
@@ -218,33 +218,33 @@ void ReportCPUTarget()
 // byte order of the CPU we're running on
 void ReportEndian()
 {
-	static uint32_t cookie = 0x01020304;
-	unsigned char *testPtr = (unsigned char *) &cookie;
-	
-	if (*testPtr == 0x01) {
-		printf( "CPU is Big Endian\n" );
-	} else if (*testPtr == 0x04) {
-		printf( "CPU is Little Endian\n" );
-	} else {
-		printf("********\n" );
-		printf("Unknown byteorder, please update %s for your cpu\n", __FILE__ );
-		printf("********\n" );
-	}
+    static uint32_t cookie = 0x01020304;
+    unsigned char *testPtr = (unsigned char *) &cookie;
+    
+    if (*testPtr == 0x01) {
+        printf( "CPU is Big Endian\n" );
+    } else if (*testPtr == 0x04) {
+        printf( "CPU is Little Endian\n" );
+    } else {
+        printf("********\n" );
+        printf("Unknown byteorder, please update %s for your cpu\n", __FILE__ );
+        printf("********\n" );
+    }
 }
 
 /******************************************************************************/
 
-	
+    
 // what CPU are we actually running on
 // architecture, revision, speed
 
 // methods for obtaining this information are probably OS specific
-	
+    
 void ReportCPUPhysical()
 {
-	const int one_million = 1000000L;
-	
-	printf("##Physical CPU\n");
+    const int one_million = 1000000L;
+    
+    printf("##Physical CPU\n");
 
 
 
@@ -255,192 +255,192 @@ void ReportCPUPhysical()
 // to get a list of known strings
 
 // see sysctl.h for the definitions
-	{
-	long returnBuffer=0, retval=0;
-	long long bigBuffer = 0;
-	size_t len;
-	
-	// this gets us the CPU family, but not the exact CPU model and rev!
-	len = 4;
-	retval = sysctlbyname("hw.cputype", &returnBuffer, &len, NULL, 0);
-	if (retval == 0) {
-		printf("Mach CPU type %ld\n", returnBuffer );
-	
-		// from sys/machine.h
-		switch(returnBuffer) {
-			case 1:
-				printf("CPU_TYPE VAX\n");
-				break;
-			case 6:
-				printf("CPU_TYPE MC680x0\n");
-				break;
-			case 7:
-				printf("CPU_TYPE x86\n");
-				break;
-			case 8:
-				printf("CPU_TYPE MIPS\n");
-				break;
-			case 10:
-				printf("CPU_TYPE MC98000\n");
-				break;
-			case 11:
-				printf("CPU_TYPE HPPA\n");
-				break;
-			case 12:
-				printf("CPU_TYPE ARM\n");
-				break;
-			case 13:
-				printf("CPU_TYPE MC8880x0\n");
-				break;
-			case 14:
-				printf("CPU_TYPE SPARC\n");
-				break;
-			case 15:
-				printf("CPU_TYPE i860\n");
-				break;
-			case 16:
-				printf("CPU_TYPE Alpha\n");
-				break;
-			case 18:
-				printf("CPU_TYPE PowerPC\n");
-				break;
-			default:
-				printf("********\n" );
-				printf("Unknown Mach CPU Type, please update %s for your cpu\n", __FILE__ );
-				printf("********\n" );
-				break;
-		}
-	
-	}
-	
-	// corresponds to CPU types, but the list is kinda big and dependent on CPU major type
-	len = 4;
-	retval = sysctlbyname("hw.cpusubtype", &returnBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("Mach CPU subtype %ld\n", returnBuffer );
-	
-	len = 8;
-	retval = sysctlbyname("hw.cpufrequency_max", &bigBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("CPU frequency: %.2f Mhz\n", (double)bigBuffer/one_million );
+    {
+    long returnBuffer=0, retval=0;
+    long long bigBuffer = 0;
+    size_t len;
+    
+    // this gets us the CPU family, but not the exact CPU model and rev!
+    len = 4;
+    retval = sysctlbyname("hw.cputype", &returnBuffer, &len, NULL, 0);
+    if (retval == 0) {
+        printf("Mach CPU type %ld\n", returnBuffer );
+    
+        // from sys/machine.h
+        switch(returnBuffer) {
+            case 1:
+                printf("CPU_TYPE VAX\n");
+                break;
+            case 6:
+                printf("CPU_TYPE MC680x0\n");
+                break;
+            case 7:
+                printf("CPU_TYPE x86\n");
+                break;
+            case 8:
+                printf("CPU_TYPE MIPS\n");
+                break;
+            case 10:
+                printf("CPU_TYPE MC98000\n");
+                break;
+            case 11:
+                printf("CPU_TYPE HPPA\n");
+                break;
+            case 12:
+                printf("CPU_TYPE ARM\n");
+                break;
+            case 13:
+                printf("CPU_TYPE MC8880x0\n");
+                break;
+            case 14:
+                printf("CPU_TYPE SPARC\n");
+                break;
+            case 15:
+                printf("CPU_TYPE i860\n");
+                break;
+            case 16:
+                printf("CPU_TYPE Alpha\n");
+                break;
+            case 18:
+                printf("CPU_TYPE PowerPC\n");
+                break;
+            default:
+                printf("********\n" );
+                printf("Unknown Mach CPU Type, please update %s for your cpu\n", __FILE__ );
+                printf("********\n" );
+                break;
+        }
+    
+    }
+    
+    // corresponds to CPU types, but the list is kinda big and dependent on CPU major type
+    len = 4;
+    retval = sysctlbyname("hw.cpusubtype", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Mach CPU subtype %ld\n", returnBuffer );
+    
+    len = 8;
+    retval = sysctlbyname("hw.cpufrequency_max", &bigBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("CPU frequency: %.2f Mhz\n", (double)bigBuffer/one_million );
 
-	len = 8;
-	retval = sysctlbyname("hw.cachelinesize", &bigBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("CPU cache linesize: %lld bytes\n", bigBuffer );
-	
-	len = 8;
-	retval = sysctlbyname("hw.l1dcachesize", &bigBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("CPU L1 Dcache: %lld bytes\n", bigBuffer );
-		
-	len = 8;
-	retval = sysctlbyname("hw.l1icachesize", &bigBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("CPU L1 Icache: %lld bytes\n", bigBuffer );
-		
-	len = 8;
-	retval = sysctlbyname("hw.l2cachesize", &bigBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("CPU L2 cache: %lld bytes\n", bigBuffer );
-		
-	len = 8;
-	retval = sysctlbyname("hw.l3cachesize", &bigBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("CPU L3 cache: %lld bytes\n", bigBuffer );
+    len = 8;
+    retval = sysctlbyname("hw.cachelinesize", &bigBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("CPU cache linesize: %lld bytes\n", bigBuffer );
+    
+    len = 8;
+    retval = sysctlbyname("hw.l1dcachesize", &bigBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("CPU L1 Dcache: %lld bytes\n", bigBuffer );
+        
+    len = 8;
+    retval = sysctlbyname("hw.l1icachesize", &bigBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("CPU L1 Icache: %lld bytes\n", bigBuffer );
+        
+    len = 8;
+    retval = sysctlbyname("hw.l2cachesize", &bigBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("CPU L2 cache: %lld bytes\n", bigBuffer );
+        
+    len = 8;
+    retval = sysctlbyname("hw.l3cachesize", &bigBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("CPU L3 cache: %lld bytes\n", bigBuffer );
 
-	
-	// PowerPC CPU extensions
-	len = 4;
-	retval = sysctlbyname("hw.optional.floatingpoint", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has optional floating point instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.altivec", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has AltiVec instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.64bitops", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has 64 bit instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.fsqrt", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has fsqrt instruction\n" );
-	
-	
-	// x86 CPU extension
-	len = 4;
-	retval = sysctlbyname("hw.optional.mmx", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has MMX instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.sse", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has SSE instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.sse2", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has SSE2 instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.sse3", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has SSE3 instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.supplementalsse3", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has supplemental SSE3 instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.sse4", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has SSE4 instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.sse4_1", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has SSE4_1 instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.sse4_2", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has SSE4_2 instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.sse5", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has SSE5 instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.avx1_0", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has AVX1_0 instructions\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.avx2_0", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has AVX2_0 instructions\n" );
+    
+    // PowerPC CPU extensions
+    len = 4;
+    retval = sysctlbyname("hw.optional.floatingpoint", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has optional floating point instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.altivec", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has AltiVec instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.64bitops", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has 64 bit instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.fsqrt", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has fsqrt instruction\n" );
+    
+    
+    // x86 CPU extension
+    len = 4;
+    retval = sysctlbyname("hw.optional.mmx", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has MMX instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.sse", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has SSE instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.sse2", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has SSE2 instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.sse3", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has SSE3 instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.supplementalsse3", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has supplemental SSE3 instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.sse4", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has SSE4 instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.sse4_1", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has SSE4_1 instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.sse4_2", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has SSE4_2 instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.sse5", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has SSE5 instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.avx1_0", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has AVX1_0 instructions\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.avx2_0", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has AVX2_0 instructions\n" );
 
-	len = 4;
-	retval = sysctlbyname("hw.optional.rdrand", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has rdrand\n" );
-	
-	len = 4;
-	retval = sysctlbyname("hw.optional.x86_64", &returnBuffer, &len, NULL, 0);
-	if (retval == 0 && returnBuffer != 0)
-		printf("CPU has x86_64 instructions\n" );
-	
-	}
-	
-#endif	// _MACHTYPES_H_
+    len = 4;
+    retval = sysctlbyname("hw.optional.rdrand", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has rdrand\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.x86_64", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has x86_64 instructions\n" );
+    
+    }
+    
+#endif    // _MACHTYPES_H_
 
 
 // TODO - Linux
@@ -448,9 +448,9 @@ void ReportCPUPhysical()
 
 // TODO - Windows
 
-	
-	// useful information, and not so dependent
-	ReportEndian();
+    
+    // useful information, and not so dependent
+    ReportEndian();
 }
 
 /******************************************************************************/
@@ -458,24 +458,24 @@ void ReportCPUPhysical()
 // format a number of bytes and print (without return)
 void printMemSize( long long input )
 {
-	double meg = (double)input / (1024.0*1024.0);
-	double tera = (double)input / (1024.0*1024.0*1024.0*1024.0);
+    double meg = (double)input / (1024.0*1024.0);
+    double tera = (double)input / (1024.0*1024.0*1024.0*1024.0);
 
-	if (input < 1024) {	// format as bytes
-		printf("%lld bytes", input );
-	} else if (input < (1024*1024)) {	// format as KB
-		printf("%.2f KBytes", (double)input/1024.0 );
-	} else if (meg < 1024.0) {	// format as MB
-		printf("%.2f MBytes", meg );
-	} else if (meg < (1024.0*1024.0)) {	// format as GB
-		printf("%.2f GBytes", meg/1024.0 );
-	} else if (tera < (1024.0)) {	// format as TB
-		printf("%.2f TeraBytes", tera );
-	} else if (tera < (1024.0*1024.0)) {	// format as PB
-		printf("%.2f PetaBytes", tera/1024.0 );
-	} else {	// format as EB
-		printf("%.2f ExaBytes", tera/(1024.0*1024.0) );
-	}
+    if (input < 1024) {    // format as bytes
+        printf("%lld bytes", input );
+    } else if (input < (1024*1024)) {    // format as KB
+        printf("%.2f KBytes", (double)input/1024.0 );
+    } else if (meg < 1024.0) {    // format as MB
+        printf("%.2f MBytes", meg );
+    } else if (meg < (1024.0*1024.0)) {    // format as GB
+        printf("%.2f GBytes", meg/1024.0 );
+    } else if (tera < (1024.0)) {    // format as TB
+        printf("%.2f TeraBytes", tera );
+    } else if (tera < (1024.0*1024.0)) {    // format as PB
+        printf("%.2f PetaBytes", tera/1024.0 );
+    } else {    // format as EB
+        printf("%.2f ExaBytes", tera/(1024.0*1024.0) );
+    }
 }
 
 /******************************************************************************/
@@ -483,177 +483,177 @@ void printMemSize( long long input )
 // information about the machine, outside of the CPU
 void ReportMachinePhysical()
 {
-	printf("##Machine\n");
-	
+    printf("##Machine\n");
+    
 
 // this should work for any Mach based OS (MacOS, FreeBSD, etc.)
 #if defined(_MACHTYPES_H_)
 
 // see sysctl.h for the definitions
-	{
-	long returnBuffer=0, retval=0;
-	long long bigBuffer = 0;
-	size_t len;
-	
-	len = 4;
-	returnBuffer = 0;
-	retval = sysctlbyname("hw.ncpu", &returnBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("Machine has %ld CPUs\n", returnBuffer );
-	
-	len = 4;
-	retval = sysctlbyname("hw.physicalcpu_max", &returnBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("Machine has %ld physical CPUs\n", returnBuffer );
-	
-	len = 4;
-	retval = sysctlbyname("hw.logicalcpu_max", &returnBuffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("Machine has %ld logical CPUs\n", returnBuffer );
-	
-	
-	len = 8;
-	retval = sysctlbyname("hw.memsize", &bigBuffer, &len, NULL, 0);
-	if (retval == 0) {
-		printf("Machine has ");
-		printMemSize( bigBuffer );
-		printf(" of RAM\n");
-		}
-	
-	len = 8;
-	retval = sysctlbyname("hw.pagesize", &bigBuffer, &len, NULL, 0);
-	if (retval == 0) {
-		printf("Machine using ");
-		printMemSize( bigBuffer );
-		printf(" pagesize\n");
-		}
+    {
+    long returnBuffer=0, retval=0;
+    long long bigBuffer = 0;
+    size_t len;
+    
+    len = 4;
+    returnBuffer = 0;
+    retval = sysctlbyname("hw.ncpu", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Machine has %ld CPUs\n", returnBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("hw.physicalcpu_max", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Machine has %ld physical CPUs\n", returnBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("hw.logicalcpu_max", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Machine has %ld logical CPUs\n", returnBuffer );
+    
+    
+    len = 8;
+    retval = sysctlbyname("hw.memsize", &bigBuffer, &len, NULL, 0);
+    if (retval == 0) {
+        printf("Machine has ");
+        printMemSize( bigBuffer );
+        printf(" of RAM\n");
+        }
+    
+    len = 8;
+    retval = sysctlbyname("hw.pagesize", &bigBuffer, &len, NULL, 0);
+    if (retval == 0) {
+        printf("Machine using ");
+        printMemSize( bigBuffer );
+        printf(" pagesize\n");
+        }
 
-	}
-	
-#endif	// _MACHTYPES_H_
+    }
+    
+#endif    // _MACHTYPES_H_
 
 
 // this should work on Linux
 #if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
 
-	int nprocs = get_nprocs();
-	if (nprocs != 0)
-		printf("Machine has %d CPUs\n", nprocs );
-	
-	int nprocs_conf = get_nprocs_conf();
-	if (nprocs_conf != 0)
-		printf("Machine has %d CPUs configured\n", nprocs_conf );
+    int nprocs = get_nprocs();
+    if (nprocs != 0)
+        printf("Machine has %d CPUs\n", nprocs );
+    
+    int nprocs_conf = get_nprocs_conf();
+    if (nprocs_conf != 0)
+        printf("Machine has %d CPUs configured\n", nprocs_conf );
 
-	struct sysinfo info;
-	int retval = sysinfo(&info);
-	if (retval == 0) {
-		long long temp = info.mem_unit * (long long)info.totalram;
-		printf("Machine has ");
-		printMemSize( temp );
-		printf(" of RAM\n");
-	}
+    struct sysinfo info;
+    int retval = sysinfo(&info);
+    if (retval == 0) {
+        long long temp = info.mem_unit * (long long)info.totalram;
+        printf("Machine has ");
+        printMemSize( temp );
+        printf(" of RAM\n");
+    }
 
-	int pageSize = getpagesize();
-	if (pageSize != 0) {
-		printf("Machine using ");
-		printMemSize( pageSize );
-		printf(" pagesize\n");
-	}
-	
+    int pageSize = getpagesize();
+    if (pageSize != 0) {
+        printf("Machine using ");
+        printMemSize( pageSize );
+        printf(" pagesize\n");
+    }
+    
 #endif
 
 
 #ifdef _WIN32
 
-	SYSTEM_INFO info;
-	GetSystemInfo(&info);
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
 
-	if (info.dwNumberOfProcessors != 0)
-		printf("Machine has %d CPUs\n", info.dwNumberOfProcessors );
-	
-	switch (info.wProcessorArchitecture) {
-		case PROCESSOR_ARCHITECTURE_AMD64:
-			printf("CPU_TYPE AMD64\n");
-			break;
-		case PROCESSOR_ARCHITECTURE_INTEL:
-			printf("CPU_TYPE x86\n");
-			break;
-		case PROCESSOR_ARCHITECTURE_IA64:
-			printf("CPU_TYPE IA64\n");
-			break;
-		case PROCESSOR_ARCHITECTURE_ARM:
-			printf("CPU_TYPE ARM32\n");
-			break;
-		case PROCESSOR_ARCHITECTURE_ARM64:
-			printf("CPU_TYPE ARM64\n");
-			break;
-		default:
-			printf("********\n" );
-			printf("Unknown Win CPU architecture, please update %s for your cpu\n", __FILE__ );
-			printf("********\n" );
-			break;
-	
-	}
+    if (info.dwNumberOfProcessors != 0)
+        printf("Machine has %d CPUs\n", info.dwNumberOfProcessors );
+    
+    switch (info.wProcessorArchitecture) {
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            printf("CPU_TYPE AMD64\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            printf("CPU_TYPE x86\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_IA64:
+            printf("CPU_TYPE IA64\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_ARM:
+            printf("CPU_TYPE ARM32\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_ARM64:
+            printf("CPU_TYPE ARM64\n");
+            break;
+        default:
+            printf("********\n" );
+            printf("Unknown Win CPU architecture, please update %s for your cpu\n", __FILE__ );
+            printf("********\n" );
+            break;
+    
+    }
 
-	if (info.dwPageSize != 0) {
-		printf("Machine using ");
-		printMemSize( info.dwPageSize  );
-		printf(" pagesize\n");
-		}
-	
+    if (info.dwPageSize != 0) {
+        printf("Machine using ");
+        printMemSize( info.dwPageSize  );
+        printf(" pagesize\n");
+        }
+    
 
-	unsigned long long totalRam = 0;	// in kilobytes
-	if (GetPhysicallyInstalledSystemMemory( &totalRam )) {		// This is failing on Windows 10 VM
-		totalRam *=1024;
-	} else {
-		MEMORYSTATUSEX gmem;
-		gmem.dwLength = sizeof(gmem);
-		if (GlobalMemoryStatusEx( &gmem )) {	// this works on Windows 10 VM
-			totalRam = gmem.ullTotalPhys;
-		}
-	}
-	
-	if (totalRam != 0) {
-		printf("Machine has ");
-		printMemSize( totalRam );
-		printf(" of RAM\n");
-	}
-	
-	
+    unsigned long long totalRam = 0;    // in kilobytes
+    if (GetPhysicallyInstalledSystemMemory( &totalRam )) {        // This is failing on Windows 10 VM
+        totalRam *=1024;
+    } else {
+        MEMORYSTATUSEX gmem;
+        gmem.dwLength = sizeof(gmem);
+        if (GlobalMemoryStatusEx( &gmem )) {    // this works on Windows 10 VM
+            totalRam = gmem.ullTotalPhys;
+        }
+    }
+    
+    if (totalRam != 0) {
+        printf("Machine has ");
+        printMemSize( totalRam );
+        printf(" of RAM\n");
+    }
+    
+    
 
 #endif
-	
+    
 }
 
 /******************************************************************************/
 
 void ReportOS()
 {
-	printf("##Operating System\n");
+    printf("##Operating System\n");
 
 
 // this should work on various flavors of Linux
 #if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
 
-	struct utsname buf;
-	int retval = uname( &buf );
-	if (retval == 0) {
-		if (buf.sysname[0] != 0)
-			printf("Kernel OS Name: %s\n", buf.sysname );
-		// nodename is useless
-		if (buf.release[0] != 0)
-			printf("Kernel OS Release: %s\n", buf.release );
-		if (buf.version[0] != 0)
-			printf("Kernel OS Version: %s\n", buf.version );
-		if (buf.machine[0] != 0)
-			printf("Kernel OS Machine: %s\n", buf.machine );
-	}
+    struct utsname buf;
+    int retval = uname( &buf );
+    if (retval == 0) {
+        if (buf.sysname[0] != 0)
+            printf("Kernel OS Name: %s\n", buf.sysname );
+        // nodename is useless
+        if (buf.release[0] != 0)
+            printf("Kernel OS Release: %s\n", buf.release );
+        if (buf.version[0] != 0)
+            printf("Kernel OS Version: %s\n", buf.version );
+        if (buf.machine[0] != 0)
+            printf("Kernel OS Machine: %s\n", buf.machine );
+    }
 
-#endif	// _LINUX_TYPES_H
+#endif    // _LINUX_TYPES_H
 
 
 #if defined(__ANDROID_API__)
-	printf("Android API version: %\n", __ANDROID_API__ );
+    printf("Android API version: %\n", __ANDROID_API__ );
 #endif
 
 
@@ -661,33 +661,33 @@ void ReportOS()
 #if defined(_MACHTYPES_H_)
 
 // see sysctl.h for the definitions
-	{
-	char string_buffer[1024];
-	long retval=0;
-	int mib[4];
-	size_t len;
-	
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_VERSION;
-	len = sizeof(string_buffer);
-	retval = sysctl(mib, 2, string_buffer, &len, NULL, 0);
-	if (retval == 0)
-		printf("Kernel OS Version: %s\n", string_buffer );
-	
-	}
-	
-#endif	// _MACHTYPES_H_
+    {
+    char string_buffer[1024];
+    long retval=0;
+    int mib[4];
+    size_t len;
+    
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_VERSION;
+    len = sizeof(string_buffer);
+    retval = sysctl(mib, 2, string_buffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Kernel OS Version: %s\n", string_buffer );
+    
+    }
+    
+#endif    // _MACHTYPES_H_
 
 
 #if _WIN32
-	OSVERSIONINFO verInfo;
-	verInfo.dwOSVersionInfoSize = sizeof(verInfo);
-	
-	if (GetVersionEx(&verInfo)) {
-		printf("Windows OS Version: %d.%d, build %d\n", verInfo.dwMajorVersion, verInfo.dwMinorVersion, verInfo.dwBuildNumber );
-		if (verInfo.szCSDVersion[0] != 0)
-			printf("Windows update %s\n", verInfo.szCSDVersion );
-	}
+    OSVERSIONINFO verInfo;
+    verInfo.dwOSVersionInfoSize = sizeof(verInfo);
+    
+    if (GetVersionEx(&verInfo)) {
+        printf("Windows OS Version: %d.%d, build %d\n", verInfo.dwMajorVersion, verInfo.dwMinorVersion, verInfo.dwBuildNumber );
+        if (verInfo.szCSDVersion[0] != 0)
+            printf("Windows update %s\n", verInfo.szCSDVersion );
+    }
 
 #endif
 
@@ -697,18 +697,18 @@ void ReportOS()
 
 int main (int argc, char *argv[])
 {
-	// this should only be changed when the reporting tags have changed in an incompatible way
-	const char version[] = "version 1.0";
+    // this should only be changed when the reporting tags have changed in an incompatible way
+    const char version[] = "version 1.0";
 
-	printf("##Start machine report %s\n", version );
-	VerifyTypeSizes();
-	ReportCompiler();
-	ReportCPUTarget();
-	ReportCPUPhysical();
-	ReportMachinePhysical();
-	ReportOS();
-	printf("##End machine report\n");
+    printf("##Start machine report %s\n", version );
+    VerifyTypeSizes();
+    ReportCompiler();
+    ReportCPUTarget();
+    ReportCPUPhysical();
+    ReportMachinePhysical();
+    ReportOS();
+    printf("##End machine report\n");
 
-	return 0;
+    return 0;
 }
 
