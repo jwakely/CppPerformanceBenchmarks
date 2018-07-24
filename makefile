@@ -58,7 +58,11 @@ byte_order \
 exceptions \
 exceptions_cpp \
 mathlib \
-shift
+shift \
+absolute_value \
+divide \
+loop_normalize \
+random_numbers
 
 
 
@@ -133,6 +137,10 @@ report:  $(BINARIES)
 	./exceptions_cpp >> $(REPORT_FILE)
 	./mathlib >> $(REPORT_FILE)
 	./shift >> $(REPORT_FILE)
+	./absolute_value >> $(REPORT_FILE)
+	./divide >> $(REPORT_FILE)
+	./loop_normalize >> $(REPORT_FILE)
+	./random_numbers >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 
