@@ -59,7 +59,11 @@ byte_order.exe \
 exceptions.exe \
 exceptions_cpp.exe \
 mathlib.exe \
-shift.exe
+shift.exe \
+absolute_value.exe \
+divide.exe \
+loop_normalize.exe \
+random_numbers.exe
 
 
 
@@ -120,6 +124,10 @@ report:  $(BINARIES)
 	.\exceptions_cpp >> $(REPORT_FILE)
 	.\mathlib >> $(REPORT_FILE)
 	.\shift >> $(REPORT_FILE)
+	.\absolute_value >> $(REPORT_FILE)
+	.\divide >> $(REPORT_FILE)
+	.\loop_normalize >> $(REPORT_FILE)
+	.\random_numbers >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 
