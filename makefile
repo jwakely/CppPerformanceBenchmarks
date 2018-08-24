@@ -45,6 +45,7 @@ DEPENDENCYFLAG = -M
 BINARIES = machine \
 stepanov_abstraction \
 stepanov_vector \
+stepanov_inherit \
 loop_unroll \
 simple_types_loop_invariant \
 functionobjects \
@@ -62,7 +63,11 @@ shift \
 absolute_value \
 divide \
 loop_normalize \
-random_numbers
+random_numbers \
+clock_time \
+inner_product \
+rotate_bits \
+rtti
 
 
 
@@ -123,6 +128,7 @@ report:  $(BINARIES)
 	./machine >> $(REPORT_FILE)
 	./stepanov_abstraction >> $(REPORT_FILE)
 	./stepanov_vector >> $(REPORT_FILE)
+	./stepanov_inherit >> $(REPORT_FILE)
 	./functionobjects >> $(REPORT_FILE)
 	./simple_types_constant_folding >> $(REPORT_FILE)
 	./simple_types_loop_invariant >> $(REPORT_FILE)
@@ -141,6 +147,10 @@ report:  $(BINARIES)
 	./divide >> $(REPORT_FILE)
 	./loop_normalize >> $(REPORT_FILE)
 	./random_numbers >> $(REPORT_FILE)
+	./clock_time >> $(REPORT_FILE)
+	./inner_product >> $(REPORT_FILE)
+	./rotate_bits >> $(REPORT_FILE)
+	./rtti >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

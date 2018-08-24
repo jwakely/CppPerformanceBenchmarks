@@ -46,6 +46,7 @@ CPPFLAGS = /nologo /Ox /TP /EHsc /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
 BINARIES = machine.exe \
 stepanov_abstraction.exe \
 stepanov_vector.exe \
+stepanov_inherit.exe \
 loop_unroll.exe \
 simple_types_loop_invariant.exe \
 functionobjects.exe \
@@ -63,7 +64,11 @@ shift.exe \
 absolute_value.exe \
 divide.exe \
 loop_normalize.exe \
-random_numbers.exe
+random_numbers.exe \
+clock_time.exe \
+inner_product.exe \
+rotate_bits.exe \
+rtti.exe
 
 
 
@@ -110,6 +115,7 @@ report:  $(BINARIES)
 	.\machine >> $(REPORT_FILE)
 	.\stepanov_abstraction >> $(REPORT_FILE)
 	.\stepanov_vector >> $(REPORT_FILE)
+	.\stepanov_inherit >> $(REPORT_FILE)
 	.\functionobjects >> $(REPORT_FILE)
 	.\simple_types_constant_folding >> $(REPORT_FILE)
 	.\simple_types_loop_invariant >> $(REPORT_FILE)
@@ -128,6 +134,10 @@ report:  $(BINARIES)
 	.\divide >> $(REPORT_FILE)
 	.\loop_normalize >> $(REPORT_FILE)
 	.\random_numbers >> $(REPORT_FILE)
+	.\clock_time >> $(REPORT_FILE)
+	.\inner_product >> $(REPORT_FILE)
+	.\rotate_bits >> $(REPORT_FILE)
+	.\rtti >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 
