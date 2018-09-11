@@ -24,6 +24,7 @@ Assumptions:
 
 
 NOTE - slowdowns seen in some virtual environments due to VM software poorly caching host time values.
+        ie: Windows10 on VirtualBox, Linux on AWS.
 NOTE - getdate crashes with an internal NULL pointer on Linux and MacOS, does not exist on Windows.
 
 
