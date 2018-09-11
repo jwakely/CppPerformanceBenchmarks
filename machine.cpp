@@ -32,6 +32,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 // this should be defined on Mach derived OSes (MacOS, FreeBSD, etc.)
 #if defined(_MACHTYPES_H_)
 #include <sys/sysctl.h>
+#include <strings.h>
 #endif
 
 // one of these should be defined on Linux derived OSes
@@ -39,6 +40,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
 #include <unistd.h>
+#include <strings.h>
 #endif
 
 #if _WIN32
@@ -544,6 +546,7 @@ void ReportMachinePhysical()
     if (nprocs_conf != 0)
         printf("Machine has %d CPUs configured\n", nprocs_conf );
 
+#if !defined (__sun)
     struct sysinfo info;
     int retval = sysinfo(&info);
     if (retval == 0) {
@@ -552,6 +555,14 @@ void ReportMachinePhysical()
         printMemSize( temp );
         printf(" of RAM\n");
     }
+#else
+    long pageCount = sysconf( _SC_PHYS_PAGES );
+    long pageSize2  = sysconf( _SC_PAGE_SIZE );
+    long long temp = (long long)pageCount * (long long)pageSize2;
+        printf("Machine has ");
+        printMemSize( temp );
+        printf(" of RAM\n");
+#endif
 
     int pageSize = getpagesize();
     if (pageSize != 0) {
@@ -633,11 +644,13 @@ void ReportOS()
 
 
 // this should work on various flavors of Linux
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__sun)
 
     struct utsname buf;
+    bzero( &buf, sizeof(buf) );
     int retval = uname( &buf );
-    if (retval == 0) {
+    // successful return is zero on some OSes, and 1 on Solaris
+    
         if (buf.sysname[0] != 0)
             printf("Kernel OS Name: %s\n", buf.sysname );
         // nodename is useless
@@ -647,7 +660,6 @@ void ReportOS()
             printf("Kernel OS Version: %s\n", buf.version );
         if (buf.machine[0] != 0)
             printf("Kernel OS Machine: %s\n", buf.machine );
-    }
 
 #endif    // _LINUX_TYPES_H
 

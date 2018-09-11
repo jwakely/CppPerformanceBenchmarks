@@ -6,18 +6,35 @@
 
 Goal: Examine performance of standard time and date functions.
 
-NOTE: many XML writers use the ASCII time conversion routines.
+    NOTE: Many XML writers use the ASCII time conversion routines.
+    NOTE: Benchmarks will make heavy use of timing functions.
+    NOTE: Web servers and many applications will use time functions for testing/invalidating caches.
 
 
 Assumptions:
 
-    1) Library/OS time and date functions should be be fast and have reasonable precision.
+    1) Library/OS time and date functions should be be fast.
+
+    2) Library/OS time and date functions should have reasonable precision.
  
-    2) Library time conversions to and from ASCII should be well optimized.
+    3) Library time conversions to and from ASCII should be well optimized.
+
+    4) STD library functions should be fastest and best precision available.
+
 
 
 NOTE - slowdowns seen in some virtual environments due to VM software poorly caching host time values.
 NOTE - getdate crashes with an internal NULL pointer on Linux and MacOS, does not exist on Windows.
+
+
+
+TODO - std::chrono
+    https://en.cppreference.com/w/cpp/chrono
+    http://www.cplusplus.com/reference/chrono/
+C++11
+    DONE - had to be careful to keep it portable though.
+C++17/20
+    Totally unsafe at this time.
 
 */
 
@@ -30,6 +47,7 @@ NOTE - getdate crashes with an internal NULL pointer on Linux and MacOS, does no
 #include <cstdlib>
 #include <cmath>
 #include <time.h>
+#include <chrono>
 #include "benchmark_results.h"
 #include "benchmark_timer.h"
 
@@ -176,7 +194,7 @@ void test_setitimer(int count, const char *label) {
 /******************************************************************************/
 /******************************************************************************/
 
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun)
 struct clock_sysinfo {
     static long do_shift() { struct sysinfo temp; sysinfo(&temp); return (temp.uptime); }
     static double seconds( double old ) { time_t now = do_shift();  return ( now - old ); }
@@ -357,6 +375,19 @@ template <clockid_t TYPE>
     };
 
 #endif  // defined(_MACHTYPES_H_)
+
+/******************************************************************************/
+
+// C++11 timers  (obviously the result of the obfuscated C++ contest)
+template< typename CLK >
+struct clock_std_chrono{
+    static double do_shift() { return seconds(0.0); }
+    static double seconds( double old ) {
+                    auto now = CLK::now();
+                    auto now_ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(now).time_since_epoch().count();
+                    double now_seconds = now_ns * 1.0e-9;
+                    return ( now_seconds - old ); }
+};
 
 /******************************************************************************/
 
@@ -789,21 +820,27 @@ int main(int argc, char** argv) {
     test_noarg_retval<clock_t, clock_getrusage >(SIZE,"getrusage");
     test_noarg_retval<clock_t, clock_times >(SIZE,"times");
 
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun)
     test_noarg_retval<long, clock_sysinfo >(SIZE,"sysinfo uptime");
 #endif
 
     test_noarg_retval<long, clock_clock_gettime<CLOCK_REALTIME> >(SIZE,"clock_gettime realtime");
     test_noarg_retval<long, clock_clock_gettime<CLOCK_MONOTONIC> >(SIZE,"clock_gettime monotonic");
+#if !defined(__sun)
     test_noarg_retval<long, clock_clock_gettime<CLOCK_MONOTONIC_RAW> >(SIZE,"clock_gettime monotonic_raw");
+#endif
     test_noarg_retval<long, clock_clock_gettime<CLOCK_PROCESS_CPUTIME_ID> >(SIZE,"clock_gettime process_cputime");
     test_noarg_retval<long, clock_clock_gettime<CLOCK_THREAD_CPUTIME_ID> >(SIZE,"clock_gettime thread_cputime");
 #endif
 
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun)
     test_noarg_retval<long, clock_clock_gettime<CLOCK_REALTIME_COARSE> >(SIZE,"clock_gettime realtime_coarse");
     test_noarg_retval<long, clock_clock_gettime<CLOCK_MONOTONIC_COARSE> >(SIZE,"clock_gettime monotonic_coarse");
     test_noarg_retval<long, clock_clock_gettime<CLOCK_BOOTTIME> >(SIZE,"clock_gettime boottime");
+#endif
+
+#if defined(__sun)
+    test_noarg_retval<long, clock_clock_gettime<CLOCK_HIGHRES> >(SIZE,"clock_gettime highres");
 #endif
 
 #if defined(_MACHTYPES_H_)
@@ -843,6 +880,12 @@ int main(int argc, char** argv) {
     test_noarg_retval<LONGLONG, clock_QueryPerformanceCounter >(SIZE,"QueryPerformanceCounter");
 #endif
 
+// C++11
+    test_noarg_retval<double, clock_std_chrono< std::chrono::system_clock > >(SIZE,"std::system_clock");
+    test_noarg_retval<double, clock_std_chrono< std::chrono::steady_clock > >(SIZE,"std::steady_clock");
+    test_noarg_retval<double, clock_std_chrono< std::chrono::high_resolution_clock > >(SIZE,"std::high_resolution_clock");    // usually an alias for another clock
+
+    
     summarize("clock_time", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
 
@@ -859,20 +902,26 @@ int main(int argc, char** argv) {
     test_timer_precision< clock_getrusage > ("getrusage");
     test_timer_precision< clock_times > ("times");
 
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun)
     test_timer_precision< clock_sysinfo > ("sysinfo uptime");
 #endif
 
     test_timer_precision< clock_clock_gettime<CLOCK_REALTIME> >("clock_gettime realtime");
     test_timer_precision< clock_clock_gettime<CLOCK_MONOTONIC> >("clock_gettime monotonic");
+#if !defined(__sun)
     test_timer_precision< clock_clock_gettime<CLOCK_MONOTONIC_RAW> >("clock_gettime monotonic_raw");
+#endif
     test_timer_precision< clock_clock_gettime<CLOCK_PROCESS_CPUTIME_ID> >("clock_gettime process_cputime");
     test_timer_precision< clock_clock_gettime<CLOCK_THREAD_CPUTIME_ID> >("clock_gettime thread_cputime");
 
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun)
     test_timer_precision< clock_clock_gettime<CLOCK_REALTIME_COARSE> >("clock_gettime realtime_coarse");
     test_timer_precision< clock_clock_gettime<CLOCK_MONOTONIC_COARSE> >("clock_gettime monotonic_coarse");
     test_timer_precision< clock_clock_gettime<CLOCK_BOOTTIME> >("clock_gettime boottime");
+#endif
+
+#if defined(__sun)
+    test_timer_precision< clock_clock_gettime<CLOCK_HIGHRES> >("clock_gettime highres");
 #endif
 
 #if defined(_MACHTYPES_H_)
@@ -906,6 +955,12 @@ int main(int argc, char** argv) {
     test_timer_precision< clock_GetSystemTimes >("GetSystemTimes");
     test_timer_precision< clock_QueryPerformanceCounter >("QueryPerformanceCounter");
 #endif
+
+// C++11
+    test_timer_precision< clock_std_chrono< std::chrono::system_clock > >("std::system_clock");
+    test_timer_precision< clock_std_chrono< std::chrono::steady_clock > >("std::steady_clock");
+    test_timer_precision< clock_std_chrono< std::chrono::high_resolution_clock > >("std::high_resolution_clock");
+
 
 
 
