@@ -67,7 +67,12 @@ random_numbers \
 clock_time \
 inner_product \
 rotate_bits \
-rtti
+rtti \
+locales \
+lookup_table \
+loop_induction \
+loop_removal \
+minmax
 
 
 
@@ -151,6 +156,11 @@ report:  $(BINARIES)
 	./inner_product >> $(REPORT_FILE)
 	./rotate_bits >> $(REPORT_FILE)
 	./rtti >> $(REPORT_FILE)
+	./locales >> $(REPORT_FILE)
+	./lookup_table >> $(REPORT_FILE)
+	./loop_induction >> $(REPORT_FILE)
+	./loop_removal >> $(REPORT_FILE)
+	./minmax >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 
