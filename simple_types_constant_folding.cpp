@@ -16,15 +16,15 @@ Assumptions:
         result = A * B            ==>        result = constant
         result = A / B            ==>        result = constant
         result = A % B            ==>        result = constant    for integer types
-        result = (A == B)         ==>        result = constant    for integer types
-        result = (A != B)         ==>        result = constant    for integer types
-        result = (A > B)          ==>        result = constant    for integer types
-        result = (A < B)          ==>        result = constant    for integer types
-        result = (A >= B)         ==>        result = constant    for integer types
-        result = (A <= B)         ==>        result = constant    for integer types
-        result = (A & B)          ==>        result = constant    for integer types
-        result = (A | B)          ==>        result = constant    for integer types
-        result = (A ^ B)          ==>        result = constant    for integer types
+        result = (A == B)        ==>        result = constant    for integer types
+        result = (A != B)        ==>        result = constant    for integer types
+        result = (A > B)        ==>        result = constant    for integer types
+        result = (A < B)        ==>        result = constant    for integer types
+        result = (A >= B)        ==>        result = constant    for integer types
+        result = (A <= B)        ==>        result = constant    for integer types
+        result = (A & B)        ==>        result = constant    for integer types
+        result = (A | B)        ==>        result = constant    for integer types
+        result = (A ^ B)        ==>        result = constant    for integer types
         
         result = input + A + B + C + D    ==>        result = input + (A+B+C+D)
         result = input - A - B - C - D    ==>        result = input - (A+B+C+D)
