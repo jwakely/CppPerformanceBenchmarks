@@ -11,7 +11,7 @@ Goal: Test compiler optimizations related to idioms for bit rotation
 Assumptions:
 
     1) The compiler will recognize common idioms for bit rotation and substitute optimal code.
-        On many processors, there are rotate instructions that should be used.
+        On most processors, there are rotate instructions that should be used.
 
 
 */
