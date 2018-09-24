@@ -16,7 +16,7 @@ Assumptions:
     2) The compiler will remove empty loops.
         aka: dead loop removal
 
-    3) The compiler will remove loops who's contents do not contribute to output / results.
+    3) The compiler will remove loops whose contents do not contribute to output / results.
         aka: dead loop removal after removing dead code from loop body
     
     4) The compiler will remove constant length loops when the result can be calculated directly.
@@ -28,7 +28,7 @@ Assumptions:
 NOTE - loops that cannot be entered are covered in dead_code_elimination.cpp
 
 NOTE - I found nested pointless loops worse than this in a physics simulation package.
-        Names removed to protect the innocent grad students maintaining said package.
+        Names have been removed to protect the innocent grad students maintaining said package.
 
 */
 
