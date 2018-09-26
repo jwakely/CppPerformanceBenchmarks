@@ -148,7 +148,7 @@ typename std::enable_if<std::is_integral<T>::value,void>::type
     test_variable4< T, custom_multiple_variable_or<T> > (data, SIZE, var1int1, var1int2, var1int3, var1int4,
         myTypeName + " multiple variable or");
     test_variable4< T, custom_multiple_variable_or2<T> > (data, SIZE, var1int1, var1int2, var1int3, var1int4,
-        myTypeName + " multiple variable or");
+        myTypeName + " multiple variable or2");
 
     test_variable1< T, custom_variable_xor<T> > (data, SIZE, var1int1, myTypeName + " variable xor");
     test_variable4< T, custom_multiple_variable_xor<T> > (data, SIZE, var1int1, var1int2, var1int3, var1int4,
