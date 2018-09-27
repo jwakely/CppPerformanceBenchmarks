@@ -9,29 +9,27 @@
         ISO/IEC TR 18015:2006(E) Appendix D.4
 
 
-Goals:
-    
-    Compare the performance of function pointers, functors, inline functors,
-        standard functors, and native comparison operators
+Goals: Compare the performance of function pointers, functors, inline functors,
+        standard functors, and native comparison operators.
 
-    Also compare the performance of qsort(), quicksort template, and std::sort
+    Also compare the performance of qsort(), quicksort template, and std::sort.
 
 
 Assumptions:
     
-    1) inline functors, standard functors and inlined native
-        comparisons will perform similarly
+    1) Inline functors, standard functors and inlined native
+        comparisons will perform similarly.
     
-    2) using functors is faster than using function pointers
+    2) Using functors is faster than using function pointers.
     
-    3) inline functors are as fast or faster than out of line functors
+    3) Inline functors are as fast or faster than out of line functors.
     
-    4) a template is at least as fast as a hard coded function of
-        the same algorithm, sometimes faster
+    4) A template is at least as fast as a hard coded function of
+        the same algorithm, sometimes faster.
     
-    5) std::sort is faster than qsort()
+    5) std::sort is faster than qsort().
     
-    6) std::sort is faster than a naive quicksort template using the same functor
+    6) std::sort is faster than a naive quicksort template using the same functor.
 
 
 Since qsort's comparison function must return int (less than 0, 0, greater than 0)
@@ -265,9 +263,7 @@ int main(int argc, char* argv[])
     // initialize the table to sort
     double * master_table = new double[tablesize];
     for( int n = 0; n < tablesize; ++n )
-        {
         master_table[n] = static_cast<double>( rand() );
-        }
     
     double * table = new double[tablesize]; // working copy
     

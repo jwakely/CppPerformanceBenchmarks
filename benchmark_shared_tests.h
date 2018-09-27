@@ -430,6 +430,13 @@ template <typename T>
 /******************************************************************************/
 
 template <typename T>
+    struct custom_add_multiple_variable2 {
+      static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + v1 + v2 + v3 + v4); }
+    };
+
+/******************************************************************************/
+
+template <typename T>
     struct custom_sub_multiple_variable {
       static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input - (v1 + v2 + v3 + v4)); }
     };
@@ -437,8 +444,22 @@ template <typename T>
 /******************************************************************************/
 
 template <typename T>
+    struct custom_sub_multiple_variable2 {
+      static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input - v1 - v2 - v3 - v4); }
+    };
+
+/******************************************************************************/
+
+template <typename T>
     struct custom_multiply_multiple_variable {
       static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input * (v1 * v2 * v3 * v4)); }
+    };
+
+/******************************************************************************/
+
+template <typename T>
+    struct custom_multiply_multiple_variable3 {
+      static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input * v1 * v2 * v3 * v4); }
     };
 
 /******************************************************************************/
@@ -477,6 +498,13 @@ template <typename T>
 /******************************************************************************/
 
 template <typename T>
+    struct custom_mixed_multiple_variable2 {
+      static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input + v1 - v2 * v3 / v4); }
+    };
+
+/******************************************************************************/
+
+template <typename T>
     struct custom_variable_and {
       static T do_shift(T input, T v1) { return (input & v1); }
     };
@@ -486,6 +514,13 @@ template <typename T>
 template <typename T>
     struct custom_multiple_variable_and {
       static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input & v1 & v2 & v3 & v4); }
+    };
+
+/******************************************************************************/
+
+template <typename T>
+    struct custom_multiple_variable_and2 {
+      static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input & (v1 & v2 & v3 & v4)); }
     };
 
 /******************************************************************************/
@@ -505,6 +540,13 @@ template <typename T>
 /******************************************************************************/
 
 template <typename T>
+    struct custom_multiple_variable_or2 {
+      static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input | (v1 | v2 | v3 | v4)); }
+    };
+
+/******************************************************************************/
+
+template <typename T>
     struct custom_variable_xor {
       static T do_shift(T input, T v1) { return (input ^ v1); }
     };
@@ -516,6 +558,12 @@ template <typename T>
       static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input ^ v1 ^ v2 ^ v3 ^ v4); }
     };
 
+/******************************************************************************/
+
+template <typename T>
+    struct custom_multiple_variable_xor2 {
+      static T do_shift(T input, T v1, T v2, T v3, T v4) { return (input ^ (v1 ^ v2 ^ v3 ^ v4)); }
+    };
 
 /******************************************************************************/
 

@@ -32,6 +32,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 // this should be defined on Mach derived OSes (MacOS, FreeBSD, etc.)
 #if defined(_MACHTYPES_H_)
 #include <sys/sysctl.h>
+#include <strings.h>
 #endif
 
 // one of these should be defined on Linux derived OSes
@@ -39,6 +40,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
 #include <unistd.h>
+#include <strings.h>
 #endif
 
 #if _WIN32
@@ -157,23 +159,52 @@ void ReportCPUTarget()
 
 #if _MANAGED
 
-    printf("Compiled for Microsoft managed code (CLR)\n" );
+    printf("Compiled for Microsoft managed code (CLR)\n");
 
-#elif defined(__ppc64__)
+#elif defined(__arm__) || defined(__ARMEL__) || defined(__ARMEB__) || defined(_M_ARM) || defined(__ARM_ARCH)
+    || defined(__thumb__) || defined(_M_ARMT)
+    || defined(__aarch64__)
+
+    #if defined(__aarch64__)
+        printf("Compiled for ARM 64bit\n");
+    #elif defined(__thumb__) || defined(_M_ARMT)
+        printf("Compiled for ARM Thumb\n");
+    #else
+        printf("Compiled for ARM\n");
+    #endif
+    
+    #if __ARM_FP
+        printf("Hardware floating point enabled\n");
+    #endif
+    
+    #if __ARM_NEON_FP
+        printf("Neon floating point enabled\n");
+    #endif
+
+#elif defined(__m68k__) || defined(__MC68K__)
+
+    printf("Compiled for m68k\n");
+
+#elif defined(_POWER)
+
+    printf("Compiled for Power Series\n");
+
+#elif defined(__ppc64__) || defined(__powerpc64__) || defined(__PPC64__) || defined(_ARCH_PPC64)
 
     printf("Compiled for PowerPC 64bit\n");
 
-#elif defined(__powerc) || defined(__ppc__) || defined(powerpc) || defined(ppc)
+#elif defined(__powerc) || defined(__ppc__) || defined(powerpc) || defined(ppc) || defined(_M_PPC)
+    || defined(__powerpc__)  || defined(__POWERPC__)  || defined(__PPC__)  || defined(_ARCH_PPC)
 
     printf("Compiled for PowerPC 32bit\n");
 
-#elif defined(_M_IA64)
+#elif defined(_M_IA64) || defined(__ia64__) || defined(__IA64__) || defined(__itanium__)
 
-    printf("Compiled for Intel Architecture 64\n" );
+    printf("Compiled for Itanium 64bit\n");
 
-#elif defined(_M_X64) || defined(__x86_64__)
+#elif defined(_M_X64) || defined(__x86_64__) || defined(__amd64__) || defined(__amd64) || defined(_M_AMD64_)
 
-    printf("Compiled for x86 64bit\n" );
+    printf("Compiled for x86 64bit\n");
 
 #elif defined(__i386__) || defined(i386) || defined(_X86_) || defined(_M_IX86)
 
@@ -181,30 +212,72 @@ void ReportCPUTarget()
 
     #if _M_IX86
     switch( _M_IX86) {
-    case 300:
-        printf("Compiled for 80386\n" );
-        break;
-    case 400:
-        printf("Compiled for 80486\n" );
-        break;
-    case 500:
-        printf("Compiled for Pentium\n" );
-        break;
-    case 600:
-        printf("Compiled for PentiumII\n" );
-        break;
-    default:    
-        printf("********\n" );
-        printf("Unknown x86 target, please update %s for your cpu\n", __FILE__ );
-        printf("********\n" );
-        break;
+        case 300:
+            printf("Compiled for 80386\n");
+            break;
+        case 400:
+            printf("Compiled for 80486\n");
+            break;
+        case 500:
+            printf("Compiled for Pentium\n");
+            break;
+        case 600:
+            printf("Compiled for PentiumII\n");
+            break;
+        default:
+            printf("********\n" );
+            printf("Unknown x86 target, please update %s for your cpu\n", __FILE__ );
+            printf("********\n" );
+            break;
     }
     #endif
 
-#elif defined(_ALPHA_)
+#elif defined(_ALPHA_) || defined(__alpha__) || defined(__alpha) || defined(_M_ALPHA)
 
-    printf("Compiled for Alpha\n" );
+    printf("Compiled for Alpha\n");
+
+#elif defined(__MIPS__) || defined(_MIPSEB) || defined (__MIPSEB) || defined(__MIPSEB__)
+        || defined(_MIPSEL) || defined (__MIPSEL) || defined(__MIPSEL__)
+
+    printf("Compiled for MIPS\n");
+
+#elif defined(_TMS320C2XX) || defined(__TMS320C2000__)
+
+    printf("Compiled for TMS320 2xxx\n");
+
+#elif defined(_TMS320C5X) || defined(__TMS320C55X__)
+
+    printf("Compiled for TMS320 5xxx\n");
+
+#elif defined(_TMS320C6X) || defined(__TMS320C6X__)
+
+    printf("Compiled for TMS320 6xxx\n");
+
+#elif defined(__TMS470__)
+
+    printf("Compiled for TMS470\n");
+
+#elif defined(__AVR_MEGA__) || defined(__AVR_ARCH__) || defined(__AVR) || defined(__AVR__)
+
+    printf("Compiled for AVR\n");
     
+    #if defined(__AVR_ARCH__)
+        printf("AVR arch = %d\n", __AVR_ARCH__);
+    #endif
+    
+    #if __AVR_HAVE_MUL__
+        printf("Hardware multiply enabled\n");
+    #endif
+
+#elif defined(__riscv) || defined(__riscv__)
+    || defined(__RISCVEL) || defined(__RISCVEL__) || defined(__RISCVEB) || defined(__RISCVEB__)
+
+    printf("Compiled for RISC V\n");
+    
+    #if __riscv_hard_float
+        printf("Hardware floating point enabled\n");
+    #endif
+
 #else
     printf("********\n" );
     printf("Unknown target CPU, please update %s for your cpu\n", __FILE__ );
@@ -544,6 +617,7 @@ void ReportMachinePhysical()
     if (nprocs_conf != 0)
         printf("Machine has %d CPUs configured\n", nprocs_conf );
 
+#if !defined (__sun)
     struct sysinfo info;
     int retval = sysinfo(&info);
     if (retval == 0) {
@@ -552,6 +626,14 @@ void ReportMachinePhysical()
         printMemSize( temp );
         printf(" of RAM\n");
     }
+#else
+    long pageCount = sysconf( _SC_PHYS_PAGES );
+    long pageSize2  = sysconf( _SC_PAGE_SIZE );
+    long long temp = (long long)pageCount * (long long)pageSize2;
+        printf("Machine has ");
+        printMemSize( temp );
+        printf(" of RAM\n");
+#endif
 
     int pageSize = getpagesize();
     if (pageSize != 0) {
@@ -618,8 +700,6 @@ void ReportMachinePhysical()
         printMemSize( totalRam );
         printf(" of RAM\n");
     }
-    
-    
 
 #endif
     
@@ -633,11 +713,13 @@ void ReportOS()
 
 
 // this should work on various flavors of Linux
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__sun)
 
     struct utsname buf;
+    bzero( &buf, sizeof(buf) );
     int retval = uname( &buf );
-    if (retval == 0) {
+    // successful return is zero on some OSes, and 1 on Solaris
+    
         if (buf.sysname[0] != 0)
             printf("Kernel OS Name: %s\n", buf.sysname );
         // nodename is useless
@@ -647,7 +729,6 @@ void ReportOS()
             printf("Kernel OS Version: %s\n", buf.version );
         if (buf.machine[0] != 0)
             printf("Kernel OS Machine: %s\n", buf.machine );
-    }
 
 #endif    // _LINUX_TYPES_H
 
@@ -712,3 +793,5 @@ int main (int argc, char *argv[])
     return 0;
 }
 
+/******************************************************************************/
+/******************************************************************************/

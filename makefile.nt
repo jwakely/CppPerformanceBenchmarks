@@ -68,7 +68,12 @@ random_numbers.exe \
 clock_time.exe \
 inner_product.exe \
 rotate_bits.exe \
-rtti.exe
+rtti.exe \
+locales.exe \
+lookup_table.exe \
+loop_induction.exe \
+loop_removal.exe \
+minmax.exe
 
 
 
@@ -112,32 +117,37 @@ report:  $(BINARIES)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##CFlags: $(CFLAGS)" >> $(REPORT_FILE)
 	@echo "##CPPFlags: $(CPPFLAGS)" >> $(REPORT_FILE)
-	.\machine >> $(REPORT_FILE)
-	.\stepanov_abstraction >> $(REPORT_FILE)
-	.\stepanov_vector >> $(REPORT_FILE)
-	.\stepanov_inherit >> $(REPORT_FILE)
-	.\functionobjects >> $(REPORT_FILE)
-	.\simple_types_constant_folding >> $(REPORT_FILE)
-	.\simple_types_loop_invariant >> $(REPORT_FILE)
-	.\loop_unroll >> $(REPORT_FILE)
-	.\atol >> $(REPORT_FILE)
-	.\ctype >> $(REPORT_FILE)
-	.\scalar_replacement_arrays >> $(REPORT_FILE)
-	.\scalar_replacement_array_reduction >> $(REPORT_FILE)
-	.\scalar_replacement_structs  >> $(REPORT_FILE)
-	.\byte_order >> $(REPORT_FILE)
-	.\exceptions >> $(REPORT_FILE)
-	.\exceptions_cpp >> $(REPORT_FILE)
-	.\mathlib >> $(REPORT_FILE)
-	.\shift >> $(REPORT_FILE)
-	.\absolute_value >> $(REPORT_FILE)
-	.\divide >> $(REPORT_FILE)
-	.\loop_normalize >> $(REPORT_FILE)
-	.\random_numbers >> $(REPORT_FILE)
-	.\clock_time >> $(REPORT_FILE)
-	.\inner_product >> $(REPORT_FILE)
-	.\rotate_bits >> $(REPORT_FILE)
-	.\rtti >> $(REPORT_FILE)
+	.\machine.exe >> $(REPORT_FILE)
+	.\stepanov_abstraction.exe >> $(REPORT_FILE)
+	.\stepanov_vector.exe >> $(REPORT_FILE)
+	.\stepanov_inherit.exe >> $(REPORT_FILE)
+	.\functionobjects.exe >> $(REPORT_FILE)
+	.\simple_types_constant_folding.exe >> $(REPORT_FILE)
+	.\simple_types_loop_invariant.exe >> $(REPORT_FILE)
+	.\loop_unroll.exe >> $(REPORT_FILE)
+	.\atol.exe >> $(REPORT_FILE)
+	.\ctype.exe >> $(REPORT_FILE)
+	.\scalar_replacement_arrays.exe >> $(REPORT_FILE)
+	.\scalar_replacement_array_reduction.exe >> $(REPORT_FILE)
+	.\scalar_replacement_structs.exe  >> $(REPORT_FILE)
+	.\byte_order.exe >> $(REPORT_FILE)
+	.\exceptions.exe >> $(REPORT_FILE)
+	.\exceptions_cpp.exe >> $(REPORT_FILE)
+	.\mathlib.exe >> $(REPORT_FILE)
+	.\shift.exe >> $(REPORT_FILE)
+	.\absolute_value.exe >> $(REPORT_FILE)
+	.\divide.exe >> $(REPORT_FILE)
+	.\loop_normalize.exe >> $(REPORT_FILE)
+	.\random_numbers.exe >> $(REPORT_FILE)
+	.\clock_time.exe >> $(REPORT_FILE)
+	.\inner_product.exe >> $(REPORT_FILE)
+	.\rotate_bits.exe >> $(REPORT_FILE)
+	.\rtti.exe >> $(REPORT_FILE)
+	.\locales.exe >> $(REPORT_FILE)
+	.\lookup_table.exe >> $(REPORT_FILE)
+	.\loop_induction.exe >> $(REPORT_FILE)
+	.\loop_removal.exe >> $(REPORT_FILE)
+	.\minmax.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 

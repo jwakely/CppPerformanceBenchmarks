@@ -6,16 +6,18 @@
 
 
 Goal: Test compiler optimizations related to scalar replacement of array references
-        as applied to reductions of arrays and matrices
+        as applied to reductions of arrays and matrices.
 
 Assumptions:
 
-    1) the compiler will convert array references to scalar calculations when necessary
+    1) The compiler will convert array references to scalar calculations when necessary
         input[0] += 2;        ==>        input[0] += 14;
         input[0] += 5;
         input[0] += 7;
     
-    2) the compiler will apply further optimization to the resulting values
+    2) The compiler will apply further optimization to the resulting values.
+        Loop combining, loop unrolling, loop reordering, etc.
+
 
 */
 

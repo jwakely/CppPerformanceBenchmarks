@@ -111,6 +111,7 @@ struct abs_functor1 {
 
 // Some compilers optimize this comparison better than the reverse
 // especially on floating point values
+// and some do just the reverse, optimizing it very poorly
 template <typename T>
 struct abs_functor8 {
     static inline T do_shift(T value)
@@ -136,6 +137,7 @@ struct abs_functor2 {
 
 // Some compilers optimize this comparison better than the reverse
 // especially on floating point values
+// and some do just the reverse, optimizing it very poorly
 template <typename T>
 struct abs_functor9 {
     static inline T do_shift(T value)

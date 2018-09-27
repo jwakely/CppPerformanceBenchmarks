@@ -15,6 +15,8 @@ Assumptions:
     2) The compiler will recognize common idioms for byte order reversal
         and substitute optimal code.
 
+    3) System byte order reversal functions will be fast.
+
 
 NOTE:  Some processors have special instructions for byte order reversal.
         They generally should be used if available.
@@ -26,6 +28,15 @@ NOTE:  Some processors have special instructions for byte order reversal.
 #include <cstdio>
 #include <ctime>
 #include <cstdlib>
+
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined (__sun)
+#include <endian.h>
+#endif
+
+#if !defined(_WIN32)
+#include <arpa/inet.h>
+#endif
+
 #include "benchmark_results.h"
 #include "benchmark_timer.h"
 
@@ -427,6 +438,77 @@ struct swab64_temp3 {
     }
 };
 
+/******************************************************************************/
+
+#if !defined(_WIN32)
+struct swab_htonl {
+    static uint16_t do_shift(uint16_t input) {
+        return htons(input);
+    }
+    static uint32_t do_shift(uint32_t input) {
+        return htonl(input);
+    }
+
+#if !(defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H))
+    static uint64_t do_shift(uint64_t input) {
+        return htonll(input);
+    }
+#endif
+
+};
+#endif
+
+/******************************************************************************/
+
+#if !defined(_WIN32)
+struct swab_ntohl {
+    static uint16_t do_shift(uint16_t input) {
+        return ntohs(input);
+    }
+    static uint32_t do_shift(uint32_t input) {
+        return ntohl(input);
+    }
+
+#if !(defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H))
+    static uint64_t do_shift(uint64_t input) {
+        return ntohll(input);
+    }
+#endif
+
+};
+#endif
+
+/******************************************************************************/
+
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined (__sun)
+struct swab_htobe {
+    static uint16_t do_shift(uint16_t input) {
+        return htobe16(input);
+    }
+    static uint32_t do_shift(uint32_t input) {
+        return htobe32(input);
+    }
+    static uint64_t do_shift(uint64_t input) {
+        return htobe64(input);
+    }
+};
+#endif
+
+/******************************************************************************/
+
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined (__sun)
+struct swab_htole {
+    static uint16_t do_shift(uint16_t input) {
+        return htole16(input);
+    }
+    static uint32_t do_shift(uint32_t input) {
+        return htole32(input);
+    }
+    static uint64_t do_shift(uint64_t input) {
+        return htole64(input);
+    }
+};
+#endif
 
 /******************************************************************************/
 /******************************************************************************/
@@ -539,7 +621,7 @@ int main(int argc, char** argv) {
     test_constant<uint16_t, swab16_temp1 >(data16unsigned, SIZE, "uint16_t byte order reverse8");
     test_constant<uint16_t, swab16_temp2 >(data16unsigned, SIZE, "uint16_t byte order reverse9");
     
-      summarize("Byte Order Reverse 16bit", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+    summarize("Byte Order Reverse 16bit", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
     
     
     test_constant<uint32_t, swab32 >(data32unsigned, SIZE, "uint32_t byte order reverse1");
@@ -554,7 +636,7 @@ int main(int argc, char** argv) {
     test_constant<uint64_t, swab32_temp2 >(data64unsigned, SIZE, "uint32_t byte order reverse10");
     test_constant<uint64_t, swab32_temp3 >(data64unsigned, SIZE, "uint32_t byte order reverse11");
     
-      summarize("Byte Order Reverse 32bit", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+    summarize("Byte Order Reverse 32bit", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
     
 
     test_constant<uint64_t, swab64 >(data64unsigned, SIZE, "uint64_t byte order reverse1");
@@ -569,10 +651,34 @@ int main(int argc, char** argv) {
     test_constant<uint64_t, swab64_temp2 >(data64unsigned, SIZE, "uint64_t byte order reverse10");
     test_constant<uint64_t, swab64_temp3 >(data64unsigned, SIZE, "uint64_t byte order reverse11");
     
-      summarize("Byte Order Reverse 64bit", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+    summarize("Byte Order Reverse 64bit", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
 
-    
+    // library/standard functions that do byte order swapping
+#if !defined(_WIN32)
+    test_constant<uint16_t, swab_htonl >(data16unsigned, SIZE, "uint16_t htons");
+    test_constant<uint16_t, swab_ntohl >(data16unsigned, SIZE, "uint16_t ntohs");
+    test_constant<uint32_t, swab_htonl >(data32unsigned, SIZE, "uint32_t htonl");
+    test_constant<uint32_t, swab_ntohl >(data32unsigned, SIZE, "uint32_t ntohl");
+
+#if !(defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H))
+    test_constant<uint64_t, swab_htonl >(data64unsigned, SIZE, "uint64_t htonll");
+    test_constant<uint64_t, swab_ntohl >(data64unsigned, SIZE, "uint64_t ntohll");
+#endif
+
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined (__sun)
+    test_constant<uint16_t, swab_htobe >(data16unsigned, SIZE, "uint16_t htobe16");
+    test_constant<uint16_t, swab_htole >(data16unsigned, SIZE, "uint16_t htole16");
+    test_constant<uint32_t, swab_htobe >(data32unsigned, SIZE, "uint32_t htobe32");
+    test_constant<uint32_t, swab_htole >(data32unsigned, SIZE, "uint32_t htole32");
+    test_constant<uint64_t, swab_htobe >(data64unsigned, SIZE, "uint64_t htobe64");
+    test_constant<uint64_t, swab_htole >(data64unsigned, SIZE, "uint64_t htole64");
+#endif
+
+    summarize("Byte Order library functions", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+#endif
+
+
     return 0;
 }
 

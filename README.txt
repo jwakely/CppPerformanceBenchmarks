@@ -50,6 +50,9 @@ Unix users should be able to use "make all" to build and "make report"
 to generate the report. If you wish to use a different compiler, you can
 set that from the make command line, or edit the makefile.
 
+Solaris users will need to use "gmake all" to build and "gmake report"
+to generate the report.
+
 Windows users will need to make sure that the VC environment variables
 are set for their shell (command prompt), then use "nmake -f makefile.nt all"
 and "nmake -f makefile.nt report" from within that shell.

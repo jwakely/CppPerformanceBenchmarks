@@ -33,9 +33,12 @@ std::string getTypeName<uint64_t>() { return std::string("uint64_t"); }
 template<>
 std::string getTypeName<int8_t>() { return std::string("int8_t"); }
 
+#if !defined (__sun)
 // char gets special treatment under some compilers, different from int8_t and uint8_t
+// except on Solaris
 template<>
 std::string getTypeName<char>() { return std::string("int8_t"); }
+#endif
 
 template<>
 std::string getTypeName<int16_t>() { return std::string("int16_t"); }

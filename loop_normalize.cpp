@@ -572,7 +572,7 @@ size_t count_half_while_index4( T* /* begin */, const int count ) {
 template <typename T>
 size_t count_half_while_index5( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -642,7 +642,7 @@ size_t count_half_while_index8( T* /* begin */, const int count ) {
 template <typename T>
 size_t count_half_do_uncountable( T* begin, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     size_t result = 0;
     T *i = begin;
@@ -659,7 +659,7 @@ size_t count_half_do_uncountable( T* begin, const int count ) {
 template <typename T>
 size_t count_half_do_opt( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     const int loop_limit = count / 2;
     size_t result = 0;
@@ -676,7 +676,7 @@ size_t count_half_do_opt( T* /* begin */, const int count ) {
 template <typename T>
 size_t count_half_do_pointer1( T* begin, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     T *end = begin + count;
     T *i, *j;
@@ -696,7 +696,7 @@ size_t count_half_do_pointer1( T* begin, const int count ) {
 template <typename T>
 size_t count_half_do_pointer2( T* begin, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     T *end = begin + count;
     T *i, *j;
@@ -716,7 +716,7 @@ size_t count_half_do_pointer2( T* begin, const int count ) {
 template <typename T>
 size_t count_half_do_pointer3( T* begin, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     T *end = begin + count;
     T *i, *j;
@@ -736,7 +736,7 @@ size_t count_half_do_pointer3( T* begin, const int count ) {
 template <typename T>
 size_t count_half_do_index1( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -755,7 +755,7 @@ size_t count_half_do_index1( T* /* begin */, const int count ) {
 template <typename T>
 size_t count_half_do_index2( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -774,7 +774,7 @@ size_t count_half_do_index2( T* /* begin */, const int count ) {
 template <typename T>
 size_t count_half_do_index3( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -793,7 +793,7 @@ size_t count_half_do_index3( T* /* begin */, const int count ) {
 template <typename T>
 size_t count_half_do_index4( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -812,7 +812,7 @@ size_t count_half_do_index4( T* /* begin */, const int count ) {
 template <typename T>
 size_t count_half_do_index5( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -833,7 +833,7 @@ size_t count_half_do_index5( T* /* begin */, const int count ) {
 template <typename T>
 size_t count_half_goto_uncountable( T* begin, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     size_t result = 0;
     T *i = begin;
@@ -853,7 +853,7 @@ loop_start:
 template <typename T>
 size_t count_half_goto_opt( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     const int loop_limit = count / 2;
     size_t result = 0;
@@ -874,7 +874,7 @@ loop_start:
 template <typename T>
 size_t count_half_goto_pointer1( T* begin, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     T *end = begin + count;
     T *i, *j;
@@ -897,7 +897,7 @@ loop_start:
 template <typename T>
 size_t count_half_goto_pointer2( T* begin, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     T *end = begin + count;
     T *i, *j;
@@ -920,7 +920,7 @@ loop_start:
 template <typename T>
 size_t count_half_goto_pointer3( T* begin, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     T *end = begin + count;
     T *i, *j;
@@ -943,7 +943,7 @@ loop_start:
 template <typename T>
 size_t count_half_goto_index1( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -965,7 +965,7 @@ loop_start:
 template <typename T>
 size_t count_half_goto_index2( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -987,7 +987,7 @@ loop_start:
 template <typename T>
 size_t count_half_goto_index3( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -1009,7 +1009,7 @@ loop_start:
 template <typename T>
 size_t count_half_goto_index4( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -1031,7 +1031,7 @@ loop_start:
 template <typename T>
 size_t count_half_goto_index5( T* /* begin */, const int count ) {
     
-    if (count == 0)
+    if (count <= 0)
         return 0;
     int i, j;
     size_t result = 0;
@@ -1073,7 +1073,6 @@ void test_count_half(Iterator first, const int count, Counter count_func, const 
     
     // need the labels to remain valid until we print the summary
     gLabels.push_back( label );
-
     record_result( timer(), gLabels.back().c_str() );
 
 }
