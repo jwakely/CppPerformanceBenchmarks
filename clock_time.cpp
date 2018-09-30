@@ -53,7 +53,7 @@ C++17/20
 #include "benchmark_timer.h"
 
 // one of these should be defined on Linux derived OSes
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__FreeBSD__)
 #include <sys/time.h>
 #include <sys/times.h>
 #include <unistd.h>
@@ -815,26 +815,26 @@ int main(int argc, char** argv) {
 
     test_noarg_retval<clock_t, clock_clock >(SIZE,"clock");
     test_noarg_retval<time_t, clock_time >(SIZE,"time");
-    
+
 #ifndef _WIN32
     test_noarg_retval<suseconds_t, clock_gettimeofday >(SIZE,"gettimeofday");
     test_noarg_retval<clock_t, clock_getrusage >(SIZE,"getrusage");
     test_noarg_retval<clock_t, clock_times >(SIZE,"times");
 
-#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun) && !defined(__FreeBSD__)
     test_noarg_retval<long, clock_sysinfo >(SIZE,"sysinfo uptime");
 #endif
 
     test_noarg_retval<long, clock_clock_gettime<CLOCK_REALTIME> >(SIZE,"clock_gettime realtime");
     test_noarg_retval<long, clock_clock_gettime<CLOCK_MONOTONIC> >(SIZE,"clock_gettime monotonic");
-#if !defined(__sun)
+#if !defined(__sun) && !defined(__FreeBSD__)
     test_noarg_retval<long, clock_clock_gettime<CLOCK_MONOTONIC_RAW> >(SIZE,"clock_gettime monotonic_raw");
 #endif
     test_noarg_retval<long, clock_clock_gettime<CLOCK_PROCESS_CPUTIME_ID> >(SIZE,"clock_gettime process_cputime");
     test_noarg_retval<long, clock_clock_gettime<CLOCK_THREAD_CPUTIME_ID> >(SIZE,"clock_gettime thread_cputime");
-#endif
+#endif  // not _WIN32
 
-#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun) && !defined(__FreeBSD__)
     test_noarg_retval<long, clock_clock_gettime<CLOCK_REALTIME_COARSE> >(SIZE,"clock_gettime realtime_coarse");
     test_noarg_retval<long, clock_clock_gettime<CLOCK_MONOTONIC_COARSE> >(SIZE,"clock_gettime monotonic_coarse");
     test_noarg_retval<long, clock_clock_gettime<CLOCK_BOOTTIME> >(SIZE,"clock_gettime boottime");
@@ -903,19 +903,19 @@ int main(int argc, char** argv) {
     test_timer_precision< clock_getrusage > ("getrusage");
     test_timer_precision< clock_times > ("times");
 
-#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun) && !defined(__FreeBSD__)
     test_timer_precision< clock_sysinfo > ("sysinfo uptime");
 #endif
 
     test_timer_precision< clock_clock_gettime<CLOCK_REALTIME> >("clock_gettime realtime");
     test_timer_precision< clock_clock_gettime<CLOCK_MONOTONIC> >("clock_gettime monotonic");
-#if !defined(__sun)
+#if !defined(__sun) && !defined(__FreeBSD__)
     test_timer_precision< clock_clock_gettime<CLOCK_MONOTONIC_RAW> >("clock_gettime monotonic_raw");
 #endif
     test_timer_precision< clock_clock_gettime<CLOCK_PROCESS_CPUTIME_ID> >("clock_gettime process_cputime");
     test_timer_precision< clock_clock_gettime<CLOCK_THREAD_CPUTIME_ID> >("clock_gettime thread_cputime");
 
-#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined(__sun) && !defined(__FreeBSD__)
     test_timer_precision< clock_clock_gettime<CLOCK_REALTIME_COARSE> >("clock_gettime realtime_coarse");
     test_timer_precision< clock_clock_gettime<CLOCK_MONOTONIC_COARSE> >("clock_gettime monotonic_coarse");
     test_timer_precision< clock_clock_gettime<CLOCK_BOOTTIME> >("clock_gettime boottime");

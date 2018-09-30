@@ -25,6 +25,7 @@ Assumptions:
 
 */
 
+#include "benchmark_stdint.hpp"
 #include <cstddef>
 #include <cstdio>
 #include <ctime>

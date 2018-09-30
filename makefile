@@ -19,13 +19,13 @@
 INCLUDE = -I.
 
 # GCC
-CC = /usr/bin/gcc
-CXX = /usr/bin/g++
+CC = gcc
+CXX = g++
 
 
 # GCC 8.1
-#CC = /usr/bin/gcc-8
-#CXX = /usr/bin/g++-8
+#CC = gcc-8
+#CXX = g++-8
 
 
 
@@ -112,10 +112,10 @@ dependencies :   $(SOURCES)
 #
 
 exceptions : exceptions.c
-	$(CC) $(CFLAGS) -o $@ $< $(CLIBS)
+	$(CC) $(CFLAGS) -o $@ exceptions.c $(CLIBS)
 
 exceptions_cpp : exceptions.c
-	$(CXX) $(CPPFLAGS) -D TEST_WITH_EXCEPTIONS=1 -o $@ $< $(CPPLIBS)
+	$(CXX) $(CPPFLAGS) -D TEST_WITH_EXCEPTIONS=1 -o $@ exceptions.c $(CPPLIBS)
 
 
 

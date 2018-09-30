@@ -36,9 +36,11 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #endif
 
 // one of these should be defined on Linux derived OSes
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__FreeBSD__)
 #include <sys/utsname.h>
+#if !defined(__FreeBSD__)
 #include <sys/sysinfo.h>
+#endif
 #include <unistd.h>
 #include <strings.h>
 #endif
@@ -321,7 +323,7 @@ void ReportCPUPhysical()
 
 
 
-// this should work for any Mach based OS (MacOS, FreeBSD, etc.)
+// this should work for any Mach based OS (MacOS, etc.)
 #if defined(_MACHTYPES_H_)
 
 // NOTE - use command line "sysctl hw"
@@ -559,7 +561,7 @@ void ReportMachinePhysical()
     printf("##Machine\n");
     
 
-// this should work for any Mach based OS (MacOS, FreeBSD, etc.)
+// this should work for any Mach based OS (MacOS, etc.)
 #if defined(_MACHTYPES_H_)
 
 // see sysctl.h for the definitions
@@ -616,8 +618,13 @@ void ReportMachinePhysical()
     int nprocs_conf = get_nprocs_conf();
     if (nprocs_conf != 0)
         printf("Machine has %d CPUs configured\n", nprocs_conf );
+    
+#endif
 
-#if !defined (__sun)
+// Linux, Solaris, FreeBSD
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__FreeBSD__)
+
+#if !defined (__sun) && !defined(__FreeBSD__)
     struct sysinfo info;
     int retval = sysinfo(&info);
     if (retval == 0) {
@@ -641,7 +648,6 @@ void ReportMachinePhysical()
         printMemSize( pageSize );
         printf(" pagesize\n");
     }
-    
 #endif
 
 
@@ -713,7 +719,7 @@ void ReportOS()
 
 
 // this should work on various flavors of Linux
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__sun)
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__sun) || defined(__FreeBSD__)
 
     struct utsname buf;
     bzero( &buf, sizeof(buf) );
