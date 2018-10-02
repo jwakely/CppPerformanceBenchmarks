@@ -28,6 +28,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #include <sys/types.h>
 #include "benchmark_stdint.hpp"
 
+// TODO - ccox - clean up the macro tests, separate into semi-sane groups
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #define isBSD   1
 #endif
