@@ -63,7 +63,9 @@ C++17/20
 #include <sys/times.h>
 #include <unistd.h>
 #include <sys/utsname.h>
+#if !defined(isBSD)
 #include <sys/sysinfo.h>
+#endif
 #include <sys/resource.h>
 #endif
 
