@@ -33,8 +33,8 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #define isBSD   1
 #endif
 
-// this should be defined on Mach derived OSes (MacOS, FreeBSD, etc.)
-// FreeBSD and NetBSD have very different versions of sysctlbyname strings
+// This should be defined on Mach derived OSes (MacOS, FreeBSD, etc.)
+// TODO - FreeBSD/NetBSD/OpenBSD have very different versions of sysctlbyname strings
 #if defined(_MACHTYPES_H_)
 #include <sys/sysctl.h>
 #include <strings.h>
@@ -523,6 +523,50 @@ void ReportCPUPhysical()
 #endif    // _MACHTYPES_H_
 
 
+
+// BSD
+#if defined(isBSD)
+
+// NOTE - use command line "sysctl hw"
+// to get a list of known strings
+
+// see sysctl.h for the definitions
+    {
+    long returnBuffer=0, retval=0;
+    //long long bigBuffer = 0;
+    char textBuffer[1024];
+    size_t len;
+    
+    len = 4;
+    retval = sysctlbyname("hw.ncpu", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("BSD CPU count %ld\n", returnBuffer );
+    
+    len = 1024;
+    retval = sysctlbyname("hw.machine", textBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("BSD machine type %s\n", textBuffer );
+    
+    len = 1024;
+    retval = sysctlbyname("hw.model", textBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("BSD model %s\n", textBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("hw.clockrate", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("BSD CPU clockrate %ld\n", returnBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("hw.floatingpoint", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("BSD CPU has floating point %ld\n", returnBuffer );
+    
+    }
+
+#endif
+
+
 // TODO - Linux
 
 
@@ -567,6 +611,7 @@ void ReportMachinePhysical()
     
 
 // this should work for any Mach based OS (MacOS, etc.)
+// and BSD for most entries - but there are alternate APIs used below for BSD
 #if defined(_MACHTYPES_H_)
 
 // see sysctl.h for the definitions
@@ -626,6 +671,7 @@ void ReportMachinePhysical()
     
 #endif
 
+
 // Linux, Solaris, FreeBSD
 #if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || isBSD
 
@@ -656,6 +702,7 @@ void ReportMachinePhysical()
 #endif
 
 
+// Windows
 #ifdef _WIN32
 
     SYSTEM_INFO info;
