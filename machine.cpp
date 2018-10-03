@@ -28,17 +28,22 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #include <sys/types.h>
 #include "benchmark_stdint.hpp"
 
+// TODO - ccox - clean up the macro tests, separate into semi-sane groups
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#define isBSD   1
+#endif
 
 // this should be defined on Mach derived OSes (MacOS, FreeBSD, etc.)
+// FreeBSD and NetBSD have very different versions of sysctlbyname strings
 #if defined(_MACHTYPES_H_)
 #include <sys/sysctl.h>
 #include <strings.h>
 #endif
 
 // one of these should be defined on Linux derived OSes
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__FreeBSD__)
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || isBSD
 #include <sys/utsname.h>
-#if !defined(__FreeBSD__)
+#if !defined(isBSD)
 #include <sys/sysinfo.h>
 #endif
 #include <unistd.h>
@@ -622,9 +627,9 @@ void ReportMachinePhysical()
 #endif
 
 // Linux, Solaris, FreeBSD
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__FreeBSD__)
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || isBSD
 
-#if !defined (__sun) && !defined(__FreeBSD__)
+#if !defined (__sun) && !defined(isBSD)
     struct sysinfo info;
     int retval = sysinfo(&info);
     if (retval == 0) {
@@ -719,7 +724,7 @@ void ReportOS()
 
 
 // this should work on various flavors of Linux
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__sun) || defined(__FreeBSD__)
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__sun) || isBSD
 
     struct utsname buf;
     bzero( &buf, sizeof(buf) );

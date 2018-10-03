@@ -61,10 +61,10 @@ std::deque<std::string> gLabels;
 
 // our global arrays of numbers to be operated upon
 
-static int16_t data16[SIZE];
-static int32_t data32[SIZE];
-static uint64_t data64[SIZE];
-static double dataDouble[SIZE];
+int16_t data16[SIZE];
+int32_t data32[SIZE];
+uint64_t data64[SIZE];
+double dataDouble[SIZE];
 
 /******************************************************************************/
 
