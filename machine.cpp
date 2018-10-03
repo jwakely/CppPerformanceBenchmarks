@@ -28,22 +28,28 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #include <sys/types.h>
 #include "benchmark_stdint.hpp"
 
-// TODO - ccox - clean up the macro tests, separate into semi-sane groups
+
+// various semi-current flavors of BSD
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #define isBSD   1
 #endif
 
-// This should be defined on Mach derived OSes (MacOS, FreeBSD, etc.)
-// TODO - FreeBSD/NetBSD/OpenBSD have very different versions of sysctlbyname strings
-#if defined(_MACHTYPES_H_) || defined(isBSD)
+// one of these should be defined on Linux derived OSes
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#define isLinux 1
+#endif
+
+
+// This should be defined on Mach derived OSes (MacOS, etc.)
+// FreeBSD/NetBSD/OpenBSD also have sysctlbyname, with different strings
+#if defined(_MACHTYPES_H_) || isBSD
 #include <sys/sysctl.h>
 #include <strings.h>
 #endif
 
-// one of these should be defined on Linux derived OSes
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || isBSD
+#if isLinux || isBSD
 #include <sys/utsname.h>
-#if !defined(isBSD)
+#if !isBSD
 #include <sys/sysinfo.h>
 #endif
 #include <unistd.h>
@@ -168,8 +174,9 @@ void ReportCPUTarget()
 
     printf("Compiled for Microsoft managed code (CLR)\n");
 
-#elif defined(__arm__) || defined(__ARMEL__) || defined(__ARMEB__) || defined(_M_ARM) || defined(__ARM_ARCH)
-    || defined(__thumb__) || defined(_M_ARMT)
+#elif defined(__arm__) || defined(__ARMEL__) || defined(__ARMEB__) \
+    || defined(_M_ARM) || defined(__ARM_ARCH) \
+    || defined(__thumb__) || defined(_M_ARMT) \
     || defined(__aarch64__)
 
     #if defined(__aarch64__)
@@ -185,7 +192,7 @@ void ReportCPUTarget()
     #endif
     
     #if __ARM_NEON_FP
-        printf("Neon floating point enabled\n");
+        printf("ARRM Neon floating point enabled\n");
     #endif
 
 #elif defined(__m68k__) || defined(__MC68K__)
@@ -200,16 +207,20 @@ void ReportCPUTarget()
 
     printf("Compiled for PowerPC 64bit\n");
 
-#elif defined(__powerc) || defined(__ppc__) || defined(powerpc) || defined(ppc) || defined(_M_PPC)
-    || defined(__powerpc__)  || defined(__POWERPC__)  || defined(__PPC__)  || defined(_ARCH_PPC)
+#elif defined(__powerc) || defined(__ppc__) || defined(powerpc) \
+    || defined(ppc) || defined(_M_PPC) \
+    || defined(__powerpc__)  || defined(__POWERPC__) \
+    || defined(__PPC__)  || defined(_ARCH_PPC)
 
     printf("Compiled for PowerPC 32bit\n");
 
-#elif defined(_M_IA64) || defined(__ia64__) || defined(__IA64__) || defined(__itanium__)
+#elif defined(_M_IA64) || defined(__ia64__) \
+    || defined(__IA64__) || defined(__itanium__)
 
     printf("Compiled for Itanium 64bit\n");
 
-#elif defined(_M_X64) || defined(__x86_64__) || defined(__amd64__) || defined(__amd64) || defined(_M_AMD64_)
+#elif defined(_M_X64) || defined(__x86_64__) || defined(__amd64__) \
+    || defined(__amd64) || defined(_M_AMD64_)
 
     printf("Compiled for x86 64bit\n");
 
@@ -243,7 +254,7 @@ void ReportCPUTarget()
 
     printf("Compiled for Alpha\n");
 
-#elif defined(__MIPS__) || defined(_MIPSEB) || defined (__MIPSEB) || defined(__MIPSEB__)
+#elif defined(__MIPS__) || defined(_MIPSEB) || defined (__MIPSEB) || defined(__MIPSEB__) \
         || defined(_MIPSEL) || defined (__MIPSEL) || defined(__MIPSEL__)
 
     printf("Compiled for MIPS\n");
@@ -276,8 +287,9 @@ void ReportCPUTarget()
         printf("Hardware multiply enabled\n");
     #endif
 
-#elif defined(__riscv) || defined(__riscv__)
-    || defined(__RISCVEL) || defined(__RISCVEL__) || defined(__RISCVEB) || defined(__RISCVEB__)
+#elif defined(__riscv) || defined(__riscv__) \
+    || defined(__RISCVEL) || defined(__RISCVEL__) \
+    || defined(__RISCVEB) || defined(__RISCVEB__)
 
     printf("Compiled for RISC V\n");
     
@@ -564,7 +576,7 @@ void ReportCPUPhysical()
     
     }
 
-#endif
+#endif  // isBSD
 
 
 // TODO - Linux
@@ -573,7 +585,7 @@ void ReportCPUPhysical()
 // TODO - Windows
 
     
-    // useful information, and not so dependent
+    // useful information, and not so dependent on the OS
     ReportEndian();
 }
 
@@ -659,7 +671,7 @@ void ReportMachinePhysical()
 
 
 // this should work on Linux
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#if isLinux
 
     int nprocs = get_nprocs();
     if (nprocs != 0)
@@ -672,8 +684,8 @@ void ReportMachinePhysical()
 #endif
 
 
-// Linux, Solaris, FreeBSD
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || isBSD
+// Linux, Solaris, *BSD
+#if isLinux || isBSD
 
 #if !defined (__sun) && !defined(isBSD)
     struct sysinfo info;
@@ -759,7 +771,7 @@ void ReportMachinePhysical()
         printf(" of RAM\n");
     }
 
-#endif
+#endif  // WIN32
     
 }
 
@@ -770,8 +782,8 @@ void ReportOS()
     printf("##Operating System\n");
 
 
-// this should work on various flavors of Linux
-#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(__sun) || isBSD
+// this should work on various flavors of Linux and BSD
+#if isLinux || defined(__sun) || isBSD
 
     struct utsname buf;
     bzero( &buf, sizeof(buf) );
@@ -788,7 +800,7 @@ void ReportOS()
         if (buf.machine[0] != 0)
             printf("Kernel OS Machine: %s\n", buf.machine );
 
-#endif    // _LINUX_TYPES_H
+#endif
 
 
 #if defined(__ANDROID_API__)
@@ -796,7 +808,7 @@ void ReportOS()
 #endif
 
 
-// this should work for any Mach based OS (MacOS, FreeBSD, etc.)
+// this should work for any Mach based OS (MacOS, etc.)
 #if defined(_MACHTYPES_H_)
 
 // see sysctl.h for the definitions
