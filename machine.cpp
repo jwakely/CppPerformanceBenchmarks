@@ -41,7 +41,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 
 
 // This should be defined on Mach derived OSes (MacOS, etc.)
-// FreeBSD/NetBSD/OpenBSD also have sysctlbyname, with different strings
+// FreeBSD/NetBSD/OpenBSD also have sysctl, with different strings
 #if defined(_MACHTYPES_H_) || isBSD
 #include <sys/sysctl.h>
 #include <strings.h>
@@ -537,7 +537,8 @@ void ReportCPUPhysical()
 
 
 // BSD
-#if defined(isBSD)
+#if defined(isBSD) && !defined (__OpenBSD__)
+//OpenBSD apparently only has sysctl, not sysctlbyname
 
 // NOTE - use command line "sysctl hw"
 // to get a list of known strings
