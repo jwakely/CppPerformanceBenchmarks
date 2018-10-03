@@ -35,7 +35,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 
 // This should be defined on Mach derived OSes (MacOS, FreeBSD, etc.)
 // TODO - FreeBSD/NetBSD/OpenBSD have very different versions of sysctlbyname strings
-#if defined(_MACHTYPES_H_)
+#if defined(_MACHTYPES_H_) || defined(isBSD)
 #include <sys/sysctl.h>
 #include <strings.h>
 #endif
