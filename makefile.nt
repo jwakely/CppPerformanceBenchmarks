@@ -73,7 +73,11 @@ locales.exe \
 lookup_table.exe \
 loop_induction.exe \
 loop_removal.exe \
-minmax.exe
+minmax.exe \
+bitarrays.exe \
+histogram.exe \
+iostreams.exe \
+loop_fusion.exe
 
 
 
@@ -148,6 +152,10 @@ report:  $(BINARIES)
 	.\loop_induction.exe >> $(REPORT_FILE)
 	.\loop_removal.exe >> $(REPORT_FILE)
 	.\minmax.exe >> $(REPORT_FILE)
+	.\bitarrays.exe >> $(REPORT_FILE)
+	.\histogram.exe >> $(REPORT_FILE)
+	.\iostreams.exe >> $(REPORT_FILE)
+	.\loop_fusion.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 
