@@ -33,7 +33,7 @@ TODO - std::chrono
     https://en.cppreference.com/w/cpp/chrono
     http://www.cplusplus.com/reference/chrono/
 C++11
-    DONE - had to be careful to keep it portable though.
+    DONE - had to be careful to keep it portable though, some compilers are fragile (bug reports filed).
 C++17/20
     Totally unsafe at this time.
 
@@ -386,9 +386,11 @@ template <clockid_t TYPE>
 
 /******************************************************************************/
 
-// C++11 timers  (obviously the result of the obfuscated C++ contest)
+// C++11 timers  (std::chrono is obviously the result of the obfuscated C++ contest)
+// Yes, this could be expressed more cleanly - but I had to go with what worked on the most compilers at the time I wrote it.
+// Compiler vendors with problems are working on the issues - and once those are fixed, I will revisit this code.
 template< typename CLK >
-struct clock_std_chrono{
+struct clock_std_chrono {
     static double do_shift() { return seconds(0.0); }
     static double seconds( double old ) {
                     auto now = CLK::now();
