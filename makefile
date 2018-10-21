@@ -19,8 +19,8 @@
 INCLUDE = -I.
 
 # GCC
-CC = gcc
-CXX = g++
+#CC = gcc
+#CXX = g++
 
 
 # GCC 8.1
