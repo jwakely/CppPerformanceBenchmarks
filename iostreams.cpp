@@ -41,6 +41,16 @@ using namespace std;
 #include <errno.h>
 #include <fcntl.h>
 
+// various semi-current flavors of BSD
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#define isBSD   1
+#endif
+
+#if isBSD
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
 #ifndef _WIN32
 #include <unistd.h>
 #endif
