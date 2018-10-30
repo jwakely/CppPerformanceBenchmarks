@@ -35,8 +35,14 @@ NOTE: strtod and strtol ignore locales, and fail tests on any locale that uses a
 #include <clocale>
 #include <sstream>
 
+
+// TODO - ccox - clean up the macro tests, separate into semi-sane groups
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#define isBSD   1
+#endif
+
 // no longer available on Linux, not available on Windows
-#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !defined(_WIN32)
+#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !defined(_WIN32) && !defined(isBSD)
 #include <xlocale.h>
 #endif
 
@@ -328,7 +334,7 @@ void test_locale_basics()
     
 
 // not available on Linux or Windows
-#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !defined(_WIN32)
+#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !defined(_WIN32) && !defined(isBSD)
     locale_t thisLocale = duplocale( LC_GLOBAL_LOCALE );    // Linux crashes without the duplicate
     start_timer();
     for (i = 0; i != iterations; ++i)
@@ -367,7 +373,7 @@ void test_locale_streams (const char *locale_to_test, const char *label = NULL)
     setlocale( LC_ALL, locale_to_test );
 
 // not available on Windows
-#if !defined(_WIN32)
+#if !defined(_WIN32) && !defined(isBSD)
     locale_t thisLocale = duplocale( LC_GLOBAL_LOCALE );    // Linux crashes without the duplicate
 #endif
     
@@ -470,7 +476,7 @@ void test_locale_streams (const char *locale_to_test, const char *label = NULL)
 
 
 // not available on Linux or Windows
-#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !defined(_WIN32)
+#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !defined(_WIN32) && !defined(isBSD)
     std::string readAtollLabel( "stringstream read atol_l " );
     readAtollLabel += label;
     start_timer();
@@ -509,7 +515,7 @@ void test_locale_streams (const char *locale_to_test, const char *label = NULL)
 
 
 // not available on Windows or Solaris
-#if !defined(_WIN32) && !defined(__sun)
+#if !defined(_WIN32) && !defined(__sun) && !defined(isBSD)
     std::string readStrtodlLabel( "stringstream read strtod_l " );
     readStrtodlLabel += label;
     start_timer();
@@ -531,7 +537,7 @@ void test_locale_streams (const char *locale_to_test, const char *label = NULL)
 
 
     // reset locales, so our output doesn't change decimal characters :-)
-#if !defined(_WIN32)
+#if !defined(_WIN32) && !defined(isBSD)
     (void)freelocale(thisLocale);
 #endif
 

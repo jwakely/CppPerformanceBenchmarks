@@ -29,6 +29,11 @@ NOTE:  Some processors have special instructions for byte order reversal.
 #include <ctime>
 #include <cstdlib>
 
+// TODO - ccox - clean up the macro tests, separate into semi-sane groups
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#define isBSD   1
+#endif
+
 #if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined (__sun)
 #include <endian.h>
 #endif
@@ -449,7 +454,7 @@ struct swab_htonl {
         return htonl(input);
     }
 
-#if !(defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H))
+#if !(defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(isBSD))
     static uint64_t do_shift(uint64_t input) {
         return htonll(input);
     }
@@ -469,7 +474,7 @@ struct swab_ntohl {
         return ntohl(input);
     }
 
-#if !(defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H))
+#if !(defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(isBSD))
     static uint64_t do_shift(uint64_t input) {
         return ntohll(input);
     }
@@ -661,12 +666,12 @@ int main(int argc, char** argv) {
     test_constant<uint32_t, swab_htonl >(data32unsigned, SIZE, "uint32_t htonl");
     test_constant<uint32_t, swab_ntohl >(data32unsigned, SIZE, "uint32_t ntohl");
 
-#if !(defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H))
+#if !(defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H) || defined(isBSD))
     test_constant<uint64_t, swab_htonl >(data64unsigned, SIZE, "uint64_t htonll");
     test_constant<uint64_t, swab_ntohl >(data64unsigned, SIZE, "uint64_t ntohll");
 #endif
 
-#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined (__sun)
+#if (defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)) && !defined (__sun) && !defined(isBSD)
     test_constant<uint16_t, swab_htobe >(data16unsigned, SIZE, "uint16_t htobe16");
     test_constant<uint16_t, swab_htole >(data16unsigned, SIZE, "uint16_t htole16");
     test_constant<uint32_t, swab_htobe >(data32unsigned, SIZE, "uint32_t htobe32");

@@ -77,6 +77,9 @@ I need to be able to parse the label and absolute time from each entry, correctl
 parse as:
 %i ([ ]*)\"%s\"  %f sec   %f M      %f\r
 
+TODO - remove gmeans entirely
+TODO - add ability to output to file - see iostreams.cpp
+
 */
 void summarize(const char *name, int size, int iterations, int show_gmeans, int show_penalty ) {
     int i;

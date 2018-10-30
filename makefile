@@ -19,13 +19,13 @@
 INCLUDE = -I.
 
 # GCC
-CC = /usr/bin/gcc
-CXX = /usr/bin/g++
+#CC = gcc
+#CXX = g++
 
 
 # GCC 8.1
-#CC = /usr/bin/gcc-8
-#CXX = /usr/bin/g++-8
+#CC = gcc-8
+#CXX = g++-8
 
 
 
@@ -72,8 +72,11 @@ locales \
 lookup_table \
 loop_induction \
 loop_removal \
-minmax
-
+minmax \
+bitarrays \
+histogram \
+iostreams \
+loop_fusion
 
 
 
@@ -112,10 +115,10 @@ dependencies :   $(SOURCES)
 #
 
 exceptions : exceptions.c
-	$(CC) $(CFLAGS) -o $@ $< $(CLIBS)
+	$(CC) $(CFLAGS) -o $@ exceptions.c $(CLIBS)
 
 exceptions_cpp : exceptions.c
-	$(CXX) $(CPPFLAGS) -D TEST_WITH_EXCEPTIONS=1 -o $@ $< $(CPPLIBS)
+	$(CXX) $(CPPFLAGS) -D TEST_WITH_EXCEPTIONS=1 -o $@ exceptions.c $(CPPLIBS)
 
 
 
@@ -161,6 +164,10 @@ report:  $(BINARIES)
 	./loop_induction >> $(REPORT_FILE)
 	./loop_removal >> $(REPORT_FILE)
 	./minmax >> $(REPORT_FILE)
+	./bitarrays >> $(REPORT_FILE)
+	./histogram >> $(REPORT_FILE)
+	./iostreams >> $(REPORT_FILE)
+	./loop_fusion >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 
