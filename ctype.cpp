@@ -40,6 +40,13 @@ TODO - wctype.h - iswascii, iswdigit, iswblank, etc.
 //#include <ctype.h>        // may be faster depending on macros/inlines
 #include <cctype>
 
+
+
+// TODO - ccox - clean up the macro tests, separate into semi-sane groups
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#define isBSD   1
+#endif
+
 /******************************************************************************/
 
 // this constant may need to be adjusted to give reasonable minimum times
@@ -310,7 +317,7 @@ template <typename T>
 
 // missing on Linux and Windows
 // present in Mach and BSD
-#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !WIN32
+#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !WIN32 && !defined(isBSD)
 
 template <typename T>
     struct ctype_isnumber {
@@ -419,7 +426,7 @@ int main(int argc, char** argv) {
 
 // missing on Linux and Windows
 // present in Mach and BSD
-#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !WIN32
+#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !WIN32 && !defined(isBSD)
     test_bool_expected<uint8_t, ctype_ishexnumber<uint8_t> >(data,SIZE, kExpected_isxdigit*(SIZE/256), "uint8_t ishexnumber");
     test_bool_expected<uint8_t, ctype_isnumber<uint8_t> >(data,SIZE, kExpected_isdigit*(SIZE/256), "uint8_t isnumber");
     test_bool_expected<uint8_t, ctype_isideogram<uint8_t> >(data,SIZE, kExpected_isideogram*(SIZE/256), "uint8_t isideogram");
