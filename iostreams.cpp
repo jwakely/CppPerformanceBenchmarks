@@ -20,6 +20,9 @@ Assumptions:
     3) Using sync=true for iostreams should only have an impact on console IO.
  
     4) Posix low level IO functions will generally be slower due to lack of buffering.
+ 
+    5) using std::endl will generally be slower than outputting '\n', because std::endl causes a stream flush.
+        (this really should be revisited by the standards committee -- it is causing confusion and very poor performance)
 
 
 **** NOTE: Order of tests and sync calls has an effect with GCC, sync=true must be tested before sync=false
@@ -62,6 +65,8 @@ typedef enum testIOMode {
     MODE_HEX = 2,
     MODE_FLOAT = 3,
     MODE_WORD = 4,
+    MODE_ENDL = 5,
+    MODE_NEWLINE = 6,
 } testIOMode;
 
 uint64_t gGlobalSum = 0;
@@ -109,6 +114,21 @@ void test_stdio_out(int n, const char *filename, const string &label, const test
                 {
                 std::string tempString = std::to_string(i);
                 fprintf ( stdio_target, "%s ", tempString.c_str() );
+                }
+            break;
+        case MODE_ENDL:
+            for (i = 0; i < n; ++i)
+                {
+                std::string tempString = std::to_string(i);
+                fprintf ( stdio_target, "%s\n", tempString.c_str() );
+                fflush( stdio_target ); // mimic behavior of endl
+                }
+            break;
+        case MODE_NEWLINE:
+            for (i = 0; i < n; ++i)
+                {
+                std::string tempString = std::to_string(i);
+                fprintf ( stdio_target, "%s\n", tempString.c_str() );
                 }
             break;
         default:
@@ -172,6 +192,16 @@ void test_stdio_in(int n, const char *filename, const string &label, const testI
                 {
                 char tempString[1000];
                 if (1 != fscanf ( stdio_target, "%s ", tempString))
+                    break;
+                sum += atol( tempString );
+                }
+            break;
+        case MODE_ENDL:
+        case MODE_NEWLINE:
+            for (i = 0; i < n; ++i)
+                {
+                char tempString[1000];
+                if (1 != fscanf ( stdio_target, "%s\n", tempString))
                     break;
                 sum += atol( tempString );
                 }
@@ -251,6 +281,8 @@ void test_posix_out(int n, const char *filename, const string &label, const test
                 }
             break;
         case MODE_HEX:
+        case MODE_ENDL:
+        case MODE_NEWLINE:
         default:
             fprintf (stderr, "Unknown mode %d", int(mode) );
             exit(-1);
@@ -337,6 +369,8 @@ void test_posix_in(int n, const char *filename, const string &label, const testI
                 }
             break;
         case MODE_HEX:
+        case MODE_ENDL:
+        case MODE_NEWLINE:
         default:
             fprintf (stderr, "Unknown mode %d", int(mode) );
             exit(-1);
@@ -404,7 +438,20 @@ void test_iostreams_out(int n, const char *filename, bool sync, const string &la
                 std::string tempString = std::to_string(i);
                 out << tempString << " ";
                 }
-            
+            break;
+        case MODE_ENDL:
+            for (i = 0; i < n; ++i)
+                {
+                std::string tempString = std::to_string(i);
+                out << tempString << std::endl;
+                }
+            break;
+        case MODE_NEWLINE:
+            for (i = 0; i < n; ++i)
+                {
+                std::string tempString = std::to_string(i);
+                out << tempString << "\n";
+                }
             break;
         default:
             fprintf (stderr, "Unknown mode %d", int(mode) );
@@ -468,6 +515,15 @@ void test_iostreams_in(int n, const char *filename, bool sync, const string &lab
                 }
             break;
         case MODE_WORD:
+            for (i = 0; i < n; ++i)
+                {
+                std::string tempString;
+                input >> tempString;
+                sum += atol( tempString.c_str() );
+                }
+            break;
+        case MODE_ENDL:
+        case MODE_NEWLINE:
             for (i = 0; i < n; ++i)
                 {
                 std::string tempString;
@@ -617,6 +673,12 @@ int main (int argc, char *argv[])
 
     string labelStdio4 ("fprintf words to stdio");
     test_stdio_out(count, NULL, labelStdio4, MODE_WORD );
+
+    string labelStdio5 ("fprintf words endl to stdio");
+    test_stdio_out(count, NULL, labelStdio5, MODE_ENDL );
+
+    string labelStdio6 ("fprintf words newline to stdio");
+    test_stdio_out(count, NULL, labelStdio6, MODE_NEWLINE );
     
     
     string labelStdioF ("fprintf integers to file");
@@ -638,6 +700,16 @@ int main (int argc, char *argv[])
     test_stdio_out(count, filename, labelStdioF7, MODE_WORD );
     string labelStdioF8 ("fscanf words from file");
     test_stdio_in(count, filename, labelStdioF8, MODE_WORD );
+
+    string labelStdioF9 ("fprintf words endl to file");
+    test_stdio_out(count, filename, labelStdioF9, MODE_ENDL );
+    string labelStdioF10 ("fscanf words endl from file");
+    test_stdio_in(count, filename, labelStdioF10, MODE_ENDL );
+
+    string labelStdioF11 ("fprintf words newline to file");
+    test_stdio_out(count, filename, labelStdioF11, MODE_NEWLINE );
+    string labelStdioF12 ("fscanf words newline from file");
+    test_stdio_in(count, filename, labelStdioF12, MODE_NEWLINE );
     
     
     string labelstreamInt ("iostream integers (sync = true) to stdio");
@@ -651,6 +723,12 @@ int main (int argc, char *argv[])
     
     string labelstreamInt4 ("iostream words (sync = true) to stdio");
     test_iostreams_out(count, NULL, true, labelstreamInt4, MODE_WORD );
+    
+    string labelstreamInt5 ("iostream words endl (sync = true) to stdio");
+    test_iostreams_out(count, NULL, true, labelstreamInt5, MODE_ENDL );
+    
+    string labelstreamInt6 ("iostream words newline (sync = true) to stdio");
+    test_iostreams_out(count, NULL, true, labelstreamInt6, MODE_NEWLINE );
     
     
     string labelstreamIntF ("iostream integers (sync = true) to file");
@@ -673,6 +751,16 @@ int main (int argc, char *argv[])
     string labelstreamIntF8 ("iostream words (sync = true) from file");
     test_iostreams_in(count, filename, true, labelstreamIntF8, MODE_WORD );
     
+    string labelstreamIntF9 ("iostream words endl (sync = true) to file");
+    test_iostreams_out(count, filename, true, labelstreamIntF9, MODE_ENDL );
+    string labelstreamIntF10 ("iostream words endl (sync = true) from file");
+    test_iostreams_in(count, filename, true, labelstreamIntF10, MODE_ENDL );
+    
+    string labelstreamIntF11 ("iostream words newline (sync = true) to file");
+    test_iostreams_out(count, filename, true, labelstreamIntF11, MODE_NEWLINE );
+    string labelstreamIntF12 ("iostream words newline (sync = true) from file");
+    test_iostreams_in(count, filename, true, labelstreamIntF12, MODE_NEWLINE );
+    
     
     string labelstreamIntA ("iostream integers (sync = false) to stdio");
     test_iostreams_out(count, NULL, false, labelstreamIntA, MODE_INT );
@@ -685,6 +773,12 @@ int main (int argc, char *argv[])
     
     string labelstreamIntA4 ("iostream words (sync = false) to stdio");
     test_iostreams_out(count, NULL, false, labelstreamIntA4, MODE_WORD );
+    
+    string labelstreamIntA5 ("iostream words endl (sync = false) to stdio");
+    test_iostreams_out(count, NULL, false, labelstreamIntA5, MODE_ENDL );
+    
+    string labelstreamIntA6 ("iostream words newline (sync = false) to stdio");
+    test_iostreams_out(count, NULL, false, labelstreamIntA6, MODE_NEWLINE );
 
     
     string labelstreamIntB ("iostream integers (sync = false) to file");
@@ -706,6 +800,16 @@ int main (int argc, char *argv[])
     test_iostreams_out(count, filename, false, labelstreamIntB7, MODE_WORD );
     string labelstreamIntB8 ("iostream words (sync = false) from file");
     test_iostreams_in(count, filename, false, labelstreamIntB8, MODE_WORD );
+    
+    string labelstreamIntB9 ("iostream words endl (sync = false) to file");
+    test_iostreams_out(count, filename, false, labelstreamIntB9, MODE_ENDL );
+    string labelstreamIntB10 ("iostream words endl (sync = false) from file");
+    test_iostreams_in(count, filename, false, labelstreamIntB10, MODE_ENDL );
+    
+    string labelstreamIntB11 ("iostream words newline (sync = false) to file");
+    test_iostreams_out(count, filename, false, labelstreamIntB11, MODE_NEWLINE );
+    string labelstreamIntB12 ("iostream words newline (sync = false) from file");
+    test_iostreams_in(count, filename, false, labelstreamIntB12, MODE_NEWLINE );
 
     // output results
     summarize2(report_file, "iostreams", 1, count, false );
