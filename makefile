@@ -72,8 +72,11 @@ locales \
 lookup_table \
 loop_induction \
 loop_removal \
-minmax
-
+minmax \
+bitarrays \
+histogram \
+iostreams \
+loop_fusion
 
 
 
@@ -161,6 +164,10 @@ report:  $(BINARIES)
 	./loop_induction >> $(REPORT_FILE)
 	./loop_removal >> $(REPORT_FILE)
 	./minmax >> $(REPORT_FILE)
+	./bitarrays >> $(REPORT_FILE)
+	./histogram >> $(REPORT_FILE)
+	./iostreams >> $(REPORT_FILE)
+	./loop_fusion >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 
