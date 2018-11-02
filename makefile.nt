@@ -109,6 +109,11 @@ clean :
 exceptions_cpp.exe : exceptions.c
 	$(CPP) $(CPPFLAGS) /D "TEST_WITH_EXCEPTIONS=1" -o exceptions_cpp.exe exceptions.c
 
+# work around lame decision to have OS version APIs lie to the developer/user
+machine.exe: machine.cpp
+	$(CPP) $(CPPFLAGS) -o machine.exe machine.cpp /link netapi32.lib
+	mt.exe -manifest machine.manifest -outputresource:machine.exe
+
 
 
 #

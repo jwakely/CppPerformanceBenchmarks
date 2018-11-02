@@ -49,15 +49,21 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 
 #if isLinux || isBSD
 #include <sys/utsname.h>
-#if !isBSD
-#include <sys/sysinfo.h>
-#endif
 #include <unistd.h>
 #include <strings.h>
 #endif
 
+#if isLinux
+// BSD doesn't have this header or function
+#include <sys/sysinfo.h>
+#endif
+
 #if _WIN32
 #include <windows.h>
+#include <atlbase.h>
+#include <lm.h>
+#include <Lmwksta.h>
+#include <Lmapibuf.h>
 #endif
 
 
@@ -81,6 +87,11 @@ void VerifyTypeSizes()
         printf("Found size of int64_t was %d instead of 8\n", (int)sizeof(int64_t) );
     if (sizeof(uint64_t) != 8)
         printf("Found size of uint64_t was %d instead of 8\n", (int)sizeof(uint64_t) );
+    
+    if (sizeof(float) != 4)
+        printf("Found size of float was %d instead of 4\n", (int)sizeof(float) );
+    if (sizeof(double) != 8)
+        printf("Found size of double was %d instead of 8\n", (int)sizeof(double) );
 }
 
 /******************************************************************************/
@@ -689,6 +700,7 @@ void ReportMachinePhysical()
 #if isLinux || isBSD
 
 #if !defined (__sun) && !defined(isBSD)
+// safe for Linux
     struct sysinfo info;
     int retval = sysinfo(&info);
     if (retval == 0) {
@@ -698,6 +710,7 @@ void ReportMachinePhysical()
         printf(" of RAM\n");
     }
 #else
+// safe for Solaris and BSD
     long pageCount = sysconf( _SC_PHYS_PAGES );
     long pageSize2  = sysconf( _SC_PAGE_SIZE );
     long long temp = (long long)pageCount * (long long)pageSize2;
@@ -785,7 +798,7 @@ void ReportOS()
 
 // this should work on various flavors of Linux and BSD
 #if isLinux || defined(__sun) || isBSD
-
+    {
     struct utsname buf;
     bzero( &buf, sizeof(buf) );
     int retval = uname( &buf );
@@ -800,7 +813,7 @@ void ReportOS()
             printf("Kernel OS Version: %s\n", buf.version );
         if (buf.machine[0] != 0)
             printf("Kernel OS Machine: %s\n", buf.machine );
-
+    }
 #endif
 
 
@@ -811,7 +824,6 @@ void ReportOS()
 
 // this should work for any Mach based OS (MacOS, etc.)
 #if defined(_MACHTYPES_H_)
-
 // see sysctl.h for the definitions
     {
     char string_buffer[1024];
@@ -827,18 +839,87 @@ void ReportOS()
         printf("Kernel OS Version: %s\n", string_buffer );
     
     }
-    
 #endif    // _MACHTYPES_H_
 
 
 #if _WIN32
+    {
     OSVERSIONINFO verInfo;
     verInfo.dwOSVersionInfoSize = sizeof(verInfo);
     
+    // NOTE - this API lies after Windows 8.1
+    // the Microsoft solution is to add a new manifest UID entry for each supported OS (which means you cannot support future OSes!)
     if (GetVersionEx(&verInfo)) {
-        printf("Windows OS Version: %d.%d, build %d\n", verInfo.dwMajorVersion, verInfo.dwMinorVersion, verInfo.dwBuildNumber );
+        printf("Windows GetVersionEx OS Version: %d.%d, build %d\n", verInfo.dwMajorVersion, verInfo.dwMinorVersion, verInfo.dwBuildNumber );
         if (verInfo.szCSDVersion[0] != 0)
-            printf("Windows update %s\n", verInfo.szCSDVersion );
+            printf("Windows GetVersionEx update %s\n", verInfo.szCSDVersion );
+        }
+    
+    // workaround 1
+    LPBYTE rawData = NULL;
+    NET_API_STATUS result = NetWkstaGetInfo( NULL, 100, &rawData );
+    
+    if ( result == ERROR_ACCESS_DENIED ) {
+        printf("insufficient rights for NetWkstaGetInfo\n");
+    } else if ( result == ERROR_INVALID_LEVEL ) {
+        printf("invalid level for NetWkstaGetInfo\n");
+        }
+    else if ( result == 0 && rawData != NULL ) {   // NERR_Success
+        WKSTA_INFO_100 *info = (WKSTA_INFO_100 *)rawData;
+        printf("Windows NetWkstaGetInfo OS Version: %d.%d\n", info->wki100_ver_major, info->wki100_ver_minor );
+        }
+    if (rawData != NULL)
+        NetApiBufferFree(rawData);
+    
+    
+    // workaround 2
+/*
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion
+\BuildLabEx        STRING
+\CurrentBuild      STRING
+\ProductName       STRING
+\CurrentMajorVersionNumber DWORD
+\CurrentMinorVersionNumber DWORD
+*/
+    const int bufferLen = 2000;
+    char value[bufferLen];
+    DWORD bufferSize = bufferLen;
+
+    auto err = RegGetValueA(HKEY_LOCAL_MACHINE,
+            _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\"),
+            _T("BuildLabEx"),
+            RRF_RT_ANY,
+            NULL,
+            value,
+            &bufferSize);
+    if (err == 0) {
+        printf("Windows BuildLabEx OS Version: %s\n", value );
+        }
+    
+    bufferSize = bufferLen;
+    err = RegGetValueA(HKEY_LOCAL_MACHINE,
+            _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\"),
+            _T("CurrentBuild"),
+            RRF_RT_ANY,
+            NULL,
+            value,
+            &bufferSize);
+    if (err == 0) {
+        printf("Windows CurrentBuild OS Version: %s\n", value );
+        }
+    
+    bufferSize = bufferLen;
+    err = RegGetValueA(HKEY_LOCAL_MACHINE,
+            _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\"),
+            _T("ProductName"),
+            RRF_RT_ANY,
+            NULL,
+            value,
+            &bufferSize);
+    if (err == 0) {
+        printf("Windows ProductName: %s\n", value );
+        }
+    
     }
 
 #endif
