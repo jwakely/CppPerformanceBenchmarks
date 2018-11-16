@@ -47,6 +47,7 @@ BINARIES = machine.exe \
 stepanov_abstraction.exe \
 stepanov_vector.exe \
 stepanov_inherit.exe \
+stepanov_array.exe \
 loop_unroll.exe \
 simple_types_loop_invariant.exe \
 functionobjects.exe \
@@ -77,7 +78,11 @@ minmax.exe \
 bitarrays.exe \
 histogram.exe \
 iostreams.exe \
-loop_fusion.exe
+loop_fusion.exe \
+count_sequence.exe \
+memset.exe \
+reference_normalization.exe \
+simple_types_algebraic_simplification.exe
 
 
 
@@ -130,6 +135,7 @@ report:  $(BINARIES)
 	.\stepanov_abstraction.exe >> $(REPORT_FILE)
 	.\stepanov_vector.exe >> $(REPORT_FILE)
 	.\stepanov_inherit.exe >> $(REPORT_FILE)
+	.\stepanov_array.exe >> $(REPORT_FILE)
 	.\functionobjects.exe >> $(REPORT_FILE)
 	.\simple_types_constant_folding.exe >> $(REPORT_FILE)
 	.\simple_types_loop_invariant.exe >> $(REPORT_FILE)
@@ -161,6 +167,10 @@ report:  $(BINARIES)
 	.\histogram.exe >> $(REPORT_FILE)
 	.\iostreams.exe >> $(REPORT_FILE)
 	.\loop_fusion.exe >> $(REPORT_FILE)
+    .\count_sequence.exe >> $(REPORT_FILE)
+    .\memset.exe >> $(REPORT_FILE)
+    .\reference_normalization.exe >> $(REPORT_FILE)
+    .\simple_types_algebraic_simplification.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 
