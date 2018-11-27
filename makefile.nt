@@ -47,6 +47,7 @@ BINARIES = machine.exe \
 stepanov_abstraction.exe \
 stepanov_vector.exe \
 stepanov_inherit.exe \
+stepanov_array.exe \
 loop_unroll.exe \
 simple_types_loop_invariant.exe \
 functionobjects.exe \
@@ -77,7 +78,11 @@ minmax.exe \
 bitarrays.exe \
 histogram.exe \
 iostreams.exe \
-loop_fusion.exe
+loop_fusion.exe \
+count_sequence.exe \
+memset.exe \
+reference_normalization.exe \
+simple_types_algebraic_simplification.exe
 
 
 
@@ -109,6 +114,11 @@ clean :
 exceptions_cpp.exe : exceptions.c
 	$(CPP) $(CPPFLAGS) /D "TEST_WITH_EXCEPTIONS=1" -o exceptions_cpp.exe exceptions.c
 
+# work around lame decision to have OS version APIs lie to the developer/user
+machine.exe: machine.cpp
+	$(CPP) $(CPPFLAGS) -o machine.exe machine.cpp /link netapi32.lib
+	mt.exe -manifest machine.manifest -outputresource:machine.exe
+
 
 
 #
@@ -125,6 +135,7 @@ report:  $(BINARIES)
 	.\stepanov_abstraction.exe >> $(REPORT_FILE)
 	.\stepanov_vector.exe >> $(REPORT_FILE)
 	.\stepanov_inherit.exe >> $(REPORT_FILE)
+	.\stepanov_array.exe >> $(REPORT_FILE)
 	.\functionobjects.exe >> $(REPORT_FILE)
 	.\simple_types_constant_folding.exe >> $(REPORT_FILE)
 	.\simple_types_loop_invariant.exe >> $(REPORT_FILE)
@@ -154,9 +165,13 @@ report:  $(BINARIES)
 	.\minmax.exe >> $(REPORT_FILE)
 	.\bitarrays.exe >> $(REPORT_FILE)
 	.\histogram.exe >> $(REPORT_FILE)
-	.\iostreams $(REPORT_FILE) $(iostreamtemp)
+	.\iostreams.exe $(REPORT_FILE) $(iostreamtemp)
 	del $(iostreamtemp)
 	.\loop_fusion.exe >> $(REPORT_FILE)
+    .\count_sequence.exe >> $(REPORT_FILE)
+    .\memset.exe >> $(REPORT_FILE)
+    .\reference_normalization.exe >> $(REPORT_FILE)
+    .\simple_types_algebraic_simplification.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 
