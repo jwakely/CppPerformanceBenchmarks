@@ -148,7 +148,7 @@ inline bool operator<(const reverse_iterator<RandomAccessIterator, T>& x, const 
 }   // namespace benchmark
 
 
-#if __GNUC__
+#if __GNUC__ || _MSC_VER
 
 // Work around gcc STL bugs - the algobase code should work with any iterator, not just your own!
 template <class RandomAccessIterator, class T>
@@ -233,7 +233,7 @@ void test_quicksort(Iterator firstSource, Iterator lastSource, Iterator firstDes
     start_timer();
 
     for(i = 0; i < iterations; ++i) {
-        std::copy(firstSource, lastSource, firstDest);
+        ::copy(firstSource, lastSource, firstDest);
         quicksort< Iterator, T>( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
