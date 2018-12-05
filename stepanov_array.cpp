@@ -151,10 +151,13 @@ inline bool operator<(const reverse_iterator<RandomAccessIterator, T>& x, const 
 
 #if __GNUC__
 
+namespace std       // necessary for older versions of gcc
+{
+
 // Work around gcc STL bugs - the algobase code should work with any iterator, not just your own!
 // MSVC has a similar bug when using std::copy instead of benchmark::copy
 template <class RandomAccessIterator, class T>
-struct std::iterator_traits< benchmark::reverse_iterator<RandomAccessIterator,T> >
+struct iterator_traits< benchmark::reverse_iterator<RandomAccessIterator,T> >
 {
     typedef ptrdiff_t difference_type;
     typedef typename remove_const<T>::type value_type;
@@ -162,6 +165,8 @@ struct std::iterator_traits< benchmark::reverse_iterator<RandomAccessIterator,T>
     typedef T& reference;
     typedef random_access_iterator_tag iterator_category;
 };
+
+}
 
 #endif
 
