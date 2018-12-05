@@ -148,9 +148,11 @@ inline bool operator<(const reverse_iterator<RandomAccessIterator, T>& x, const 
 }   // namespace benchmark
 
 
-#if __GNUC__ || _MSC_VER
+
+#if __GNUC__
 
 // Work around gcc STL bugs - the algobase code should work with any iterator, not just your own!
+// MSVC has a similar bug when using std::copy instead of benchmark::copy
 template <class RandomAccessIterator, class T>
 struct std::iterator_traits< benchmark::reverse_iterator<RandomAccessIterator,T> >
 {
