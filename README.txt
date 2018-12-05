@@ -12,7 +12,7 @@ To help compiler vendors identify places where they may be able to improve
 the performance of the code they generate, or the libraries they supply.
 
 To help developers understand the performance impact of using different
-data types, operations, and C++ langugage features with their
+data types, operations, and C++ language features with their
 target compilers and OSes.
 
 /******************************************************************************/
