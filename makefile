@@ -23,7 +23,7 @@ INCLUDE = -I.
 #CXX = g++
 
 
-# GCC 8.1
+# GCC 8.2
 #CC = gcc-8
 #CXX = g++-8
 
@@ -46,6 +46,7 @@ BINARIES = machine \
 stepanov_abstraction \
 stepanov_vector \
 stepanov_inherit \
+stepanov_array \
 loop_unroll \
 simple_types_loop_invariant \
 functionobjects \
@@ -76,7 +77,13 @@ minmax \
 bitarrays \
 histogram \
 iostreams \
-loop_fusion
+loop_fusion \
+count_sequence \
+memset \
+reference_normalization \
+simple_types_algebraic_simplification
+
+
 
 
 
@@ -137,6 +144,7 @@ report:  $(BINARIES)
 	./stepanov_abstraction >> $(REPORT_FILE)
 	./stepanov_vector >> $(REPORT_FILE)
 	./stepanov_inherit >> $(REPORT_FILE)
+	./stepanov_array >> $(REPORT_FILE)
 	./functionobjects >> $(REPORT_FILE)
 	./simple_types_constant_folding >> $(REPORT_FILE)
 	./simple_types_loop_invariant >> $(REPORT_FILE)
@@ -166,8 +174,13 @@ report:  $(BINARIES)
 	./minmax >> $(REPORT_FILE)
 	./bitarrays >> $(REPORT_FILE)
 	./histogram >> $(REPORT_FILE)
-	./iostreams >> $(REPORT_FILE)
+	./iostreams $(REPORT_FILE) $(iostreamtemp)
+	rm $(iostreamtemp)
 	./loop_fusion >> $(REPORT_FILE)
+	./count_sequence >> $(REPORT_FILE)
+	./memset >> $(REPORT_FILE)
+	./reference_normalization >> $(REPORT_FILE)
+	./simple_types_algebraic_simplification >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 
