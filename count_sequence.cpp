@@ -348,6 +348,8 @@ void TestOneType()
 {
     std::string myTypeName( getTypeName<T>() );
     
+    gLabels.clear();
+    
     // seed the random number generator so we get repeatable results
     srand( (int)init_value + 123 );
     
