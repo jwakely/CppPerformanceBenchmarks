@@ -75,7 +75,7 @@ static std::deque<std::string> gLabels;
 /******************************************************************************/
 
 template <typename T>
-inline void check_sum(T result, const std::string label) {
+inline void check_sum(T result, const std::string &label) {
   T temp = (T)(SIZE * (T)init_value);
   if (!tolerance_equal<T>(result,temp))
     std::cout << "test " << label << " failed, expected " << temp << " got " << result << std::endl;
@@ -84,7 +84,7 @@ inline void check_sum(T result, const std::string label) {
 /******************************************************************************/
 
 template <typename T>
-inline void check_sum_channels(T result, size_t HEIGHT, size_t WIDTH, size_t channels, const std::string label) {
+inline void check_sum_channels(T result, size_t HEIGHT, size_t WIDTH, size_t channels, const std::string &label) {
   T temp = (T)(HEIGHT*WIDTH*channels * (T)init_value);
   if (!tolerance_equal<T>(result,temp))
     std::cout << "test " << label << " failed, expected " << temp << " got " << result << std::endl;
@@ -93,7 +93,7 @@ inline void check_sum_channels(T result, size_t HEIGHT, size_t WIDTH, size_t cha
 /******************************************************************************/
 
 template <typename T>
-inline void check_sum_4D(T result, const std::string label) {
+inline void check_sum_4D(T result, const std::string &label) {
   T temp = (T)(sizeA*sizeB*sizeC*sizeD * (T)init_value);
   if (!tolerance_equal<T>(result,temp))
     std::cout << "test " << label << " failed, expected " << temp << " got " << result << std::endl;
@@ -102,7 +102,7 @@ inline void check_sum_4D(T result, const std::string label) {
 /******************************************************************************/
 
 template <typename T>
-inline void check_sum_3D(T first[sizeZ][sizeY][sizeX], const std::string label) {
+inline void check_sum_3D(T first[sizeZ][sizeY][sizeX], const std::string &label) {
 
     int x, y, z;
   
