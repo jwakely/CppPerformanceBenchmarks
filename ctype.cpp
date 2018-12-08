@@ -5,7 +5,7 @@
     or a copy at http://stlab.adobe.com/licenses.html )
 
 
-Goal:  Test performance of the ctype and tolower/toupper functions
+Goal:  Test performance of the ctype, tolower/toupper, and similar functions
 
 Assumptions:
     1) None of the ctype routines should be slower than a table lookup and bitfield comparison
@@ -15,8 +15,13 @@ Assumptions:
     3) tolower and toupper should not be slower than table lookups (assuming locale data is cached)
     
     4) isascii should be as fast as an inline calculation
-    
+
     5) The choice of <ctype.h> or <cctype> should have no impact on performance (can't test with single source file)
+ 
+    6) ctype like functions that have too many comparisons, should be reduced to precalculated lookup tables.
+        This is important for parsers/tokenizers.
+        NOTE - it looks like around 6-8 comparisons is the magic point to move to a table.
+
 
 
 NOTE -  isdigit and isxdigit are locale dependent
@@ -41,10 +46,14 @@ TODO - wctype.h - iswascii, iswdigit, iswblank, etc.
 #include <cctype>
 
 
-
-// TODO - ccox - clean up the macro tests, separate into semi-sane groups
+// various semi-current flavors of BSD
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #define isBSD   1
+#endif
+
+// one of these should be defined on Linux derived OSes
+#if defined(_LINUX_TYPES_H) || defined(_SYS_TYPES_H)
+#define isLinux 1
 #endif
 
 /******************************************************************************/
@@ -59,16 +68,20 @@ const int SIZE = 8192;
 
 /******************************************************************************/
 
-// our global arrays of numbers to be operated upon
-uint8_t data[SIZE];
-
-/******************************************************************************/
-
 // TODO - ccox - move these to benchmark_shared_tests.h
 template <typename T>
 inline void check_expected_sum(T result, T expected) {
   if (result != expected)
     printf("test %i failed\n", current_test);
+}
+
+/******************************************************************************/
+
+volatile uint64_t gFake = 0;
+
+template <typename T>
+inline void check_expected_fake(T result) {
+    gFake += result;
 }
 
 /******************************************************************************/
@@ -105,6 +118,25 @@ void test_bool_expected(T* first, int count, int expected, const char *label) {
         result += int( Shifter::do_shift( first[n] ) );
     }
     check_expected_sum<int>(result, expected);
+  }
+  
+  record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_bool_faked(T* first, int count, const char *label) {
+  int i;
+  
+  start_timer();
+  
+  for(i = 0; i < iterations; ++i) {
+    int result = 0;
+    for (int n = 0; n < count; ++n) {
+        result += int( Shifter::do_shift( first[n] ) );
+    }
+    check_expected_fake<int>(result);
   }
   
   record_result( timer(), label );
@@ -316,8 +348,8 @@ template <typename T>
 /******************************************************************************/
 
 // missing on Linux and Windows
-// present in Mach and BSD
-#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !WIN32 && !defined(isBSD)
+// present in Mach
+#if !isLinux && !WIN32 && !defined(isBSD)
 
 template <typename T>
     struct ctype_isnumber {
@@ -350,6 +382,124 @@ template <typename T>
     };
 
 #endif
+
+/******************************************************************************/
+/******************************************************************************/
+
+// NOTE - I found functions similar to this used on critical paths in a couple of databases and parsers
+bool isIdentifier_long(const char c)
+{
+    return (c >= '0' && c <= '9')
+        || (c >= 'a' && c <= 'z')
+        || (c >= 'A' && c <= 'Z')
+        || c == '@' || c == '#'
+        || c == '$' || c == '~'
+        || c == '-' || c == '+'
+        || c == '.' || c == '_'
+        || c == '&';
+}
+
+template <typename T>
+struct ctype_cheap_isidentifier_long {
+      static bool do_shift(T input) { return isIdentifier_long(input); };
+};
+
+/******************************************************************************/
+
+template <typename T>
+struct ctype_cheap_isidentifier2 {
+      static bool do_shift(T c) { return (c >= 'a' && c <= 'z'); }
+};
+
+template <typename T>
+    struct ctype_cheap_isidentifier4 {
+      static bool do_shift(T c) { return (c >= '0' && c <= '9')
+                                        || (c >= 'a' && c <= 'z'); }
+};
+
+template <typename T>
+struct ctype_cheap_isidentifier6 {
+      static bool do_shift(T c) { return (c >= '0' && c <= '9')
+                                        || (c >= 'a' && c <= 'z')
+                                        || (c >= 'A' && c <= 'Z'); }
+};
+
+template <typename T>
+struct ctype_cheap_isidentifier8 {
+      static bool do_shift(T c) { return (c >= '0' && c <= '9')
+                                        || (c >= 'a' && c <= 'z')
+                                        || (c >= 'A' && c <= 'Z')
+                                        || c == '$' || c == '~'; }
+};
+
+template <typename T>
+struct ctype_cheap_isidentifier10 {
+      static bool do_shift(T c) { return (c >= '0' && c <= '9')
+                                        || (c >= 'a' && c <= 'z')
+                                        || (c >= 'A' && c <= 'Z')
+                                        || c == '@' || c == '#'
+                                        || c == '$' || c == '~'; }
+};
+
+template <typename T>
+struct ctype_cheap_isidentifier12 {
+      static bool do_shift(T c) { return (c >= '0' && c <= '9')
+                                        || (c >= 'a' && c <= 'z')
+                                        || (c >= 'A' && c <= 'Z')
+                                        || c == '@' || c == '#'
+                                        || c == '$' || c == '~'
+                                        || c == '-' || c == '+'; }
+};
+
+template <typename T>
+struct ctype_cheap_isidentifier14 {
+      static bool do_shift(T c) { return (c >= '0' && c <= '9')
+                                        || (c >= 'a' && c <= 'z')
+                                        || (c >= 'A' && c <= 'Z')
+                                        || c == '@' || c == '#'
+                                        || c == '$' || c == '~'
+                                        || c == '-' || c == '+'
+                                        || c == '.' || c == '_'; }
+};
+
+template <typename T>
+struct ctype_cheap_isidentifier16 {
+      static bool do_shift(T c) { return (c >= '0' && c <= '9')
+                                        || (c >= 'a' && c <= 'z')
+                                        || (c >= 'A' && c <= 'Z')
+                                        || c == '@' || c == '#'
+                                        || c == '$' || c == '~'
+                                        || c == '-' || c == '+'
+                                        || c == '.' || c == '_'
+                                        || c == '&' || c == ']'; }
+};
+
+template <typename T>
+struct ctype_cheap_isidentifier18 {
+      static bool do_shift(T c) { return (c >= '0' && c <= '9')
+                                        || (c >= 'a' && c <= 'z')
+                                        || (c >= 'A' && c <= 'Z')
+                                        || c == '@' || c == '#'
+                                        || c == '$' || c == '~'
+                                        || c == '-' || c == '+'
+                                        || c == '.' || c == '_'
+                                        || c == '&' || c == ']'
+                                        || c == ';' || c == '>'; }
+};
+
+template <typename T>
+struct ctype_cheap_isidentifier20 {
+      static bool do_shift(T c) { return (c >= '0' && c <= '9')
+                                        || (c >= 'a' && c <= 'z')
+                                        || (c >= 'A' && c <= 'Z')
+                                        || c == '@' || c == '#'
+                                        || c == '$' || c == '~'
+                                        || c == '-' || c == '+'
+                                        || c == '.' || c == '_'
+                                        || c == '&' || c == ']'
+                                        || c == ';' || c == '>'
+                                        || c == '\\' || c == '('; }
+};
 
 /******************************************************************************/
 /******************************************************************************/
@@ -390,6 +540,10 @@ int main(int argc, char** argv) {
     if (argc > 1) iterations = atoi(argv[1]);
 
 
+
+    // our array of numbers to be operated upon
+    uint8_t data[SIZE];
+
     // seed the random number generator, so we get repeatable results
     srand( iterations + 123 );
     
@@ -400,6 +554,8 @@ int main(int argc, char** argv) {
     // randomize the order
     ::random_shuffle( data, data+SIZE );
 
+
+#if 0
     test_bool_expected<uint8_t, ctype_isdigit<uint8_t> >(data,SIZE, kExpected_isdigit*(SIZE/256), "uint8_t isdigit");
     test_bool_expected<uint8_t, ctype_cheap_isdigit<uint8_t> >(data,SIZE, kExpected_isdigit*(SIZE/256), "uint8_t inline isdigit");
     test_bool_expected<uint8_t, ctype_table_isdigit<uint8_t> >(data,SIZE, kExpected_isdigit*(SIZE/256), "uint8_t table isdigit");
@@ -425,8 +581,8 @@ int main(int argc, char** argv) {
     test_bool_expected<uint8_t, ctype_isxdigit<uint8_t> >(data,SIZE, kExpected_isxdigit*(SIZE/256), "uint8_t isxdigit");
 
 // missing on Linux and Windows
-// present in Mach and BSD
-#if !defined(_LINUX_TYPES_H) && !defined(_SYS_TYPES_H) && !WIN32 && !defined(isBSD)
+// present in Mach
+#if !isLinux && !WIN32 && !isBSD
     test_bool_expected<uint8_t, ctype_ishexnumber<uint8_t> >(data,SIZE, kExpected_isxdigit*(SIZE/256), "uint8_t ishexnumber");
     test_bool_expected<uint8_t, ctype_isnumber<uint8_t> >(data,SIZE, kExpected_isdigit*(SIZE/256), "uint8_t isnumber");
     test_bool_expected<uint8_t, ctype_isideogram<uint8_t> >(data,SIZE, kExpected_isideogram*(SIZE/256), "uint8_t isideogram");
@@ -435,16 +591,33 @@ int main(int argc, char** argv) {
     test_bool_expected<uint8_t, ctype_isspecial<uint8_t> >(data,SIZE, kExpected_isspecial*(SIZE/256), "uint8_t isspecial");
 #endif
 
-    summarize("uint8_t ctype", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-
-
+    summarize("uint8_t ctype functions", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+#endif
 
     test_bool_expected<uint8_t, ctype_tolower<uint8_t> >(data,SIZE, kExpected_tolower*(SIZE/256), "uint8_t tolower");
     test_bool_expected<uint8_t, ctype_toupper<uint8_t> >(data,SIZE, kExpected_toupper*(SIZE/256), "uint8_t toupper");
     test_bool_expected<uint8_t, ctype_table_tolower<uint8_t> >(data,SIZE, kExpected_tolower*(SIZE/256), "uint8_t table tolower");
     test_bool_expected<uint8_t, ctype_table_toupper<uint8_t> >(data,SIZE, kExpected_toupper*(SIZE/256), "uint8_t table toupper");
 
-    summarize("uint8_t ctype", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+    summarize("uint8_t ctype toupper", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+
+
+
+    test_bool_faked<uint8_t, ctype_table_toupper<uint8_t> >(data,SIZE, "uint8_t ctype table lookup");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier_long<uint8_t> >(data,SIZE, "uint8_t isIdentifier longform");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier2<uint8_t> >(data,SIZE, "uint8_t isIdentifier 2");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier4<uint8_t> >(data,SIZE, "uint8_t isIdentifier 4");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier6<uint8_t> >(data,SIZE, "uint8_t isIdentifier 6");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier8<uint8_t> >(data,SIZE, "uint8_t isIdentifier 8");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier10<uint8_t> >(data,SIZE, "uint8_t isIdentifier 10");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier12<uint8_t> >(data,SIZE, "uint8_t isIdentifier 12");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier14<uint8_t> >(data,SIZE, "uint8_t isIdentifier 14");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier16<uint8_t> >(data,SIZE, "uint8_t isIdentifier 16");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier18<uint8_t> >(data,SIZE, "uint8_t isIdentifier 18");
+    test_bool_faked<uint8_t, ctype_cheap_isidentifier20<uint8_t> >(data,SIZE, "uint8_t isIdentifier 20");
+
+    summarize("uint8_t ctype complex test", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+
 
     return 0;
 }
