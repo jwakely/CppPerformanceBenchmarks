@@ -848,7 +848,7 @@ void ReportOS()
     verInfo.dwOSVersionInfoSize = sizeof(verInfo);
     
     // NOTE - this API lies after Windows 8.1
-    // the Microsoft solution is to add a new manifest UID entry for each supported OS (which means you cannot support future OSes!)
+    // the Microsoft "solution" is to add a new manifest UID entry for each supported OS (which means you cannot support future OSes!)
     if (GetVersionEx(&verInfo)) {
         printf("Windows GetVersionEx OS Version: %d.%d, build %d\n", verInfo.dwMajorVersion, verInfo.dwMinorVersion, verInfo.dwBuildNumber );
         if (verInfo.szCSDVersion[0] != 0)
@@ -874,12 +874,12 @@ void ReportOS()
     
     // workaround 2
 /*
-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion
-\BuildLabEx        STRING
-\CurrentBuild      STRING
-\ProductName       STRING
-\CurrentMajorVersionNumber DWORD
-\CurrentMinorVersionNumber DWORD
+    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion
+    \BuildLabEx        STRING
+    \CurrentBuild      STRING
+    \ProductName       STRING
+    \CurrentMajorVersionNumber DWORD
+    \CurrentMinorVersionNumber DWORD
 */
     const int bufferLen = 2000;
     char value[bufferLen];

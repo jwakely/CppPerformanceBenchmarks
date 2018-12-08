@@ -42,6 +42,8 @@ Assumptions:
 
 
 
+TODO - independent loops with other induction styles  for (x=0;x<count;++x)  buf[x*3] = 1;
+        should be handled by loop normalization, but how does that affect fusion pass?
 
 TODO - rearrange and combine tests by data type, use template for type
 
@@ -51,6 +53,8 @@ TODO - weighted fusion
             multiple choices that could be fused, picking the optimal loops to fuse???
 
 TODO - multiple loop fusion nested
+
+TODO - reverse replacement loops (partial write, then full overwrite)
 
 NOTE - different types of loops should be normalized, tested in loop_normalize.cpp
 
