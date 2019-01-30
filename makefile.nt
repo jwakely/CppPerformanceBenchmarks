@@ -1,6 +1,6 @@
 #
 #    Copyright 2007-2009 Adobe Systems Incorporated
-#    Copyright 2018 Chris Cox
+#    Copyright 2018-2019 Chris Cox
 #    Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
 #    or a copy at http://stlab.adobe.com/licenses.html )
 #
@@ -82,7 +82,12 @@ loop_fusion.exe \
 count_sequence.exe \
 memset.exe \
 reference_normalization.exe \
-simple_types_algebraic_simplification.exe
+simple_types_algebraic_simplification.exe \
+complex_type.exe \
+custom_types_loop_invariant.exe \
+loop_interchange.exe \
+memcmp.exe \
+simple_types_constant_propagation.exe
 
 
 
@@ -168,10 +173,15 @@ report:  $(BINARIES)
 	.\iostreams.exe $(REPORT_FILE) $(iostreamtemp)
 	del $(iostreamtemp)
 	.\loop_fusion.exe >> $(REPORT_FILE)
-    .\count_sequence.exe >> $(REPORT_FILE)
-    .\memset.exe >> $(REPORT_FILE)
-    .\reference_normalization.exe >> $(REPORT_FILE)
-    .\simple_types_algebraic_simplification.exe >> $(REPORT_FILE)
+	.\count_sequence.exe >> $(REPORT_FILE)
+	.\memset.exe >> $(REPORT_FILE)
+	.\reference_normalization.exe >> $(REPORT_FILE)
+	.\simple_types_algebraic_simplification.exe >> $(REPORT_FILE)
+	.\complex_type.exe >> $(REPORT_FILE)
+	.\custom_types_loop_invariant.exe >> $(REPORT_FILE)
+	.\loop_interchange.exe >> $(REPORT_FILE)
+	.\memcmp.exe >> $(REPORT_FILE)
+	.\simple_types_constant_propagation.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 

@@ -1,6 +1,6 @@
 #
 #    Copyright 2007-2010 Adobe Systems Incorporated
-#    Copyright 2018 Chris Cox
+#    Copyright 2018-2019 Chris Cox
 #    Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
 #     or a copy at http://stlab.adobe.com/licenses.html )
 #
@@ -44,9 +44,9 @@ DEPENDENCYFLAG = -M
 
 BINARIES = machine \
 stepanov_abstraction \
-stepanov_vector \
-stepanov_inherit \
 stepanov_array \
+stepanov_inherit \
+stepanov_vector \
 loop_unroll \
 simple_types_loop_invariant \
 functionobjects \
@@ -81,7 +81,12 @@ loop_fusion \
 count_sequence \
 memset \
 reference_normalization \
-simple_types_algebraic_simplification
+simple_types_algebraic_simplification \
+complex_type \
+custom_types_loop_invariant \
+loop_interchange \
+memcmp \
+simple_types_constant_propagation
 
 
 
@@ -181,6 +186,11 @@ report:  $(BINARIES)
 	./memset >> $(REPORT_FILE)
 	./reference_normalization >> $(REPORT_FILE)
 	./simple_types_algebraic_simplification >> $(REPORT_FILE)
+	./complex_type >> $(REPORT_FILE)
+	./custom_types_loop_invariant >> $(REPORT_FILE)
+	./loop_interchange  >> $(REPORT_FILE)
+	./memcmp >> $(REPORT_FILE)
+	./simple_types_constant_propagation >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

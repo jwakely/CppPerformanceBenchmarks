@@ -56,6 +56,9 @@ template<>
 std::string getTypeName<double>() { return std::string("double"); }
 
 template<>
+std::string getTypeName<long double>() { return std::string("long double"); }
+
+template<>
 std::string getTypeName<uint8_t *>() { return std::string("uint8_t*"); }
 
 template<>
@@ -84,6 +87,9 @@ std::string getTypeName<float *>() { return std::string("float*"); }
 
 template<>
 std::string getTypeName<double *>() { return std::string("double*"); }
+
+template<>
+std::string getTypeName<long double *>() { return std::string("long double*"); }
 
 }    // end namespace benchmark
 

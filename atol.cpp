@@ -5,7 +5,7 @@
     or a copy at http://stlab.adobe.com/licenses.html )
 
 
-Goal: test the performance of various common ways of parsing a number from a string
+Goal: Test the performance of various common ways of parsing a number from a string.
 
 Assumptions:
     
