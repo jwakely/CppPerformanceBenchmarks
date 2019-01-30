@@ -540,7 +540,7 @@ struct pin_functor9 {
 /******************************************************************************/
 
 template <typename T>
-inline void check_sum(T result, std::string &label) {
+inline void check_sum(T result, const std::string &label) {
     T temp = T(SIZE * T(init_value)) ;
     if (!tolerance_equal<T>(result,temp))
         printf("test %s failed\n", label.c_str());
@@ -549,7 +549,7 @@ inline void check_sum(T result, std::string &label) {
 /******************************************************************************/
 
 template <typename T>
-inline void check_max_sum(T result, std::string &label) {
+inline void check_max_sum(T result, const std::string &label) {
     T temp = T(SIZE * T((init_value > init_value2) ? init_value : init_value2) ) ;
     if (!tolerance_equal<T>(result,temp))
         printf("test %s failed\n", label.c_str());
@@ -558,7 +558,7 @@ inline void check_max_sum(T result, std::string &label) {
 /******************************************************************************/
 
 template <typename T>
-inline void check_min_sum(T result, std::string &label) {
+inline void check_min_sum(T result, const std::string &label) {
     T temp = T(SIZE * T((init_value < init_value2) ? init_value : init_value2) ) ;
     if (!tolerance_equal<T>(result,temp))
         printf("test %s failed\n", label.c_str());
@@ -883,7 +883,7 @@ int main(int argc, char** argv) {
     TestInts<int32_t>();
     TestInts<uint64_t>();
     TestInts<int64_t>();
-    
+
     TestFloats<float>();
     TestFloats<double>();
 

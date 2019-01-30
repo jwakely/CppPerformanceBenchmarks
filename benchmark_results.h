@@ -87,6 +87,8 @@ void summarize(const char *name, int size, int iterations, int show_gmeans, int 
     double total_absolute_times = 0.0;
     double gmean_ratio = 0.0;
     
+    if (current_test == 0)
+        return;
     
     /* find longest label so we can adjust formatting
         12 = strlen("description")+1 */
@@ -156,6 +158,9 @@ void summarize(const char *name, int size, int iterations, int show_gmeans, int 
 void summarize_simplef( FILE *output, const char *name ) {
     int i;
     double total_absolute_times = 0.0;
+    
+    if (current_test == 0)
+        return;
     
     /* find longest label so we can adjust formatting
         12 = strlen("description")+1 */

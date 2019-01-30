@@ -66,16 +66,6 @@ Assumptions:
 
 
 
-
-
-TODO - ccox - other random stuff found unoptimized in code:
-
-    block = index >> 3;
-    offset = index - (block << 3);      ==>        offset = index & 7;
- 
-    offset = index - ((index/8)*8);     ==>        offset = index % 8 = index & 7;
-        Handled as mask_low in shift.cpp, technically a strength reduction
-
 */
 
 /******************************************************************************/

@@ -67,7 +67,7 @@ static std::deque<std::string> gLabels;
 
 /******************************************************************************/
 
-inline void check_sum(size_t result, int count, const std::string label) {
+inline void check_sum(size_t result, int count, const std::string &label) {
     size_t temp = size_t(count) * init_value;
     if (result != temp)
         printf("test %s failed\n", label.c_str() );
