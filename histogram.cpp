@@ -754,10 +754,10 @@ int main(int argc, char** argv) {
     if (argc > 2) init_value = (int32_t) atoi(argv[2]);
 
     srand( init_value );
-    fill_random<uint8_t *, uint8_t>( inputData8, inputData8+SIZE );
-    fill_random<uint16_t *, uint16_t>( inputData16, inputData16+SIZE );
-    fill_random_float<float *, float>( inputData32, inputData32+SIZE, -400.0f, 20000.0f );
-    fill_random_float<double *, double>( inputData64, inputData64+SIZE, -400.0f, 20000.0f );
+    fill_random( inputData8, inputData8+SIZE );
+    fill_random( inputData16, inputData16+SIZE );
+    fill_random_float( inputData32, inputData32+SIZE, -400.0f, 20000.0f );
+    fill_random_float( inputData64, inputData64+SIZE, -400.0f, 20000.0f );
     
     // create our reference histogram for comparison
     memset( (void *)referenceHistogram, 0, 256*sizeof(uint64_t) );

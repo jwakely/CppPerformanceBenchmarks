@@ -790,7 +790,7 @@ void test_insertion_sort(const Iterator firstSource, const Iterator lastSource, 
 
     for(int i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        insertionSort< Iterator, T>( firstDest, lastDest );
+        insertionSort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -809,7 +809,7 @@ void test_quicksort(const Iterator firstSource, const Iterator lastSource, Itera
 
     for(int i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        quicksort< Iterator, T>( firstDest, lastDest );
+        quicksort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -828,7 +828,7 @@ void test_heap_sort(const Iterator firstSource, const Iterator lastSource, Itera
 
     for(int i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        heapsort< Iterator, T>( firstDest, lastDest );
+        heapsort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -995,7 +995,7 @@ void testOneType()
     srand( (int)init_value + 12345 );
 
     // fill one set of random numbers
-    fill_random<Number *, Number>( data, data+SIZE );
+    fill_random( data, data+SIZE );
     // copy to the other sets, so we have the same numbers
     ::copy( data, data+SIZE, dataArray.begin() );
     ::copy( data, data+SIZE, dataVector.begin() );
