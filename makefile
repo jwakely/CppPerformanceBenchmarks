@@ -86,7 +86,11 @@ complex_type \
 custom_types_loop_invariant \
 loop_interchange \
 memcmp \
-simple_types_constant_propagation
+simple_types_constant_propagation \
+memcpy \
+simple_types_copy_propagation \
+simple_types_cse \
+simple_types_value_range
 
 
 
@@ -191,6 +195,10 @@ report:  $(BINARIES)
 	./loop_interchange  >> $(REPORT_FILE)
 	./memcmp >> $(REPORT_FILE)
 	./simple_types_constant_propagation >> $(REPORT_FILE)
+	./memcpy >> $(REPORT_FILE)
+	./simple_types_copy_propagation >> $(REPORT_FILE)
+	./simple_types_cse >> $(REPORT_FILE)
+	./simple_types_value_range >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

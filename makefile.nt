@@ -87,7 +87,11 @@ complex_type.exe \
 custom_types_loop_invariant.exe \
 loop_interchange.exe \
 memcmp.exe \
-simple_types_constant_propagation.exe
+simple_types_constant_propagation.exe \
+memcpy.exe \
+simple_types_copy_propagation.exe \
+simple_types_cse.exe \
+simple_types_value_range.exe
 
 
 
@@ -182,6 +186,10 @@ report:  $(BINARIES)
 	.\loop_interchange.exe >> $(REPORT_FILE)
 	.\memcmp.exe >> $(REPORT_FILE)
 	.\simple_types_constant_propagation.exe >> $(REPORT_FILE)
+	.\memcpy.exe >> $(REPORT_FILE)
+	.\simple_types_copy_propagation.exe >> $(REPORT_FILE)
+	.\simple_types_cse.exe >> $(REPORT_FILE)
+	.\simple_types_value_range.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 
