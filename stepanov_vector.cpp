@@ -177,7 +177,7 @@ void test_accumulate(Iterator first, Iterator last, T zero, const std::string la
     start_timer();
 
     for(i = 0; i < iterations; ++i)
-        check_sum( T( accumulate(first, last, zero) ), label );
+        check_sum( T( benchmark::accumulate(first, last, zero) ), label );
 
     record_std_result( timer(), label );
 }
