@@ -362,7 +362,7 @@ void test_insertion_sort(Iterator firstSource, Iterator lastSource, Iterator fir
 
     for(i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        insertionSort< Iterator, T>( firstDest, lastDest );
+        insertionSort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -380,7 +380,7 @@ void test_quicksort(Iterator firstSource, Iterator lastSource, Iterator firstDes
 
     for(i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        quicksort< Iterator, T>( firstDest, lastDest );
+        quicksort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -398,7 +398,7 @@ void test_heap_sort(Iterator firstSource, Iterator lastSource, Iterator firstDes
 
     for(i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        heapsort< Iterator, T>( firstDest, lastDest );
+        heapsort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -525,7 +525,7 @@ void TestOneType()
     iterations = iterations / 2000;
     
     // fill one set of random numbers
-    fill_random<T *, T>( dMpb, dMpe );
+    fill_random( dMpb, dMpe );
     // copy to the other sets, so we have the same numbers
     ::copy( dMpb, dMpe, DVMpb );
     ::copy( dMpb, dMpe, DV10Mpb );

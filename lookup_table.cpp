@@ -1010,8 +1010,8 @@ int main(int argc, char** argv) {
     fill(myLUT16, myLUT16+65536, uint16_t(init_value));
 
     srand( init_value+42 );
-    fill_random<uint8_t *, uint8_t>( inputData8, inputData8+SIZE );
-    fill_random<uint16_t *, uint16_t>( inputData16, inputData16+SIZE );
+    fill_random( inputData8, inputData8+SIZE );
+    fill_random( inputData16, inputData16+SIZE );
 
 
 // uint8_t
