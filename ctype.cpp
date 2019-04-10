@@ -40,6 +40,7 @@ TODO - wctype.h - iswascii, iswdigit, iswblank, etc.
 #include <cstdlib>
 #include <cmath>
 #include "benchmark_results.h"
+#include "benchmark_algorithms.h"
 #include "benchmark_timer.h"
 
 //#include <ctype.h>        // may be faster depending on macros/inlines
@@ -89,19 +90,6 @@ inline void check_expected_fake(T result) {
 template <typename Iterator, typename T>
 void fill_increasing(Iterator first, Iterator last, T value) {
     while (first != last) *first++ = value++;
-} 
-
-/******************************************************************************/
-
-template<typename T>
-void random_shuffle(T* first, T* last) {
-    int count = last - first;
-    for (T* i = first + 1; i != last; ++i) {
-        int offset = rand() % count;
-        T temp = *i;
-        *i = first[ offset ];
-        first[ offset ] = temp;
-    }
 }
 
 /******************************************************************************/
@@ -656,7 +644,7 @@ int main(int argc, char** argv) {
     // fill with several copies of the 256 possible values
     ::fill_increasing( data, data+SIZE, uint8_t(0) );
     // randomize the order
-    ::random_shuffle( data, data+SIZE );
+    random_shuffle( data, data+SIZE );
 
 
 

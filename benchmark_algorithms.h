@@ -152,6 +152,32 @@ void reverse(BidirectionalIterator begin, BidirectionalIterator end, Swapper dos
 
 /******************************************************************************/
 
+template<typename RandomIterator>
+void random_shuffle(RandomIterator first, RandomIterator last) {
+    auto count = last - first;
+    for (RandomIterator i = first + 1; i != last; ++i) {
+        size_t offset = rand() % count;
+        auto temp = *i;
+        *i = first[ offset ];
+        first[ offset ] = temp;
+    }
+}
+
+/******************************************************************************/
+
+template<typename RandomIterator, class RNG>
+void random_shuffle(RandomIterator first, RandomIterator last, RNG &rngfunc) {
+    auto count = last - first;
+    for (RandomIterator i = first + 1; i != last; ++i) {
+        size_t offset = rngfunc(count);
+        auto temp = *i;
+        *i = first[ offset ];
+        first[ offset ] = temp;
+    }
+}
+
+/******************************************************************************/
+
 // our accumulator function template, using iterators or pointers
 template <typename ForwardIterator, typename Number>
 Number accumulate(ForwardIterator first, ForwardIterator last, Number result) {
@@ -260,7 +286,7 @@ template <class RandomAccessIterator>
 void bogosort( RandomAccessIterator begin, RandomAccessIterator end )
 {
     do {
-        std::random_shuffle(begin,end);
+        random_shuffle(begin,end);
     } while (!is_sorted(begin,end));
 }
 
