@@ -57,20 +57,5 @@ Windows users will need to make sure that the VC environment variables
 are set for their shell (command prompt), then use "nmake -f makefile.nt all"
 and "nmake -f makefile.nt report" from within that shell.
 
-Alternativly, there is a portable way of building and running using CMake:
-    <make a directory inside the project directory named, e.g, 'build'>
-    cd <project-dir>/build
-    <make sure the dir is empty, e.g., run "rm -rf *">
-    cmake -DCMAKE_BUILD_TYPE=Release ..
-    cmake --build .
-    ctest --extra-verbose --parallel 1
-A report (in a different form) will be printed to standard/log/error output.
-You can turn common options on or off or add compiler-specific flags, or even
-switch compilers and linkers, using "-D<variable>=<value>" mechanism during the
-initial cmake configuration run. A target generator, different from the
-default one, can be specified using "-G <generator>" option. For example:
-    cmake -G 'Unix Makefiles' -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
-       -DCMAKE_CXX_STANDARD=17 -DCMAKE_BUILD_TYPE=Release ..
-Run "cmake -h" for the list of available build system/IDE generators for your
-platform. The list of config variables recognised by CMake is available at:
-    https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html
+A CMakeLists.txt file is provided for convenience, but not tested as thoroughly
+as the makefiles. (thanks to Denis Glazachev)

@@ -90,7 +90,11 @@ simple_types_constant_propagation \
 memcpy \
 simple_types_copy_propagation \
 simple_types_cse \
-simple_types_value_range
+simple_types_value_range \
+memmove \
+minmax_sequence \
+pointer_loop_invariant \
+smart_pointers
 
 
 
@@ -200,5 +204,9 @@ report:  $(BINARIES)
 	./simple_types_cse >> $(REPORT_FILE)
 	./simple_types_value_range >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
+	memmove >> $(REPORT_FILE)
+	minmax_sequence >> $(REPORT_FILE)
+	pointer_loop_invariant >> $(REPORT_FILE)
+	smart_pointers >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

@@ -132,6 +132,10 @@ set(test_cases
 	simple_types_copy_propagation
 	simple_types_cse
 	simple_types_value_range
+	memmove
+	minmax_sequence
+	pointer_loop_invariant
+	smart_pointers
 )
 
 foreach(test_case IN LISTS test_cases)
