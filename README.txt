@@ -57,3 +57,5 @@ Windows users will need to make sure that the VC environment variables
 are set for their shell (command prompt), then use "nmake -f makefile.nt all"
 and "nmake -f makefile.nt report" from within that shell.
 
+A CMakeLists.txt file is provided for convenience, but not tested as thoroughly
+as the makefiles. (thanks to Denis Glazachev)

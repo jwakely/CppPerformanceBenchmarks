@@ -91,7 +91,11 @@ simple_types_constant_propagation.exe \
 memcpy.exe \
 simple_types_copy_propagation.exe \
 simple_types_cse.exe \
-simple_types_value_range.exe
+simple_types_value_range.exe \
+memmove.exe \
+minmax_sequence.exe \
+pointer_loop_invariant.exe \
+smart_pointers.exe
 
 
 
@@ -190,6 +194,10 @@ report:  $(BINARIES)
 	.\simple_types_copy_propagation.exe >> $(REPORT_FILE)
 	.\simple_types_cse.exe >> $(REPORT_FILE)
 	.\simple_types_value_range.exe >> $(REPORT_FILE)
+	.\memmove.exe >> $(REPORT_FILE)
+	.\minmax_sequence.exe >> $(REPORT_FILE)
+	.\pointer_loop_invariant.exe >> $(REPORT_FILE)
+	.\smart_pointers.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 
