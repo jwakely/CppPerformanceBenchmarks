@@ -65,6 +65,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #include <lm.h>
 #include <Lmwksta.h>
 #include <Lmapibuf.h>
+#include <intrin.h>
 #endif
 
 
@@ -704,10 +705,69 @@ void ReportCPUPhysical()
 #endif
 
 
+#ifdef _WIN32
+// why the heck doesn't Microsoft have a real API for CPU information?
+// GetSystemInfo is pretty anemic, and forcing us to use an Intel specific instruction is BAD.
 
-// TODO - Windows
+    int CPUInfo[4] = {-1};
+    char CPUBrandString[ 200 ];
 
+    __cpuid(CPUInfo, 0x80000000);
+
+    const unsigned nExIds = CPUInfo[0];
+
+    for (unsigned i=0x80000000; i <= nExIds; ++i)
+    {
+        __cpuid(CPUInfo, i);
+        
+        // get CPU "brand" string
+        if  (i == 0x80000002)
+            memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+        else if  (i == 0x80000003)
+            memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+        else if  (i == 0x80000004)
+            memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+    }
+
+    printf("CPU brand string: %s\n", CPUBrandString );
     
+    
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+
+    if (info.dwNumberOfProcessors != 0)
+        printf("Machine has %d CPUs\n", info.dwNumberOfProcessors );
+    
+    switch (info.wProcessorArchitecture) {
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            printf("CPU_TYPE AMD64\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            printf("CPU_TYPE x86\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_IA64:
+            printf("CPU_TYPE IA64\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_ARM:
+            printf("CPU_TYPE ARM32\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_ARM64:
+            printf("CPU_TYPE ARM64\n");
+            break;
+        default:
+            printf("********\n" );
+            printf("Unknown Win CPU architecture, please update %s for your cpu\n", __FILE__ );
+            printf("********\n" );
+            break;
+    
+    }
+
+    printf("Processor Level: %d\n", info.wProcessorLevel );
+    printf("Processor Revision: %d\n", info.wProcessorRevision );
+    
+#endif  // _WIN32
+    
+
     // useful information, and not so dependent on the OS
     ReportEndian();
 }
@@ -845,43 +905,15 @@ void ReportMachinePhysical()
     SYSTEM_INFO info;
     GetSystemInfo(&info);
 
-    if (info.dwNumberOfProcessors != 0)
-        printf("Machine has %d CPUs\n", info.dwNumberOfProcessors );
-    
-    switch (info.wProcessorArchitecture) {
-        case PROCESSOR_ARCHITECTURE_AMD64:
-            printf("CPU_TYPE AMD64\n");
-            break;
-        case PROCESSOR_ARCHITECTURE_INTEL:
-            printf("CPU_TYPE x86\n");
-            break;
-        case PROCESSOR_ARCHITECTURE_IA64:
-            printf("CPU_TYPE IA64\n");
-            break;
-        case PROCESSOR_ARCHITECTURE_ARM:
-            printf("CPU_TYPE ARM32\n");
-            break;
-        case PROCESSOR_ARCHITECTURE_ARM64:
-            printf("CPU_TYPE ARM64\n");
-            break;
-        default:
-            printf("********\n" );
-            printf("Unknown Win CPU architecture, please update %s for your cpu\n", __FILE__ );
-            printf("********\n" );
-            break;
-    
-    }
-
     if (info.dwPageSize != 0) {
         printf("Machine using ");
         printMemSize( info.dwPageSize  );
         printf(" pagesize\n");
         }
-    
 
     unsigned long long totalRam = 0;    // in kilobytes
     if (GetPhysicallyInstalledSystemMemory( &totalRam )) {        // This is failing on Windows 10 VM
-        totalRam *=1024;
+        totalRam *= 1024;
     } else {
         MEMORYSTATUSEX gmem;
         gmem.dwLength = sizeof(gmem);
