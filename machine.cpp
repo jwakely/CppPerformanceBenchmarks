@@ -52,6 +52,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #include <sys/utsname.h>
 #include <unistd.h>
 #include <strings.h>
+#include <gnu/libc-version.h>
 #endif
 
 #if isLinux
@@ -171,6 +172,11 @@ void ReportCompiler()
     printf("********\n" );
     printf("Unknown compiler, please update %s for your compiler\n", __FILE__ );
     printf("********\n" );
+#endif
+
+
+#if isLinux || isBSD
+    printf("glibc version: %s\n", gnu_get_libc_version());
 #endif
 
 }
