@@ -57,6 +57,10 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #if isLinux
 // BSD doesn't have this header or function
 #include <sys/sysinfo.h>
+#endif
+
+// present on most Linux versions, missing from Solaris
+#if isLinux && !defined (__sun)
 #include <gnu/libc-version.h>
 #endif
 
@@ -175,7 +179,7 @@ void ReportCompiler()
 #endif
 
 
-#if isLinux
+#if isLinux && !defined (__sun)
     printf("glibc version: %s\n", gnu_get_libc_version());
 #endif
 
