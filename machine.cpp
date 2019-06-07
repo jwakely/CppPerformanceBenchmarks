@@ -700,7 +700,6 @@ void ReportCPUPhysical()
 
 
 #if isLinux
-// read first processor entry of /proc/cpuinfo
     parseLinuxCPUInfo();
 #endif
 
@@ -709,15 +708,17 @@ void ReportCPUPhysical()
 // why the heck doesn't Microsoft have a real API for CPU information?
 // GetSystemInfo is pretty anemic, and forcing us to use an Intel specific instruction is BAD.
 
-    int CPUInfo[4] = {-1};
-    char CPUBrandString[ 200 ];
+    int32_t CPUInfo[4] = {-1};
+    char CPUBrandString[ 64 ];
 
     __cpuid(CPUInfo, 0x80000000);
 
     const unsigned nExIds = CPUInfo[0];
+    printf("CPU extended ids: 0x%8.8X\n", nExIds );
 
-    for (unsigned i=0x80000000; i <= nExIds; ++i)
-    {
+    // only 0x80000000 + 2,3,4 are valid brand strings
+    // 0x80000006 has some cache info
+    for (unsigned i = 0x80000000; i <= nExIds; ++i) {
         __cpuid(CPUInfo, i);
         
         // get CPU "brand" string
@@ -728,6 +729,8 @@ void ReportCPUPhysical()
         else if  (i == 0x80000004)
             memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
     }
+    
+    CPUBrandString[32+16] = 0;  // make sure it is NULL terminated
 
     printf("CPU brand string: %s\n", CPUBrandString );
     
