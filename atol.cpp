@@ -26,6 +26,7 @@ Assumptions:
 #include <ctime>
 #include <climits>
 #include <cerrno>
+#include <cinttypes>
 #include "benchmark_stdint.hpp"
 #include "benchmark_timer.h"
 #include "benchmark_results.h"
@@ -99,14 +100,14 @@ inline void check_sum(unsigned long result) {
 
 inline void check_sum64(int64_t result) {
     if (result != global_64_sum)
-        printf("test %i failed (%lld, %llu)\n", current_test, result, global_u64_sum);
+        printf("test %i failed (%" PRIi64 ", %" PRIu64 ")\n", current_test, result, global_u64_sum);
 }
 
 /******************************************************************************/
 
 inline void check_sum64(uint64_t result) {
     if (result != global_u64_sum)
-        printf("test %i failed (%llu, %llu)\n", current_test, result, global_u64_sum);
+        printf("test %i failed (%" PRIu64 ", %" PRIu64 ")\n", current_test, result, global_u64_sum);
 }
 
 /******************************************************************************/
@@ -540,7 +541,7 @@ int main (int argc, char *argv[])
         for (j = 0; j < SIZE; ++j )
             {
             int64_t result;
-            sscanf( integer_strings[j], "%lld", &result );
+            sscanf( integer_strings[j], "%" SCNi64, &result );
             sum += result;
             }
         check_sum64(sum);
@@ -640,7 +641,7 @@ int main (int argc, char *argv[])
         for (j = 0; j < SIZE; ++j )
             {
             int64_t result;
-            sscanf( hex_strings[j], "%llX", &result );
+            sscanf( hex_strings[j], "%" SCNx64, &result );
             sum += result;
             }
         check_sum64(sum);

@@ -34,6 +34,7 @@ NOTE: strtod and strtol ignore locales, and fail tests on any locale that uses a
 #include <cstdlib>
 #include <clocale>
 #include <sstream>
+#include <cinttypes>
 
 
 // TODO - ccox - clean up the macro tests, separate into semi-sane groups
@@ -119,14 +120,14 @@ inline void check_sum(long result) {
 
 inline void check_sum64(int64_t result) {
     if (result != global_64_sum)
-        printf("test %i failed (expect %jd, got %jd)\n", current_test, global_64_sum, result);
+        printf("test %i failed (expected %" PRIi64 ", got %" PRIi64 ")\n", current_test, global_64_sum, result);
 }
 
 /******************************************************************************/
 
 inline void check_sum_float(float result) {
     float diff = fabs(result - global_float_sum);
-    if ( diff > 0.1f)    // linux fabs or gcc makes a mess of the difference for some reason
+    if ( diff > 0.1f )    // linux fabs or gcc makes a mess of the difference for some reason
         printf("test %i failed (expect %f, got %f, diff %f)\n", current_test, global_float_sum, result, diff);
 }
 
@@ -134,8 +135,8 @@ inline void check_sum_float(float result) {
 
 inline void check_sum_double(double result) {
     double diff = fabs(result - global_double_sum);
-    if ( diff > 0.01)
-        printf("test %i failed (expect %lf, got %lff, diff %f)\n", current_test, global_double_sum, result, diff);
+    if ( diff > 0.01 )
+        printf("test %i failed (expect %lf, got %lf, diff %f)\n", current_test, global_double_sum, result, diff);
 }
 
 /******************************************************************************/
