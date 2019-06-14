@@ -992,7 +992,7 @@ void testOneType()
     iterations /= 533;
     
     // seed the random number generator so we get repeatable results
-    srand( (int)init_value + 12345 );
+    scrand( (int)init_value + 12345 );
 
     // fill one set of random numbers
     fill_random( data, data+SIZE );

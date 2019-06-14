@@ -26,6 +26,33 @@ bool isInteger() { return (T(2.1) == T(2)); }
 
 /******************************************************************************/
 
+volatile static uint64_t gCRand64Seed = 0x42424242;
+
+void scrand(uint64_t seed)
+{
+    gCRand64Seed = seed;
+}
+
+// we don't need a complicated random function for benchmarking
+int64_t crand64(void)
+{
+    const uint64_t a = 6364136223846793005ULL;
+    const uint64_t c = 1442695040888963407ULL;
+    uint64_t temp = (gCRand64Seed * a) + c;
+    gCRand64Seed = temp;
+    
+    // without bit mixing the result is really bad, shows lots of periodicity
+    temp = (temp >> 20) ^ (temp << 23) ^ temp;        // looks better
+    return int64_t(temp);
+}
+
+int32_t crand32(void)
+{
+    return int32_t( crand64() );
+}
+
+/******************************************************************************/
+
 template <typename ForwardIterator>
 bool is_sorted(ForwardIterator first, ForwardIterator last) {
     auto prev = first;
@@ -78,7 +105,7 @@ template <typename ForwardIterator>
 void fill_random(ForwardIterator first, ForwardIterator last) {
     using T = typename std::iterator_traits<ForwardIterator>::value_type;
     while (first != last) {
-        *first++ = static_cast<T>( rand() >> 3 );
+        *first++ = static_cast<T>( crand64() >> 3 );
     }
 }
 
@@ -156,7 +183,7 @@ template<typename RandomIterator>
 void random_shuffle(RandomIterator first, RandomIterator last) {
     auto count = last - first;
     for (RandomIterator i = first + 1; i != last; ++i) {
-        size_t offset = rand() % count;
+        size_t offset = crand64() % count;
         auto temp = *i;
         *i = first[ offset ];
         first[ offset ] = temp;

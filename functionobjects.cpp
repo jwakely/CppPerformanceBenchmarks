@@ -49,6 +49,7 @@ Since qsort's comparison function must return int (less than 0, 0, greater than 
 #include <memory>
 #include "benchmark_results.h"
 #include "benchmark_timer.h"
+#include "benchmark_algorithms.h"
 
 using namespace std;
 
@@ -108,38 +109,6 @@ struct inline_less_than_functor
         return( lhs < rhs? true : false );
         }
 };
-
-/******************************************************************************/
-
-// hard coded comparison function
-template<class Iterator>
-void quicksort(Iterator begin, Iterator end)
-{
-    if ( (end - begin) > 1 ) {
-
-        auto middleValue = *begin;
-        Iterator left = begin;
-        Iterator right = end;
-
-        for(;;) {
-
-            while ( middleValue < *(--right) );
-            if ( !(left < right ) ) break;
-            
-            while ( *(left) < middleValue )
-                ++left;
-            if ( !(left < right ) ) break;
-
-            // swap
-            auto temp = *right;
-            *right = *left;
-            *left = temp;
-        }
-        
-        quicksort( begin, right + 1 );
-        quicksort( right + 1, end );
-    }
-}
 
 /******************************************************************************/
 
@@ -327,7 +296,7 @@ void TestOneSort( const T master_table, T table,
 {
     start_timer();
     for (int i = 0; i < iterations; ++i) {
-        copy(master_table, master_table+tablesize, table);
+        std::copy(master_table, master_table+tablesize, table);
         doSort( table, table+tablesize, doCompare );
         verify_sorted( table, table + tablesize, label );
     }
@@ -344,7 +313,7 @@ void TestOneSort( const T master_table, T table,
 {
     start_timer();
     for (int i = 0; i < iterations; ++i) {
-        copy(master_table, master_table+tablesize, table);
+        std::copy(master_table, master_table+tablesize, table);
         doSort( table, table+tablesize );
         verify_sorted( table, table + tablesize, label );
     }
@@ -418,12 +387,12 @@ int main(int argc, char* argv[])
     
     
     // seed the random number generator, so we get repeatable results
-    srand( tablesize + 123 );
+    scrand( tablesize + 123 );
     
     auto master_storage = std::unique_ptr<double>(new double[tablesize]);
     double * master_table = master_storage.get();
     for( int n = 0; n < tablesize; ++n )
-        master_table[n] = static_cast<double>( rand() );
+        master_table[n] = static_cast<double>( crand32() );
     
     auto table_storage = std::unique_ptr<double>(new double[tablesize]);
     double * table = table_storage.get();
