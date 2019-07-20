@@ -136,6 +136,10 @@ set(test_cases
 	minmax_sequence
 	pointer_loop_invariant
 	smart_pointers
+	convolution
+	reverse_sequence
+	simple_types_strength_reduction
+	sum_sequence
 )
 
 foreach(test_case IN LISTS test_cases)
