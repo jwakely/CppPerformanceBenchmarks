@@ -25,6 +25,7 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 /******************************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include "benchmark_stdint.hpp"
 
@@ -58,12 +59,18 @@ See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
 #include <sys/sysinfo.h>
 #endif
 
+// present on most Linux versions, missing from Solaris
+#if isLinux && !defined (__sun)
+#include <gnu/libc-version.h>
+#endif
+
 #if _WIN32
 #include <windows.h>
 #include <atlbase.h>
 #include <lm.h>
 #include <Lmwksta.h>
 #include <Lmapibuf.h>
+#include <intrin.h>
 #endif
 
 
@@ -169,6 +176,11 @@ void ReportCompiler()
     printf("********\n" );
     printf("Unknown compiler, please update %s for your compiler\n", __FILE__ );
     printf("********\n" );
+#endif
+
+
+#if isLinux && !defined (__sun)
+    printf("glibc version: %s\n", gnu_get_libc_version());
 #endif
 
 }
@@ -337,6 +349,81 @@ void ReportEndian()
 
 /******************************************************************************/
 
+#if isLinux
+void parseLinuxCPUInfo()
+{
+    const int buffersize = 4096;
+    char textBuffer[ buffersize ];
+    
+    FILE *procinfo = fopen("/proc/cpuinfo","r");
+    if (procinfo == NULL) {
+        printf("ERROR: could not open /proc/cpuinfo\n");
+        return;
+    }
+
+    // get useful lines from cpuinfo
+    while ( fgets(textBuffer, buffersize, procinfo) != NULL ) {
+        if (strstr(textBuffer, "vendor_id")
+        || strstr(textBuffer, "cpu family")
+        || strstr(textBuffer, "model")         // model and model name
+        || strstr(textBuffer, "stepping")
+        || strstr(textBuffer, "microcode")
+        || strstr(textBuffer, "cpu MHz")
+        || strstr(textBuffer, "cache")          // cache and cache alignment
+        || strstr(textBuffer, "fpu")            // fpu and fpu exceptions
+        || strstr(textBuffer, "flags")  ) {
+            int len = strlen(textBuffer);
+            textBuffer[len-1] = 0;  // remove trailing newline
+            puts(textBuffer);
+        }
+    
+        // stop after first processor == stop on first blank line
+        if (textBuffer[0] == '\r' || textBuffer[0] == '\n')
+            break;
+    }
+    
+    fclose(procinfo);
+    
+    
+    
+    // iterate over cache levels, painfully
+    for (int L = 0; L < 10; ++L) {
+        char levelBuffer[ buffersize ];
+        char filename[ 1024 ];
+        sprintf(filename, "/sys/devices/system/cpu/cpu0/cache/index%1d/level", L );
+    
+        FILE *cacheinfo = fopen(filename,"r");
+        if (cacheinfo == NULL) {
+            break;
+        }
+        if ( fgets(levelBuffer, buffersize, cacheinfo) != NULL ) {
+            int len = strlen(levelBuffer);
+            levelBuffer[len-1] = 0;  // remove trailing newline
+        }
+        fclose(cacheinfo);
+        
+        
+        sprintf(filename, "/sys/devices/system/cpu/cpu0/cache/index%1d/size", L );
+    
+        FILE *sizeinfo = fopen(filename,"r");
+        if (sizeinfo == NULL) {
+            break;
+        }
+        if ( fgets(textBuffer, buffersize, sizeinfo) != NULL ) {
+            int len = strlen(textBuffer);
+            textBuffer[len-1] = 0;  // remove trailing newline
+        }
+        fclose(sizeinfo);
+        
+        printf("Cache Level %s = %s\n", levelBuffer, textBuffer );
+    }
+
+}
+#endif //   isLinux
+
+
+/******************************************************************************/
+
     
 // what CPU are we actually running on
 // architecture, revision, speed
@@ -361,6 +448,7 @@ void ReportCPUPhysical()
     {
     long returnBuffer=0, retval=0;
     long long bigBuffer = 0;
+    char textBuffer[1024];
     size_t len;
     
     // this gets us the CPU family, but not the exact CPU model and rev!
@@ -422,6 +510,36 @@ void ReportCPUPhysical()
     if (retval == 0)
         printf("Mach CPU subtype %ld\n", returnBuffer );
     
+    len = 1024;
+    retval = sysctlbyname("machdep.cpu.brand_string", textBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Mach CPU brand string: %s\n", textBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("machdep.cpu.family", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Mach CPU family %ld\n", returnBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("machdep.cpu.model", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Mach CPU model %ld\n", returnBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("machdep.cpu.extfamily", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Mach CPU extfamily %ld\n", returnBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("machdep.cpu.stepping", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Mach CPU stepping %ld\n", returnBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("machdep.cpu.microcode_version", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("Mach CPU microcode_version %ld\n", returnBuffer );
+    
     len = 8;
     retval = sysctlbyname("hw.cpufrequency_max", &bigBuffer, &len, NULL, 0);
     if (retval == 0)
@@ -436,7 +554,7 @@ void ReportCPUPhysical()
     retval = sysctlbyname("hw.l1dcachesize", &bigBuffer, &len, NULL, 0);
     if (retval == 0)
         printf("CPU L1 Dcache: %lld bytes\n", bigBuffer );
-        
+    
     len = 8;
     retval = sysctlbyname("hw.l1icachesize", &bigBuffer, &len, NULL, 0);
     if (retval == 0)
@@ -591,12 +709,78 @@ void ReportCPUPhysical()
 #endif  // isBSD
 
 
-// TODO - Linux
+#if isLinux
+    parseLinuxCPUInfo();
+#endif
 
 
-// TODO - Windows
+#ifdef _WIN32
+// why the heck doesn't Microsoft have a real API for CPU information?
+// GetSystemInfo is pretty anemic, and forcing us to use an Intel specific instruction is BAD.
 
+    int32_t CPUInfo[4] = {-1};
+    char CPUBrandString[ 64 ];
+
+    __cpuid(CPUInfo, 0x80000000);
+
+    const unsigned nExIds = CPUInfo[0];
+    printf("CPU extended ids: 0x%8.8X\n", nExIds );
+
+    // only 0x80000000 + 2,3,4 are valid brand strings
+    // 0x80000006 has some cache info
+    for (unsigned i = 0x80000000; i <= nExIds; ++i) {
+        __cpuid(CPUInfo, i);
+        
+        // get CPU "brand" string
+        if  (i == 0x80000002)
+            memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+        else if  (i == 0x80000003)
+            memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+        else if  (i == 0x80000004)
+            memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+    }
     
+    CPUBrandString[32+16] = 0;  // make sure it is NULL terminated
+
+    printf("CPU brand string: %s\n", CPUBrandString );
+    
+    
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+
+    if (info.dwNumberOfProcessors != 0)
+        printf("Machine has %d CPUs\n", info.dwNumberOfProcessors );
+    
+    switch (info.wProcessorArchitecture) {
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            printf("CPU_TYPE AMD64\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            printf("CPU_TYPE x86\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_IA64:
+            printf("CPU_TYPE IA64\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_ARM:
+            printf("CPU_TYPE ARM32\n");
+            break;
+        case PROCESSOR_ARCHITECTURE_ARM64:
+            printf("CPU_TYPE ARM64\n");
+            break;
+        default:
+            printf("********\n" );
+            printf("Unknown Win CPU architecture, please update %s for your cpu\n", __FILE__ );
+            printf("********\n" );
+            break;
+    
+    }
+
+    printf("Processor Level: %d\n", info.wProcessorLevel );
+    printf("Processor Revision: %d\n", info.wProcessorRevision );
+    
+#endif  // _WIN32
+    
+
     // useful information, and not so dependent on the OS
     ReportEndian();
 }
@@ -734,43 +918,15 @@ void ReportMachinePhysical()
     SYSTEM_INFO info;
     GetSystemInfo(&info);
 
-    if (info.dwNumberOfProcessors != 0)
-        printf("Machine has %d CPUs\n", info.dwNumberOfProcessors );
-    
-    switch (info.wProcessorArchitecture) {
-        case PROCESSOR_ARCHITECTURE_AMD64:
-            printf("CPU_TYPE AMD64\n");
-            break;
-        case PROCESSOR_ARCHITECTURE_INTEL:
-            printf("CPU_TYPE x86\n");
-            break;
-        case PROCESSOR_ARCHITECTURE_IA64:
-            printf("CPU_TYPE IA64\n");
-            break;
-        case PROCESSOR_ARCHITECTURE_ARM:
-            printf("CPU_TYPE ARM32\n");
-            break;
-        case PROCESSOR_ARCHITECTURE_ARM64:
-            printf("CPU_TYPE ARM64\n");
-            break;
-        default:
-            printf("********\n" );
-            printf("Unknown Win CPU architecture, please update %s for your cpu\n", __FILE__ );
-            printf("********\n" );
-            break;
-    
-    }
-
     if (info.dwPageSize != 0) {
         printf("Machine using ");
         printMemSize( info.dwPageSize  );
         printf(" pagesize\n");
         }
-    
 
     unsigned long long totalRam = 0;    // in kilobytes
     if (GetPhysicallyInstalledSystemMemory( &totalRam )) {        // This is failing on Windows 10 VM
-        totalRam *=1024;
+        totalRam *= 1024;
     } else {
         MEMORYSTATUSEX gmem;
         gmem.dwLength = sizeof(gmem);

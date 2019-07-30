@@ -18,15 +18,20 @@
 
 INCLUDE = -I.
 
-# GCC
+
+# GCC (defaults to Clang/LLVM on MacOS)
 #CC = gcc
 #CXX = g++
 
 
-# GCC 8.2
+# GCC 8
 #CC = gcc-8
 #CXX = g++-8
 
+
+# Clang/LLVM 8
+#CC = clang-8
+#CXX = clang++-8
 
 
 CFLAGS = $(INCLUDE) -O3
@@ -94,7 +99,11 @@ simple_types_value_range \
 memmove \
 minmax_sequence \
 pointer_loop_invariant \
-smart_pointers
+smart_pointers \
+convolution \
+reverse_sequence \
+simple_types_strength_reduction \
+sum_sequence
 
 
 
@@ -203,10 +212,14 @@ report:  $(BINARIES)
 	./simple_types_copy_propagation >> $(REPORT_FILE)
 	./simple_types_cse >> $(REPORT_FILE)
 	./simple_types_value_range >> $(REPORT_FILE)
+	./memmove >> $(REPORT_FILE)
+	./minmax_sequence >> $(REPORT_FILE)
+	./pointer_loop_invariant >> $(REPORT_FILE)
+	./smart_pointers >> $(REPORT_FILE)
+	./convolution >> $(REPORT_FILE)
+	./reverse_sequence >> $(REPORT_FILE)
+	./simple_types_strength_reduction >> $(REPORT_FILE)
+	./sum_sequence >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
-	memmove >> $(REPORT_FILE)
-	minmax_sequence >> $(REPORT_FILE)
-	pointer_loop_invariant >> $(REPORT_FILE)
-	smart_pointers >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

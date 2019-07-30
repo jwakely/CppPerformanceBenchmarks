@@ -912,7 +912,7 @@ void TestOneType()
     T data[SIZE];
 
     // seed the random number generator so we get repeatable results
-    srand( (int)init_value + 123 );
+    scrand( (int)init_value + 123 );
     
     // fill one set of random numbers
     fill_random( data, data+SIZE );
@@ -1006,7 +1006,7 @@ void TestOneFloat()
     T data[SIZE];
 
     // seed the random number generator so we get repeatable results
-    srand( (int)init_value + 123 );
+    scrand( (int)init_value + 123 );
     
     // fill one set of random numbers
     fill_random( data, data+SIZE );

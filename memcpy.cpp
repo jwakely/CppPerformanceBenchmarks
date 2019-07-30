@@ -434,7 +434,7 @@ int main(int argc, char** argv) {
     if (argc > 2) init_value = (double) atof(argv[2]);
 
 
-    srand( init_value );
+    scrand( init_value );
     fill_random( data8u, data8u+SIZE+alignment_pad );
     fill_random( data8u_source, data8u_source+SIZE );
 

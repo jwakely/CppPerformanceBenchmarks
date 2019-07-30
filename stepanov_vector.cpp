@@ -286,7 +286,7 @@ void TestOneType()
     int base_iterations = iterations;
     
     // seed the random number generator so we get repeatable results
-    srand( (int)init_value + 234 );
+    scrand( (int)init_value + 234 );
     
     ::fill(dpb, dpe, T(init_value));
     

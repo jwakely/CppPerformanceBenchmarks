@@ -501,7 +501,7 @@ void TestOneType()
     int base_iterations = iterations;
 
     // seed the random number generator so we get repeatable results
-    srand( (int)init_value + 123 );
+    scrand( (int)init_value + 123 );
 
     fill(dpb, dpe, T(init_value));
     fill(DVpb, DVpe, TypeValueWrapper(init_value));

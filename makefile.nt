@@ -95,7 +95,11 @@ simple_types_value_range.exe \
 memmove.exe \
 minmax_sequence.exe \
 pointer_loop_invariant.exe \
-smart_pointers.exe
+smart_pointers.exe \
+convolution.exe \
+reverse_sequence.exe \
+simple_types_strength_reduction.exe \
+sum_sequence.exe
 
 
 
@@ -198,6 +202,10 @@ report:  $(BINARIES)
 	.\minmax_sequence.exe >> $(REPORT_FILE)
 	.\pointer_loop_invariant.exe >> $(REPORT_FILE)
 	.\smart_pointers.exe >> $(REPORT_FILE)
+	.\convolution.exe >> $(REPORT_FILE)
+	.\reverse_sequence.exe >> $(REPORT_FILE)
+	.\simple_types_strength_reduction.exe >> $(REPORT_FILE)
+	.\sum_sequence.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 

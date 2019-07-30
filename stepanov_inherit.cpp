@@ -599,7 +599,7 @@ void TestOneType()
 
 
     // seed the random number generator so we get repeatable results
-    srand( (int)init_value + 345 );
+    scrand( (int)init_value + 345 );
 
     fill( dpb, dpe, T(init_value) );
     fill( Dpb, Dpe, TypeClass<T>(init_value) );
