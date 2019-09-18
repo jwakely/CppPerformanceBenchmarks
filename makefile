@@ -103,7 +103,11 @@ smart_pointers \
 convolution \
 reverse_sequence \
 simple_types_strength_reduction \
-sum_sequence
+sum_sequence \
+convolution_box \
+logic_sequence \
+matrix_vector_product \
+product_sequence
 
 
 
@@ -220,6 +224,10 @@ report:  $(BINARIES)
 	./reverse_sequence >> $(REPORT_FILE)
 	./simple_types_strength_reduction >> $(REPORT_FILE)
 	./sum_sequence >> $(REPORT_FILE)
+	./convolution_box >> $(REPORT_FILE)
+	./logic_sequence >> $(REPORT_FILE)
+	./matrix_vector_product >> $(REPORT_FILE)
+	./product_sequence >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

@@ -99,8 +99,11 @@ smart_pointers.exe \
 convolution.exe \
 reverse_sequence.exe \
 simple_types_strength_reduction.exe \
-sum_sequence.exe
-
+sum_sequence.exe \
+convolution_box.exe \
+logic_sequence.exe \
+matrix_vector_product.exe \
+product_sequence.exe
 
 
 #
@@ -206,6 +209,10 @@ report:  $(BINARIES)
 	.\reverse_sequence.exe >> $(REPORT_FILE)
 	.\simple_types_strength_reduction.exe >> $(REPORT_FILE)
 	.\sum_sequence.exe >> $(REPORT_FILE)
+	.\convolution_box.exe >> $(REPORT_FILE)
+	.\logic_sequence.exe >> $(REPORT_FILE)
+	.\matrix_vector_product.exe >> $(REPORT_FILE)
+	.\product_sequence.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 
