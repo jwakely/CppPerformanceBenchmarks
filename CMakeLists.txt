@@ -140,6 +140,10 @@ set(test_cases
 	reverse_sequence
 	simple_types_strength_reduction
 	sum_sequence
+	convolution_box
+	logic_sequence
+	matrix_vector_product
+	product_sequence
 )
 
 foreach(test_case IN LISTS test_cases)
