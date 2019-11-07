@@ -144,6 +144,9 @@ set(test_cases
 	logic_sequence
 	matrix_vector_product
 	product_sequence
+	binary_search
+	loop_unswitching
+	template_unroll
 )
 
 foreach(test_case IN LISTS test_cases)

@@ -107,8 +107,10 @@ sum_sequence \
 convolution_box \
 logic_sequence \
 matrix_vector_product \
-product_sequence
-
+product_sequence \
+binary_search \
+loop_unswitching \
+template_unroll
 
 
 
@@ -228,6 +230,9 @@ report:  $(BINARIES)
 	./logic_sequence >> $(REPORT_FILE)
 	./matrix_vector_product >> $(REPORT_FILE)
 	./product_sequence >> $(REPORT_FILE)
+	./binary_search >> $(REPORT_FILE)
+	./loop_unswitching >> $(REPORT_FILE)
+	./template_unroll >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 
