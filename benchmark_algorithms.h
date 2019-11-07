@@ -33,7 +33,8 @@ void scrand(uint64_t seed)
     gCRand64Seed = seed;
 }
 
-// we don't need a complicated random function for benchmarking
+// We don't need a complicated random function for benchmarking.
+// But we do need reproducible values, so can't rely on the system random functions.
 int64_t crand64(void)
 {
     const uint64_t a = 6364136223846793005ULL;
@@ -122,12 +123,49 @@ void fill_ascending(ForwardIterator first, ForwardIterator last) {
 
 /******************************************************************************/
 
-template <class ForwardIterator>
-void fill_descending(ForwardIterator first, ForwardIterator last, size_t count) {
-    using T = typename std::iterator_traits<ForwardIterator>::value_type;
+template <class ForwardIterator, typename T>
+void fill_ascending(ForwardIterator first, ForwardIterator last, T initial) {
+    using TT = typename std::iterator_traits<ForwardIterator>::value_type;
     while (first != last) {
-        *(first++) = static_cast<T>( --count );
+        *(first++) = static_cast<TT>( initial++ );
     }
+}
+
+/******************************************************************************/
+
+template <class RandomAccessIterator>
+void fill_ascending_n(RandomAccessIterator first, size_t count) {
+    using TT = typename std::iterator_traits<RandomAccessIterator>::value_type;
+    for (size_t i = 0; i < count; ++i)
+        first[i] = static_cast<TT>( i );
+}
+
+/******************************************************************************/
+
+template <class RandomAccessIterator, typename T>
+void fill_ascending_n(RandomAccessIterator first, size_t count, T initial) {
+    using TT = typename std::iterator_traits<RandomAccessIterator>::value_type;
+    for (size_t i = 0; i < count; ++i)
+        first[i] = static_cast<TT>( initial++ );
+}
+
+/******************************************************************************/
+
+template <class ForwardIterator, typename T>
+void fill_descending(ForwardIterator first, ForwardIterator last, T initial) {
+    using TT = typename std::iterator_traits<ForwardIterator>::value_type;
+    while (first != last) {
+        *(first++) = static_cast<TT>( --initial );
+    }
+}
+
+/******************************************************************************/
+
+template <class RandomAccessIterator, typename T>
+void fill_descending_n(RandomAccessIterator first, size_t count, T initial) {
+    using TT = typename std::iterator_traits<RandomAccessIterator>::value_type;
+    for (size_t i = 0; i < count; ++i)
+        first[i] = static_cast<TT>( --initial );
 }
 
 /******************************************************************************/
@@ -146,13 +184,24 @@ void fill_alternating(ForwardIterator first, ForwardIterator last, size_t count)
 /******************************************************************************/
 
 template <class ForwardIterator>
-void fill_steps(ForwardIterator first, ForwardIterator last, size_t count, size_t steps) {
+void fill_steps(ForwardIterator first, size_t count, size_t steps) {
     using T = typename std::iterator_traits<ForwardIterator>::value_type;
     size_t run_length = count / steps;
+    size_t i = 0;
+    T value(0);
     if (run_length < 1) run_length = 1; // happens when count < steps
-    for (size_t i=0; first != last; ++i) {
-        *first++ = T( i / run_length );
+    while (i < count) {
+        for ( size_t temp = 0; (temp < run_length) && (i < count); ++temp, ++i)
+            *first++ = value;
+        ++value;
     }
+}
+
+/******************************************************************************/
+
+template <class ForwardIterator>
+void fill_steps(ForwardIterator first, ForwardIterator /* last */, size_t count, size_t steps) {
+    fill_steps(first, count, steps );
 }
 
 /******************************************************************************/
@@ -315,6 +364,17 @@ void bogosort( RandomAccessIterator begin, RandomAccessIterator end )
     do {
         random_shuffle(begin,end);
     } while (!is_sorted(begin,end));
+}
+
+/******************************************************************************/
+
+template <class RandomAccessIterator, typename T>
+RandomAccessIterator bogosearch( RandomAccessIterator begin, RandomAccessIterator end, T value )
+{
+    do {
+        random_shuffle(begin,end);
+    } while (value != *begin);
+    return begin;
 }
 
 /******************************************************************************/
