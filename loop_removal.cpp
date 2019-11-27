@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018 Chris Cox
+    Copyright 2018-2019 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -18,11 +18,13 @@ Assumptions:
 
     3) The compiler will remove loops whose contents do not contribute to output / results.
         aka: dead loop removal after removing dead code from loop body
-    
+
     4) The compiler will remove constant length loops when the result can be calculated directly.
 
     5) The compiler will remove variable length loops when the result can be calculated directly.
 
+    6) The compiler will apply algebraic simplification to induction variables and then remove
+        loops as above.
 
 
 NOTE - loops that cannot be entered are covered in dead_code_elimination.cpp
@@ -66,25 +68,28 @@ int count_array[ 8 ];
 /******************************************************************************/
 
 template <typename T>
-inline void check_sum(T result, int length) {
+inline void check_sum(T result, int length, const char *label) {
   T temp = (length*length)*(length*length)*(length*length)*(length*length);
-  if (!tolerance_equal<T>(result,temp)) printf("test %i failed\n", current_test);
+  if (!tolerance_equal<T>(result,temp))
+    printf("test %s failed\n", label);
 }
 
 /******************************************************************************/
 
 template <typename T>
-inline void check_sum(T result, int* lengths) {
+inline void check_sum(T result, int* lengths, const char *label) {
   T temp = (lengths[0]*lengths[1])*(lengths[2]*lengths[3])*(lengths[4]*lengths[5])*(lengths[6]*lengths[7]);
-  if (!tolerance_equal<T>(result,temp)) printf("test %i failed\n", current_test);
+  if (!tolerance_equal<T>(result,temp))
+    printf("test %s failed\n", label);
 }
 
 /******************************************************************************/
 
 template <typename T>
-inline void check_sum2(T result) {
+inline void check_sum2(T result, const char *label) {
   T temp = (T)255 * (T)SIZE;
-  if (!tolerance_equal<T>(result,temp)) printf("test %i failed\n", current_test);
+  if (!tolerance_equal<T>(result,temp))
+    printf("test %s failed\n", label);
 }
 
 /******************************************************************************/
@@ -92,16 +97,16 @@ inline void check_sum2(T result) {
 
 template <typename T >
 void test_loop_opt(int length, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
 
         result = (length*length)*(length*length)*(length*length)*(length*length);
 
-        check_sum<T>(result, length);
+        check_sum<T>(result, length, label);
     }
   
     record_result( timer(), label );
@@ -111,11 +116,11 @@ void test_loop_opt(int length, const char *label) {
 
 template <typename T >
 void test_for_loop_single(int length, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -129,7 +134,7 @@ void test_for_loop_single(int length, const char *label) {
         for (m = 0; m < length; ++m)
             ++result;
 
-        check_sum<T>(result, length);
+        check_sum<T>(result, length, label);
     }
   
     record_result( timer(), label );
@@ -139,11 +144,11 @@ void test_for_loop_single(int length, const char *label) {
 
 template <typename T >
 void test_for_loop_single2(int length, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -157,7 +162,7 @@ void test_for_loop_single2(int length, const char *label) {
         for (m = length; m > 0; --m)
             ++result;
 
-        check_sum<T>(result, length);
+        check_sum<T>(result, length, label);
     }
   
     record_result( timer(), label );
@@ -167,11 +172,11 @@ void test_for_loop_single2(int length, const char *label) {
 
 template <typename T >
 void test_for_loop_single3(int length, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -185,7 +190,7 @@ void test_for_loop_single3(int length, const char *label) {
         for (m = length; m > 0; --m)
             ++result;
 
-        check_sum<T>(result, length);
+        check_sum<T>(result, length, label);
     }
   
     record_result( timer(), label );
@@ -195,11 +200,11 @@ void test_for_loop_single3(int length, const char *label) {
 
 template <typename T >
 void test_while_loop_single(int length, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -237,7 +242,7 @@ void test_while_loop_single(int length, const char *label) {
         ++x;
         }
 
-        check_sum<T>(result, length);
+        check_sum<T>(result, length, label);
     }
   
     record_result( timer(), label );
@@ -247,11 +252,11 @@ void test_while_loop_single(int length, const char *label) {
 
 template <typename T >
 void test_do_loop_single(int length, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -290,7 +295,7 @@ void test_do_loop_single(int length, const char *label) {
         ++x;
         } while (x < length);
 
-        check_sum<T>(result, length);
+        check_sum<T>(result, length, label);
     }
   
     record_result( timer(), label );
@@ -300,11 +305,11 @@ void test_do_loop_single(int length, const char *label) {
 
 template <typename T >
 void test_goto_loop_single(int length, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -369,7 +374,7 @@ loop_start_m:
             goto loop_start_x;
         }
 
-        check_sum<T>(result, length);
+        check_sum<T>(result, length, label);
     }
   
     record_result( timer(), label );
@@ -380,11 +385,11 @@ loop_start_m:
 // scalar replacement of arrays would help here
 template <typename T >
 void test_for_loop_multiple(int* lengths, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -398,7 +403,7 @@ void test_for_loop_multiple(int* lengths, const char *label) {
         for (m = 0; m < lengths[7]; ++m)
             ++result;
 
-        check_sum<T>(result, lengths);
+        check_sum<T>(result, lengths, label);
     }
   
     record_result( timer(), label );
@@ -409,11 +414,11 @@ void test_for_loop_multiple(int* lengths, const char *label) {
 // scalar replacement of arrays would help here
 template <typename T >
 void test_for_loop_multiple2(int* lengths, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -427,7 +432,7 @@ void test_for_loop_multiple2(int* lengths, const char *label) {
         for (m = lengths[7]; m > 0; --m)
             ++result;
 
-        check_sum<T>(result, lengths);
+        check_sum<T>(result, lengths, label);
     }
   
     record_result( timer(), label );
@@ -438,11 +443,11 @@ void test_for_loop_multiple2(int* lengths, const char *label) {
 // scalar replacement of arrays would help here
 template <typename T >
 void test_for_loop_multiple3(int* lengths, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -456,7 +461,7 @@ void test_for_loop_multiple3(int* lengths, const char *label) {
         for (m = lengths[7]; m > 0; --m)
             ++result;
 
-        check_sum<T>(result, lengths);
+        check_sum<T>(result, lengths, label);
     }
   
     record_result( timer(), label );
@@ -466,11 +471,11 @@ void test_for_loop_multiple3(int* lengths, const char *label) {
 
 template <typename T >
 void test_while_loop_multiple(int* lengths, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -508,7 +513,7 @@ void test_while_loop_multiple(int* lengths, const char *label) {
         ++x;
         }
 
-        check_sum<T>(result, lengths);
+        check_sum<T>(result, lengths, label);
     }
   
     record_result( timer(), label );
@@ -518,11 +523,11 @@ void test_while_loop_multiple(int* lengths, const char *label) {
 
 template <typename T >
 void test_do_loop_multiple(int* lengths, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -568,7 +573,7 @@ void test_do_loop_multiple(int* lengths, const char *label) {
         ++x;
         } while (x < lengths[0]);
 
-        check_sum<T>(result, lengths);
+        check_sum<T>(result, lengths, label);
     }
   
     record_result( timer(), label );
@@ -578,11 +583,11 @@ void test_do_loop_multiple(int* lengths, const char *label) {
 
 template <typename T >
 void test_goto_loop_multiple(int* lengths, const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, y, z, w, j, k, i, m;
 
@@ -654,7 +659,7 @@ loop_start_m:
             goto loop_start_x;
         }
 
-        check_sum<T>(result, lengths);
+        check_sum<T>(result, lengths, label);
     }
 
     record_result( timer(), label );
@@ -665,16 +670,16 @@ loop_start_m:
 
 template <typename T >
 void test_loop_const_opt(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -684,11 +689,11 @@ void test_loop_const_opt(const char *label) {
 
 template <typename T >
 void test_for_loop_const(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, i;
         
@@ -700,7 +705,7 @@ void test_for_loop_const(const char *label) {
             result += temp;
         }
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -710,11 +715,11 @@ void test_for_loop_const(const char *label) {
 
 template <typename T >
 void test_for_loop_const2(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, i;
         
@@ -726,7 +731,7 @@ void test_for_loop_const2(const char *label) {
             result += temp;
         }
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -736,11 +741,11 @@ void test_for_loop_const2(const char *label) {
 
 template <typename T >
 void test_for_loop_const3(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, i;
         
@@ -752,7 +757,7 @@ void test_for_loop_const3(const char *label) {
             result += temp;
         }
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -762,11 +767,11 @@ void test_for_loop_const3(const char *label) {
 
 template <typename T >
 void test_for_loop_const4(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, i;
         
@@ -778,7 +783,7 @@ void test_for_loop_const4(const char *label) {
             result += temp;
         }
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -788,11 +793,11 @@ void test_for_loop_const4(const char *label) {
 
 template <typename T >
 void test_while_loop_const(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, i;
         
@@ -806,7 +811,7 @@ void test_while_loop_const(const char *label) {
             result += temp;
         }
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -816,11 +821,11 @@ void test_while_loop_const(const char *label) {
 
 template <typename T >
 void test_do_loop_const(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, i;
         
@@ -835,7 +840,7 @@ void test_do_loop_const(const char *label) {
             result += temp;
         }
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -845,11 +850,11 @@ void test_do_loop_const(const char *label) {
 
 template <typename T >
 void test_goto_loop_const(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x, i;
         
@@ -868,7 +873,7 @@ loop_start:
             result += temp;
         }
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -879,16 +884,16 @@ loop_start:
 
 template <typename T >
 void test_loop_empty_opt(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
                 
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -898,11 +903,11 @@ void test_loop_empty_opt(const char *label) {
 
 template <typename T >
 void test_for_loop_empty(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x;
         
@@ -925,7 +930,7 @@ void test_for_loop_empty(const char *label) {
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -936,11 +941,11 @@ void test_for_loop_empty(const char *label) {
 // reverse loop direction
 template <typename T >
 void test_for_loop_empty2(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x;
         
@@ -963,7 +968,7 @@ void test_for_loop_empty2(const char *label) {
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -973,11 +978,11 @@ void test_for_loop_empty2(const char *label) {
 
 template <typename T >
 void test_while_loop_empty(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x;
         
@@ -1016,7 +1021,7 @@ void test_while_loop_empty(const char *label) {
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -1026,11 +1031,11 @@ void test_while_loop_empty(const char *label) {
 
 template <typename T >
 void test_do_loop_empty(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x;
         
@@ -1077,7 +1082,7 @@ void test_do_loop_empty(const char *label) {
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -1087,11 +1092,11 @@ void test_do_loop_empty(const char *label) {
 
 template <typename T >
 void test_goto_loop_empty(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         int x;
         
@@ -1161,7 +1166,7 @@ loop_start8:
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -1172,11 +1177,11 @@ loop_start8:
 
 template <typename T >
 void test_for_loop_dead(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         T temp = 0;
         int x;
@@ -1208,7 +1213,7 @@ void test_for_loop_dead(const char *label) {
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -1217,11 +1222,11 @@ void test_for_loop_dead(const char *label) {
 
 template <typename T >
 void test_for_loop_dead2(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         T temp = 0;
         int x;
@@ -1253,7 +1258,7 @@ void test_for_loop_dead2(const char *label) {
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -1263,12 +1268,12 @@ void test_for_loop_dead2(const char *label) {
 
 template <typename T >
 void test_for_loop_dead3(const char *label) {
-    int i;
+    int mm;
     T result = 0;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         int x;
         
         for (x = 0; x < SIZE; ++x) {
@@ -1298,7 +1303,7 @@ void test_for_loop_dead3(const char *label) {
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -1308,11 +1313,11 @@ void test_for_loop_dead3(const char *label) {
 
 template <typename T >
 void test_while_loop_dead(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         T temp = 0;
         int x;
@@ -1360,7 +1365,7 @@ void test_while_loop_dead(const char *label) {
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -1370,11 +1375,11 @@ void test_while_loop_dead(const char *label) {
 
 template <typename T >
 void test_do_loop_dead(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         T temp = 0;
         int x;
@@ -1430,7 +1435,7 @@ void test_do_loop_dead(const char *label) {
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
     record_result( timer(), label );
@@ -1440,11 +1445,11 @@ void test_do_loop_dead(const char *label) {
 
 template <typename T >
 void test_goto_loop_dead(const char *label) {
-    int i;
+    int mm;
 
     start_timer();
   
-    for(i = 0; i < iterations; ++i) {
+    for(mm = 0; mm < iterations; ++mm) {
         T result = 0;
         T temp = 0;
         int x;
@@ -1524,9 +1529,822 @@ loop_start8:
         
         result = (T)SIZE * (T)255;
 
-        check_sum2<T>(result);
+        check_sum2<T>(result, label);
     }
   
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+/******************************************************************************/
+
+template <typename T >
+void test_loop_calc_opt(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = static_cast<T>( 32767 );
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_for_loop_calc1(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+
+        for (int k = 0; k < 32768; ++k)
+            result = k;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_for_loop_calc2(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+
+//      for (int k = 0; (k*k) < 1073741824L; ++k)   // same result
+        for (int k = 0; (k*k) < (1L << 30); ++k)
+            result = k;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_for_loop_calc3(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+
+        for (int k = 0; (k+k) < 65536; ++k)
+            result = k;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_for_loop_calc4(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32757 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+
+        for (int k = 0; (k/11) < 2978; ++k)
+            result = k;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed got %d\n", label, result);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_for_loop_calc5(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+
+        for (int k = 0; (k*11) < 360448; ++k)
+            result = k;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed got %d\n", label, result);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_for_loop_calc6(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+
+        for (int k = 0; (k+99) < 32867; ++k)
+            result = k;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed got %d\n", label, result);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_for_loop_calc7(const char *label) {
+    int mm;
+    int expected = 32768;
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        int k;
+
+        for (k = 0; k < 32768; ++k);
+
+        if (!tolerance_equal<int>( k, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_for_loop_calc8(const char *label) {
+    int mm;
+    int expected = 0;
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        int k;
+
+        for (k = 32768; k > 0; --k);
+
+        if (!tolerance_equal<int>( k, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_while_loop_calc1(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+    
+        while ( k < 32768 ) {
+            result = k;
+            ++k;
+        }
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_while_loop_calc2(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+    
+        while ( (k*k) < (1L << 30) ) {
+            result = k;
+            ++k;
+        }
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_while_loop_calc3(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+    
+        while ( (k+k) < 65536 ) {
+            result = k;
+            ++k;
+        }
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_while_loop_calc4(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32757 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+    
+        while ( (k/11) < 2978 ) {
+            result = k;
+            ++k;
+        }
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_while_loop_calc5(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+    
+        while ( (k*11) < 360448 ) {
+            result = k;
+            ++k;
+        }
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_while_loop_calc6(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+    
+        while ( (k+99) < 32867 ) {
+            result = k;
+            ++k;
+        }
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_while_loop_calc7(const char *label) {
+    int mm;
+    int expected = 32768;
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        int k = 0;
+    
+        while ( k < 32768 )
+            ++k;
+
+        if (!tolerance_equal<int>( k, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_while_loop_calc8(const char *label) {
+    int mm;
+    int expected = 0;
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        int k = 32768;
+    
+        while ( k > 0 )
+            --k;
+
+        if (!tolerance_equal<int>( k, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_do_loop_calc1(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        do {
+            result = k;
+            ++k;
+        } while ( k < 32768 );
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_do_loop_calc2(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        do {
+            result = k;
+            ++k;
+        } while ( (k*k) < (1L << 30) );
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_do_loop_calc3(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        do {
+            result = k;
+            ++k;
+        } while ( (k+k) < 65536 );
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_do_loop_calc4(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32757 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        do {
+            result = k;
+            ++k;
+        } while ( (k/11) < 2978 );
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_do_loop_calc5(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        do {
+            result = k;
+            ++k;
+        } while ( (k*11) < 360448 );
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_do_loop_calc6(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        do {
+            result = k;
+            ++k;
+        } while ( (k+99) < 32867 );
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_do_loop_calc7(const char *label) {
+    int mm;
+    int expected = 32768;
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        int k = 0;
+        
+        do {
+            ++k;
+        } while ( k < 32768 );
+
+        if (!tolerance_equal<int>( k, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_do_loop_calc8(const char *label) {
+    int mm;
+    int expected = 0;
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        int k = 32768;
+        
+        do {
+            --k;
+        } while ( k > 0);
+
+        if (!tolerance_equal<int>( k, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_goto_loop_calc1(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        goto loop_end;
+
+loop_start:
+            result = k;
+            ++k;
+
+loop_end:
+        if ( k < 32768 ) goto loop_start;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_goto_loop_calc2(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        goto loop_end;
+
+loop_start:
+            result = k;
+            ++k;
+
+loop_end:
+        if ( (k*k) < (1L << 30) ) goto loop_start;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_goto_loop_calc3(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        goto loop_end;
+
+loop_start:
+            result = k;
+            ++k;
+
+loop_end:
+        if ( (k+k) < 65536 ) goto loop_start;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_goto_loop_calc4(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32757 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        goto loop_end;
+
+loop_start:
+            result = k;
+            ++k;
+
+loop_end:
+        if ( (k/11) < 2978 ) goto loop_start;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_goto_loop_calc5(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+
+    start_timer();
+  
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        goto loop_end;
+
+loop_start:
+            result = k;
+            ++k;
+
+loop_end:
+        if ( (k*11) < 360448 ) goto loop_start;
+
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_goto_loop_calc6(const char *label) {
+    int mm;
+    T expected = static_cast<T>( 32767 );
+    
+    start_timer();
+    
+    for(mm = 0; mm < iterations; ++mm) {
+        T result = 0;
+        int k = 0;
+        
+        goto loop_end;
+        
+loop_start:
+            result = k;
+            ++k;
+        
+loop_end:
+        if ( (k+99) < 32867 ) goto loop_start;
+        
+        if (!tolerance_equal<T>( result, expected ))
+            printf("test %s failed\n", label);
+    }
+    
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_goto_loop_calc7(const char *label) {
+    int mm;
+    int expected = 32768;
+    
+    start_timer();
+    
+    for(mm = 0; mm < iterations; ++mm) {
+        int k = 0;
+        
+        goto loop_end;
+        
+loop_start:
+            ++k;
+        
+loop_end:
+        if ( k < 32768 ) goto loop_start;
+        
+        if (!tolerance_equal<int>( k, expected ))
+            printf("test %s failed\n", label);
+    }
+    
+    record_result( timer(), label );
+}
+
+/******************************************************************************/
+
+template <typename T >
+void test_goto_loop_calc8(const char *label) {
+    int mm;
+    int expected = 0;
+    
+    start_timer();
+    
+    for(mm = 0; mm < iterations; ++mm) {
+        int k = 32768;
+        
+        goto loop_end;
+        
+loop_start:
+            --k;
+        
+loop_end:
+        if ( k > 0 ) goto loop_start;
+        
+        if (!tolerance_equal<int>( k, expected ))
+            printf("test %s failed\n", label);
+    }
+    
     record_result( timer(), label );
 }
 
@@ -1545,7 +2363,6 @@ int main(int argc, char** argv) {
     if (argc > 2) init_value = (double) atof(argv[2]);
     if (argc > 3) count = (int) atoi(argv[3]);
     
-
 
 // int32_t
     test_loop_empty_opt<int32_t>( "int32_t loop removal empty optimal");
@@ -1589,7 +2406,6 @@ int main(int argc, char** argv) {
     test_do_loop_single<int32_t>( count, "int32_t do loop removal variable single");
     test_goto_loop_single<int32_t>( count, "int32_t goto loop removal variable single");
     
-    
     ::fill( count_array, count_array+8, count );
     test_for_loop_multiple<int32_t>( count_array, "int32_t for loop removal variable multiple");
     test_for_loop_multiple2<int32_t>( count_array, "int32_t for loop removal variable multiple reverse");
@@ -1601,6 +2417,50 @@ int main(int argc, char** argv) {
     summarize("int32_t variable loop removal", (count*count)*(count*count)*(count*count)*(count*count), iterations, kDontShowGMeans, kDontShowPenalty );
 
 
+    iterations *= 8;
+    test_loop_calc_opt<int32_t>( "int32_t loop removal calc opt" );
+    
+    test_for_loop_calc1<int32_t>( "int32_t for loop removal calc1" );
+    test_while_loop_calc1<int32_t>( "int32_t while loop removal calc1" );
+    test_do_loop_calc1<int32_t>( "int32_t do loop removal calc1" );
+    test_goto_loop_calc1<int32_t>( "int32_t goto loop removal calc1" );
+    
+    test_for_loop_calc2<int32_t>( "int32_t for loop removal calc2" );
+    test_while_loop_calc2<int32_t>( "int32_t while loop removal calc2" );
+    test_do_loop_calc2<int32_t>( "int32_t do loop removal calc2" );
+    test_goto_loop_calc2<int32_t>( "int32_t goto loop removal calc2" );
+    
+    test_for_loop_calc3<int32_t>( "int32_t for loop removal calc3" );
+    test_while_loop_calc3<int32_t>( "int32_t while loop removal calc3" );
+    test_do_loop_calc3<int32_t>( "int32_t do loop removal calc3" );
+    test_goto_loop_calc3<int32_t>( "int32_t goto loop removal calc3" );
+    
+    test_for_loop_calc4<int32_t>( "int32_t for loop removal calc4" );
+    test_while_loop_calc4<int32_t>( "int32_t while loop removal calc4" );
+    test_do_loop_calc4<int32_t>( "int32_t do loop removal calc4" );
+    test_goto_loop_calc4<int32_t>( "int32_t goto loop removal calc4" );
+    
+    test_for_loop_calc5<int32_t>( "int32_t for loop removal calc5" );
+    test_while_loop_calc5<int32_t>( "int32_t while loop removal calc5" );
+    test_do_loop_calc5<int32_t>( "int32_t do loop removal calc5" );
+    test_goto_loop_calc5<int32_t>( "int32_t goto loop removal calc5" );
+    
+    test_for_loop_calc6<int32_t>( "int32_t for loop removal calc6" );
+    test_while_loop_calc6<int32_t>( "int32_t while loop removal calc6" );
+    test_do_loop_calc6<int32_t>( "int32_t do loop removal calc6" );
+    test_goto_loop_calc6<int32_t>( "int32_t goto loop removal calc6" );
+    
+    test_for_loop_calc7<int32_t>( "int32_t for loop removal calc7" );
+    test_while_loop_calc7<int32_t>( "int32_t while loop removal calc7" );
+    test_do_loop_calc7<int32_t>( "int32_t do loop removal calc7" );
+    test_goto_loop_calc7<int32_t>( "int32_t goto loop removal calc7" );
+    
+    test_for_loop_calc8<int32_t>( "int32_t for loop removal calc8" );
+    test_while_loop_calc8<int32_t>( "int32_t while loop removal calc8" );
+    test_do_loop_calc8<int32_t>( "int32_t do loop removal calc8" );
+    test_goto_loop_calc8<int32_t>( "int32_t goto loop removal calc8" );
+
+    summarize("int32_t calculable loop removal", 32767, iterations, kDontShowGMeans, kDontShowPenalty );
 
     return 0;
 }

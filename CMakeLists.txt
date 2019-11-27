@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project(CppPerformanceBenchmarks LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -144,6 +144,9 @@ set(test_cases
 	logic_sequence
 	matrix_vector_product
 	product_sequence
+	binary_search
+	loop_unswitching
+	template_unroll
 )
 
 foreach(test_case IN LISTS test_cases)

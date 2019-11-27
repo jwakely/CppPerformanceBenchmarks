@@ -32,9 +32,9 @@
 
 
 # don't show a logo each time, full optimization, define WIN32 and NDEBUG
-CFLAGS = /nologo /Ox /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
+CFLAGS = /nologo /Ox /std:c++14 /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
 # same as above, forcing C++ and normal exception handling
-CPPFLAGS = /nologo /Ox /TP /EHsc /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
+CPPFLAGS = /nologo /Ox /std:c++14 /TP /EHsc /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
 
 
 
@@ -103,7 +103,10 @@ sum_sequence.exe \
 convolution_box.exe \
 logic_sequence.exe \
 matrix_vector_product.exe \
-product_sequence.exe
+product_sequence.exe \
+binary_search.exe \
+loop_unswitching.exe \
+template_unroll.exe
 
 
 #
@@ -213,6 +216,9 @@ report:  $(BINARIES)
 	.\logic_sequence.exe >> $(REPORT_FILE)
 	.\matrix_vector_product.exe >> $(REPORT_FILE)
 	.\product_sequence.exe >> $(REPORT_FILE)
+	.\binary_search.exe >> $(REPORT_FILE)
+	.\loop_unswitching.exe >> $(REPORT_FILE)
+	.\template_unroll.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 

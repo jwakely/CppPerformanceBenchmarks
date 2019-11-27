@@ -1694,7 +1694,7 @@ int main(int argc, char** argv) {
     int32_t intDst[ SIZE ];
     
     
-    srand( init_value );
+    scrand( init_value );
     fill_random( intSrc, intSrc+SIZE );
 
 
