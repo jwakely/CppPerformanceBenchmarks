@@ -32,9 +32,9 @@
 
 
 # don't show a logo each time, full optimization, define WIN32 and NDEBUG
-CFLAGS = /nologo /Ox /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
+CFLAGS = /nologo /Ox /std:c++14 /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
 # same as above, forcing C++ and normal exception handling
-CPPFLAGS = /nologo /Ox /TP /EHsc /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
+CPPFLAGS = /nologo /Ox /std:c++14 /TP /EHsc /D "WIN32" /D "NDEBUG" /I "$(INCLUDE)"
 
 
 

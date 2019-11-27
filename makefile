@@ -35,7 +35,7 @@ INCLUDE = -I.
 
 
 CFLAGS = $(INCLUDE) -O3
-CPPFLAGS = -std=c++11 $(INCLUDE) -O3
+CPPFLAGS = -std=c++14 $(INCLUDE) -O3
 
 CLIBS = -lm
 CPPLIBS = -lm
