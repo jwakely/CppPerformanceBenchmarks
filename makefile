@@ -110,7 +110,11 @@ matrix_vector_product \
 product_sequence \
 binary_search \
 loop_unswitching \
-template_unroll
+template_unroll \
+interleave \
+matrix_flip \
+matrix_multiply \
+rotate_sequence
 
 
 
@@ -233,6 +237,10 @@ report:  $(BINARIES)
 	./binary_search >> $(REPORT_FILE)
 	./loop_unswitching >> $(REPORT_FILE)
 	./template_unroll >> $(REPORT_FILE)
+	./interleave >> $(REPORT_FILE)
+	./matrix_flip >> $(REPORT_FILE)
+	./matrix_multiply >> $(REPORT_FILE)
+	./rotate_sequence >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 
