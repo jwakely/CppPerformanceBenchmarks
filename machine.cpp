@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -19,6 +19,10 @@ for correct identification of their products.
 See https://sourceforge.net/p/predef/wiki/OperatingSystems/ for some older compilers and architectures.
 See source for Unix hostinfo.
 See https://gist.github.com/hi2p-perim/7855506  for Intel CPUID (not portable!)
+
+
+TODO - there doesn't appear to be a way to get the CPU frequency on Apple ARM64 (M1) chips
+    This is going to make things difficult to compare between iterations of the chips!
 
 */
 
@@ -215,7 +219,7 @@ void ReportCPUTarget()
     #endif
     
     #if __ARM_NEON_FP
-        printf("ARRM Neon floating point enabled\n");
+        printf("ARM Neon floating point enabled\n");
     #endif
 
 #elif defined(__m68k__) || defined(__MC68K__)
@@ -481,7 +485,7 @@ void ReportCPUPhysical()
                 printf("CPU_TYPE ARM\n");
                 break;
             case 13:
-                printf("CPU_TYPE MC8880x0\n");
+                printf("CPU_TYPE MC880x0\n");
                 break;
             case 14:
                 printf("CPU_TYPE SPARC\n");
@@ -494,6 +498,9 @@ void ReportCPUPhysical()
                 break;
             case 18:
                 printf("CPU_TYPE PowerPC\n");
+                break;
+            case 16777228:
+                printf("CPU_TYPE Apple ARM64\n");
                 break;
             default:
                 printf("********\n" );
@@ -544,6 +551,15 @@ void ReportCPUPhysical()
     retval = sysctlbyname("hw.cpufrequency_max", &bigBuffer, &len, NULL, 0);
     if (retval == 0)
         printf("CPU frequency: %.2f Mhz\n", (double)bigBuffer/one_million );
+    else {
+        int mib[4];
+        mib[0] = CTL_HW;
+        mib[1] = HW_CPU_FREQ;
+        len = 8;
+        retval = sysctl(mib, 2, &bigBuffer, &len, NULL, 0);
+        if (retval == 0)
+            printf("CPU frequency: %.2f Mhz\n", (double)bigBuffer/one_million );
+    }
 
     len = 8;
     retval = sysctlbyname("hw.cachelinesize", &bigBuffer, &len, NULL, 0);
@@ -659,6 +675,38 @@ void ReportCPUPhysical()
     if (retval == 0 && returnBuffer != 0)
         printf("CPU has x86_64 instructions\n" );
     
+    // ARM optional values
+    len = 4;
+    retval = sysctlbyname("hw.optional.amx_version", &returnBuffer, &len, NULL, 0);
+    if (retval == 0)
+        printf("CPU amx_version %ld\n", returnBuffer );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.arm64", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU is ARM64\n" );
+        
+    len = 4;
+    retval = sysctlbyname("hw.optional.armv8_1_atomics", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has ARM 8_1 atomics\n" );
+    
+    len = 4;
+    retval = sysctlbyname("hw.optional.neon", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has ARM neon\n" );
+        
+    len = 4;
+    retval = sysctlbyname("hw.optional.neon_fp16", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has ARM neon FP16\n" );
+        
+    len = 4;
+    retval = sysctlbyname("hw.optional.neon_hpfp", &returnBuffer, &len, NULL, 0);
+    if (retval == 0 && returnBuffer != 0)
+        printf("CPU has ARM neon HPFP\n" );
+        
+        
     }
     
 #endif    // _MACHTYPES_H_
