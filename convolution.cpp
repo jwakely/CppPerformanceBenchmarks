@@ -1,6 +1,6 @@
 /*
     Copyright 2008 Adobe Systems Incorporated
-    Copyright 2018-2019 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -1971,7 +1971,8 @@ void convolution2D_sep_opt2(const T *source, T *dest, int rows, int cols, int ro
 // increment pointers as induction values
 // Unroll 8x in X
 template <typename T, typename TS >
-void convolution2D_sep_opt3(const T *source, T *dest, int rows, int cols, int rowStep, const std::string &label) {
+void convolution2D_sep_opt3(const T *source, T *dest, int rows, int cols, int rowStep, const std::string &label)
+{
     int i;
     const bool isFloat = (T(2.9) > T(2.0));
     const TS half = isFloat ? TS(0) : TS(8);
@@ -1984,10 +1985,12 @@ void convolution2D_sep_opt3(const T *source, T *dest, int rows, int cols, int ro
         // horizontal pass
         const T *source2 = source;
         T *dest2 = dest;
+
         for (y = 0; y < rows; ++y) {
-            const T *source3 = source2;
-            T *dest3 = dest2;
-            for (x = 2; x < (cols-2-7); x+=8) {
+            const T *source3 = source2 + 2;
+            T *dest3 = dest2 + 2;
+            x = 2;
+            for (; x < (cols-2-7); x+=8) {
                 TS sum0 = TS(1) * source3[-2] + TS(3) * source3[-1] + TS(8) * source3[0] + TS(3) * source3[1] + TS(1) * source3[2];
                 TS sum1 = TS(1) * source3[-1] + TS(3) * source3[0] + TS(8) * source3[1] + TS(3) * source3[2] + TS(1) * source3[3];
                 TS sum2 = TS(1) * source3[0] + TS(3) * source3[1] + TS(8) * source3[2] + TS(3) * source3[3] + TS(1) * source3[4];
@@ -2029,7 +2032,7 @@ void convolution2D_sep_opt3(const T *source, T *dest, int rows, int cols, int ro
             dest2 += rowStep;
         }
 
-
+        
         // vertical pass
         dest2 = dest + 2*rowStep;
         // using offset source ended up slower!?
@@ -2054,14 +2057,14 @@ void convolution2D_sep_opt3(const T *source, T *dest, int rows, int cols, int ro
                 T temp6 = T( (sum6+half) / TS(16) );
                 T temp7 = T( (sum7+half) / TS(16) );
                 
-                dest2[0] = temp0;
-                dest2[1] = temp1;
-                dest2[2] = temp2;
-                dest2[3] = temp3;
-                dest2[4] = temp4;
-                dest2[5] = temp5;
-                dest2[6] = temp6;
-                dest2[7] = temp7;
+                dest2[x+0] = temp0;
+                dest2[x+1] = temp1;
+                dest2[x+2] = temp2;
+                dest2[x+3] = temp3;
+                dest2[x+4] = temp4;
+                dest2[x+5] = temp5;
+                dest2[x+6] = temp6;
+                dest2[x+7] = temp7;
             }
             for (; x < (cols-2); ++x) {
                 TS sum = TS(1) * dest2[-2*rowStep+x] + TS(3) * dest2[-1*rowStep+x] + TS(8) * dest2[0*rowStep+x] + TS(3) * dest2[1*rowStep+x] + TS(1) * dest2[2*rowStep+x];
@@ -2100,8 +2103,8 @@ void convolution2D_sep_opt4(const T *source, T *dest, int rows, int cols, int ro
         const T *source2 = source;
         T *dest2 = dest;
         for (y = 0; y < rows; ++y) {
-            const T *source3 = source2;
-            T *dest3 = dest2;
+            const T *source3 = source2 + 2;
+            T *dest3 = dest2 + 2;
             for (x = 2; x < (cols-2-7); x+=8) {
                 TS sum[8];
                 T temp[8];
@@ -2174,14 +2177,14 @@ void convolution2D_sep_opt4(const T *source, T *dest, int rows, int cols, int ro
                 temp[6] = T( (sum[6]+half) / TS(16) );
                 temp[7] = T( (sum[7]+half) / TS(16) );
                 
-                dest2[0] = temp[0];
-                dest2[1] = temp[1];
-                dest2[2] = temp[2];
-                dest2[3] = temp[3];
-                dest2[4] = temp[4];
-                dest2[5] = temp[5];
-                dest2[6] = temp[6];
-                dest2[7] = temp[7];
+                dest2[x+0] = temp[0];
+                dest2[x+1] = temp[1];
+                dest2[x+2] = temp[2];
+                dest2[x+3] = temp[3];
+                dest2[x+4] = temp[4];
+                dest2[x+5] = temp[5];
+                dest2[x+6] = temp[6];
+                dest2[x+7] = temp[7];
             }
             for (; x < (cols-2); ++x) {
                 TS sum = TS(1) * dest2[-2*rowStep+x] + TS(3) * dest2[-1*rowStep+x] + TS(8) * dest2[0*rowStep+x] + TS(3) * dest2[1*rowStep+x] + TS(1) * dest2[2*rowStep+x];
@@ -2214,6 +2217,7 @@ void TestOneType()
 
 #if 0
     // if these are stack arrays, MSVC silently exits the app after int16
+    // llvm/XCode will crash at static init time (stack check) if compiled for M1/ARM64 (LAME!)
     T data_flat[ HEIGHT*WIDTH ];
     T data_flatDst[ HEIGHT*WIDTH ];
 #else
@@ -2281,6 +2285,7 @@ void TestOneType()
     
     std::string temp3( myTypeName + " convolution 2D separable" );
     summarize( temp3.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+
     
     iterations = base_iterations;
 
@@ -2300,7 +2305,7 @@ int main(int argc, char** argv) {
     if (argc > 1) iterations = atoi(argv[1]);
     if (argc > 2) init_value = (double) atof(argv[2]);
 
-
+    
     TestOneType<uint8_t, uint16_t>();
     TestOneType<int8_t, int16_t>();     // signed 8 bit isn't very useful, but does show compiler problems
     

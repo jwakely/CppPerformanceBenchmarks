@@ -1,6 +1,6 @@
 /*
     Copyright 2008 Adobe Systems Incorporated
-    Copyright 2019 Chris Cox
+    Copyright 2019-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -45,6 +45,8 @@ Assumptions:
         y = (x << 6) - (x << 5) + (x << 4) - (x << 3) + (x << 2) - (x << 1)     ==>        y = x * 42
         y = (x * 64) + (x * 32) + (x * 16) + (x * 8) + (x * 4) + (x * 2)        ==>        y = x * 126
 
+    6) The compiler will strength reduce and simplify algebra in loop induction variables
+       and values derived from induction variables.
 
 
 
@@ -55,7 +57,7 @@ NOTE: integer division/modulo by an arbitrary constant is covered in divide.cpp
 
 NOTE: algebraic identities are covered in simple_types_algebraic_simplification.cpp
 
-NOTE: induction variable manipulation is covered in loop_induction.cpp
+NOTE: other induction variable manipulation is covered in loop_induction.cpp
 
 
 
@@ -64,8 +66,11 @@ TODO - multistep multiplies (x * 5 * 9) ==> t = ((x << 2) + x); result = ((t << 
     Different CPUs will require different approaches.
 
 TODO - what are valid floating point strength reductions?
+    x/2 = x*0.5 ?
     sqrt(X) = pow(x,0.5) ?
     x*x = pow(x,2) ?
+
+TODO - need more classic loop induction variable strength reduction examples, once common compilers can handle the basic examples.
 
 */
 
@@ -77,6 +82,7 @@ TODO - what are valid floating point strength reductions?
 #include <time.h>
 #include <stdlib.h>
 #include <math.h>
+#include <cassert>
 #include <deque>
 #include <string>
 #include <iostream>
@@ -113,28 +119,28 @@ static std::deque<std::string> gLabels;
 // TODO - put these into shared tests
 template <typename T, const int shift>
     struct shift_right {
-      static T do_shift(T input) { return (input >> shift); }
+      static constexpr T do_shift(T input) { return (input >> shift); }
     };
 
 /******************************************************************************/
 
 template <typename T, const int shift>
     struct shift_left {
-      static T do_shift(T input) { return (input << shift); }
+      static constexpr T do_shift(T input) { return (input << shift); }
     };
 
 /******************************************************************************/
 
 template <typename T, const int divisor>
     struct custom_divide {
-      static T do_shift(T input) { return (input / divisor); }
+      static constexpr T do_shift(T input) { return (input / divisor); }
     };
 
 /******************************************************************************/
 
 template <typename T, const int factor>
     struct custom_multiply {
-      static T do_shift(T input) { return (input * factor); }
+      static constexpr T do_shift(T input) { return (input * factor); }
     };
 
 /******************************************************************************/
@@ -142,7 +148,7 @@ template <typename T, const int factor>
 // this will usually be faster than a multiply
 template <typename T>
     struct custom_multiply_shiftadd_63 {
-      static T do_shift(T input) { return ((input << 6) - input); }
+      static constexpr T do_shift(T input) { return ((input << 6) - input); }
     };
 
 /******************************************************************************/
@@ -150,7 +156,7 @@ template <typename T>
 // this may be slower than a multiply, but it depends on the CPU, unless algebraic simplification reduces it
 template <typename T>
     struct custom_multiply_shiftadd_67 {
-      static T do_shift(T input) { return ((input << 6) + (input << 2) - input); }
+      static constexpr T do_shift(T input) { return ((input << 6) + (input << 2) - input); }
     };
 
 /******************************************************************************/
@@ -158,7 +164,7 @@ template <typename T>
 // this will almost always be slower than a single multiply, unless algebraic simplification reduces it
 template <typename T>
     struct custom_multiply_muladd_67 {
-      static T do_shift(T input) { return ((input * 64) + (input * 4) - input); }
+      static constexpr T do_shift(T input) { return ((input * 64) + (input * 4) - input); }
     };
 
 /******************************************************************************/
@@ -166,7 +172,7 @@ template <typename T>
 // this will usually be slower than a multiply, but it depends on the CPU, unless algebraic simplification reduces it
 template <typename T>
     struct custom_multiply_shiftadd_83 {
-      static T do_shift(T input) { return ((input << 6) + (input << 4) + (input << 2) - input); }
+      static constexpr T do_shift(T input) { return ((input << 6) + (input << 4) + (input << 2) - input); }
     };
 
 /******************************************************************************/
@@ -174,7 +180,7 @@ template <typename T>
 // this will almost always be slower than a single multiply, unless algebraic simplification reduces it
 template <typename T>
     struct custom_multiply_muladd_83 {
-      static T do_shift(T input) { return ((input * 64) + (input * 16) + (input * 4) - input); }
+      static constexpr T do_shift(T input) { return ((input * 64) + (input * 16) + (input * 4) - input); }
     };
 
 /******************************************************************************/
@@ -182,7 +188,7 @@ template <typename T>
 // this will almost always be slower than a multiply, unless algebraic simplification reduces it
 template <typename T>
     struct custom_multiply_shiftadd_126 {
-      static T do_shift(T input) { return ((input << 6) + (input << 5) + (input << 4) + (input << 3) + (input << 2) + (input << 1) ); }
+      static constexpr T do_shift(T input) { return ((input << 6) + (input << 5) + (input << 4) + (input << 3) + (input << 2) + (input << 1) ); }
     };
 
 /******************************************************************************/
@@ -190,7 +196,7 @@ template <typename T>
 // this will almost always be slower than a single multiply, unless algebraic simplification reduces it
 template <typename T>
     struct custom_multiply_muladd_126 {
-      static T do_shift(T input) { return ((input * 64) + (input * 32) + (input * 16) + (input * 8) + (input * 4) + (input * 2) ); }
+      static constexpr T do_shift(T input) { return ((input * 64) + (input * 32) + (input * 16) + (input * 8) + (input * 4) + (input * 2) ); }
     };
 
 /******************************************************************************/
@@ -198,7 +204,7 @@ template <typename T>
 // this will almost always be slower than a multiply, unless algebraic simplification reduces it
 template <typename T>
     struct custom_multiply_shiftadd_2 {
-      static T do_shift(T input) { return ((input << 6) - (input << 5) - (input << 4) - (input << 3) - (input << 2) - (input << 1) ); }
+      static constexpr T do_shift(T input) { return ((input << 6) - (input << 5) - (input << 4) - (input << 3) - (input << 2) - (input << 1) ); }
     };
 
 /******************************************************************************/
@@ -206,105 +212,105 @@ template <typename T>
 // this will almost always be slower than a multiply, unless algebraic simplification reduces it
 template <typename T>
     struct custom_multiply_shiftadd_42 {
-      static T do_shift(T input) { return ((input << 6) - (input << 5) + (input << 4) - (input << 3) + (input << 2) - (input << 1) ); }
+      static constexpr T do_shift(T input) { return ((input << 6) - (input << 5) + (input << 4) - (input << 3) + (input << 2) - (input << 1) ); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_constant_addself {
-      static T do_shift(T input) { return (input + input); }
+      static constexpr T do_shift(T input) { return (input + input); }
     };
 
 /****************************************************************1**************/
 
 template <typename T>
     struct custom_multiply_inline2 {
-      static T do_shift(T input) { return (input * 2); }
+      static constexpr T do_shift(T input) { return (input * 2); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_divide_inline2 {
-      static T do_shift(T input) { return (input / 2); }
+      static constexpr T do_shift(T input) { return (input / 2); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_inline2 {
-      static T do_shift(T input) { return (input % 2); }
+      static constexpr T do_shift(T input) { return (input % 2); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_inline4 {
-      static T do_shift(T input) { return (input % 4); }
+      static constexpr T do_shift(T input) { return (input % 4); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_inline8 {
-      static T do_shift(T input) { return (input % 8); }
+      static constexpr T do_shift(T input) { return (input % 8); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_inline16 {
-      static T do_shift(T input) { return (input % 16); }
+      static constexpr T do_shift(T input) { return (input % 16); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_inline32 {
-      static T do_shift(T input) { return (input % 32); }
+      static constexpr T do_shift(T input) { return (input % 32); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_inline64 {
-      static T do_shift(T input) { return (input % 64); }
+      static constexpr T do_shift(T input) { return (input % 64); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_inline128 {
-      static T do_shift(T input) { return (input % 128); }
+      static constexpr T do_shift(T input) { return (input % 128); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_inline256 {
-      static T do_shift(T input) { return (input % 256); }
+      static constexpr T do_shift(T input) { return (input % 256); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_inline1024 {
-      static T do_shift(T input) { return (input % 1024); }
+      static constexpr T do_shift(T input) { return (input % 1024); }
     };
 
 /******************************************************************************/
 
 template <typename T, const int val>
     struct and_constant {
-      static T do_shift(T input) { return (input & val); }
+      static constexpr T do_shift(T input) { return (input & val); }
     };
 
 /******************************************************************************/
 
 template <typename T, const int val>
     struct and_remainder {
-      static T do_shift(T input) {
+      static constexpr T do_shift(T input) {
         if (isSigned<T>()) {
             auto temp = (input & val);
             return (input < 0 && temp != 0) ? -((val+1)-temp) : temp;
@@ -318,7 +324,7 @@ template <typename T, const int val>
 
 template <typename T, const int val>
     struct and_remainder2 {
-      static T do_shift(T input) {
+      static constexpr T do_shift(T input) {
         auto result = (input & val);
         if (isSigned<T>() && (input < 0) && (result != 0))
             result = -((val+1)-result);
@@ -330,7 +336,7 @@ template <typename T, const int val>
 
 template <typename T, const int shift>
     struct shift_divide_toward_zero {
-     static T do_shift(T input) {
+     static constexpr T do_shift(T input) {
         if (isSigned<T>() && (input < 0))
             return -((-input)>>shift);
         else
@@ -342,14 +348,14 @@ template <typename T, const int shift>
 
 template <typename T, const int divisor>
     struct custom_remainder {
-      static T do_shift(T input) { return (input % divisor); }
+      static constexpr T do_shift(T input) { return (input % divisor); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_remainder_variable {
-      static T do_shift(T input, const int v1) { return (input % v1); }
+      static constexpr T do_shift(T input, const int v1) { return (input % v1); }
     };
 
 /******************************************************************************/
@@ -384,6 +390,267 @@ void test_variable1(const T* first, const int count, const T v1, const std::stri
             result += Shifter::do_shift( first[n], v1 );
         }
         check_shifted_variable_sum<T, Shifter>(result, v1);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_opt(const T* first, const size_t count, const size_t step, const std::string label) {
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < count; ++n) {
+            result += Shifter::do_shift( first[ n ] );
+        }
+        check_shifted_sum<T, Shifter>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_div_halfopt1(const T* first, const size_t count, const size_t step, const std::string label) {
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < count; ++n) {
+            size_t k = n*step;
+            result += Shifter::do_shift( first[ k / step ] );
+        }
+        check_shifted_sum<T, Shifter>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_div_halfopt2(const T* first, const size_t count, const size_t step, const std::string label) {
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < count; ++n) {
+            result += Shifter::do_shift( first[ (n*step) / step ] );
+        }
+        check_shifted_sum<T, Shifter>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_div_halfopt3(const T* first, const size_t count, const size_t step, const std::string label) {
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < count; ++n) {
+            result += Shifter::do_shift( first[ (n*step + (step>>1)) / step ] );
+        }
+        check_shifted_sum<T, Shifter>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_div1(const T* first, const size_t count, const size_t step, const std::string label) {
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < (count*step); n += step) {
+            result += Shifter::do_shift( first[ n / step ] );
+        }
+        check_shifted_sum<T, Shifter>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_div2(const T* first, const size_t count, const size_t step, const std::string label) {
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = (step>>1); n < (count*step); n += step) {
+            result += Shifter::do_shift( first[ n / step ] );
+        }
+        check_shifted_sum<T, Shifter>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_div3(const T* first, const size_t count, const size_t step, const std::string label) {
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < (count*step); n += step) {
+            result += Shifter::do_shift( first[ (n+(step>>1)) / step ] );
+        }
+        check_shifted_sum<T, Shifter>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_mul_halfopt1(const T* first, const size_t count, const size_t step, const std::string label) {
+    assert( 1 == Shifter::do_shift( step ) );
+
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        size_t k = 0;
+        for (size_t n = 0; n < count; ++n) {
+            result += first[ Shifter::do_shift( k ) ];
+            k += step;
+        }
+        check_simple_sum<T>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_mul_halfopt2(const T* first, const size_t count, const size_t step, const std::string label) {
+    assert( 1 == Shifter::do_shift( step ) );
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0, k = 0; n < count; ++n, k += step ) {
+            result += first[ Shifter::do_shift( k ) ];
+        }
+        check_simple_sum<T>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_mul_halfopt3(const T* first, const size_t count, const size_t step, const std::string label) {
+    assert( 1 == Shifter::do_shift( step ) );
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < (count*step); n += step) {
+            result += first[ Shifter::do_shift( n ) ];
+        }
+        check_simple_sum<T>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_mul1(const T* first, const size_t count, const size_t step, const std::string label) {
+    assert( 1 == Shifter::do_shift( step ) );
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < count; ++n) {
+            result += first[ Shifter::do_shift( n * step ) ];
+        }
+        check_simple_sum<T>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_mul2(const T* first, const size_t count, const size_t step, const std::string label) {
+    assert( 1 == Shifter::do_shift( step ) );
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < count; ++n) {
+            auto k = n * step;
+            result += first[ Shifter::do_shift( k ) ];
+        }
+        check_simple_sum<T>(result);
+    }
+
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_loopstep_mul3(const T* first, const size_t count, const size_t step, const std::string label) {
+    assert( 1 == Shifter::do_shift( step ) );
+    assert( step >= 2 );
+    start_timer();
+
+    for(size_t i = 0; i < iterations; ++i) {
+        T result = 0;
+        for (size_t n = 0; n < count; ++n) {
+            auto k = 1 + n * step;
+            result += first[ Shifter::do_shift( k ) ];
+        }
+        check_simple_sum<T>(result);
     }
 
     // need the labels to remain valid until we print the summary
@@ -884,6 +1151,50 @@ void TestOneType()
 /******************************************************************************/
 /******************************************************************************/
 
+template<typename T>
+void TestOneTypeInduction()
+{
+    std::string myTypeName( getTypeName<T>() );
+    
+    gLabels.clear();
+    
+    T data[SIZE];
+    
+    ::fill(data, data+SIZE, T(init_value));
+    
+    auto base_iterations = iterations;
+
+
+    // LLVM, GCC, and MSVC are not removing the divisions, and doing poorly on multiplication
+    // At least GCC and MSVC are doing better than LLVM on divisions
+    iterations /= 10;
+    
+    test_loopstep_opt<T, shift_right<T, 0> >(data,SIZE, 11, myTypeName + " loop induction opt");
+    
+    test_loopstep_div_halfopt1<T, shift_right<T, 0> >(data,SIZE, 11, myTypeName + " loop induction div halfopt1");
+    test_loopstep_div_halfopt2<T, shift_right<T, 0> >(data,SIZE, 11, myTypeName + " loop induction div halfopt2");
+    test_loopstep_div_halfopt3<T, shift_right<T, 0> >(data,SIZE, 11, myTypeName + " loop induction div halfopt3");
+    test_loopstep_div1<T, shift_right<T, 0> >(data,SIZE, 11, myTypeName + " loop induction div1");
+    test_loopstep_div2<T, shift_right<T, 0> >(data,SIZE, 11, myTypeName + " loop induction div2");
+    test_loopstep_div3<T, shift_right<T, 0> >(data,SIZE, 11, myTypeName + " loop induction div3");
+    
+    test_loopstep_mul_halfopt1<T, shift_right<size_t, 2> >(data,SIZE, 4, myTypeName + " loop induction mul halfopt1");
+    test_loopstep_mul_halfopt2<T, shift_right<size_t, 2> >(data,SIZE, 4, myTypeName + " loop induction mul halfopt2");
+    test_loopstep_mul_halfopt3<T, shift_right<size_t, 2> >(data,SIZE, 4, myTypeName + " loop induction mul halfopt3");
+    test_loopstep_mul1<T, shift_right<size_t, 2> >(data,SIZE, 4, myTypeName + " loop induction mul1");
+    test_loopstep_mul2<T, shift_right<size_t, 2> >(data,SIZE, 4, myTypeName + " loop induction mul2");
+    test_loopstep_mul3<T, shift_right<size_t, 2> >(data,SIZE, 4, myTypeName + " loop induction mul3");
+
+    std::string temp4( myTypeName + " loop induction strength reduction");
+    summarize(temp4.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+    
+    
+    iterations = base_iterations;
+}
+
+/******************************************************************************/
+/******************************************************************************/
+
 int main(int argc, char** argv) {
     
     // output command for documentation:
@@ -906,9 +1217,14 @@ int main(int argc, char** argv) {
     TestOneType<int64_t>();
     TestOneType<uint64_t>();
 
-
-    // no float strength reduction yet
+    // no float strength reductions yet
     
+    
+    
+    // We don't need multiple data types to test loop induction variables
+    iterations *= 4;
+    TestOneTypeInduction<uint64_t>();
+
     
     return 0;
 }

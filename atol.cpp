@@ -20,6 +20,8 @@ Assumptions:
     5) library routines should be the same speed or faster than simple source versions of functions
 
 
+TODO - https://lemire.me/blog/2021/01/29/number-parsing-at-a-gigabyte-per-second/
+
 */
 
 #include <cstdio>

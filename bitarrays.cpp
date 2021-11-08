@@ -1,6 +1,6 @@
 /*
     Copyright 2008 Adobe Systems Incorporated
-    Copyright 2018 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -948,7 +948,7 @@ size_t CountBits ( T *table, const size_t start, const size_t stop )
     if (stop < start)
         return 0;
     
-    // divide and mod will be by powers of 2:  they optimize to shift and mask
+    // divide and mod will be by powers of 2:  they *should* optimize to shift and mask
     while (count--) {
         T bitValue = table[ pos / (8*sizeof(T)) ] & T(T(1) << (pos % (8*sizeof(T))));
         if (bitValue != 0)
@@ -958,6 +958,7 @@ size_t CountBits ( T *table, const size_t start, const size_t stop )
     
     return result;
 }
+
 /******************************************************************************/
 
 // This is possibly the worst way to count bits, but I've seen it done
@@ -1321,6 +1322,64 @@ size_t CountBits32Parallel ( T *table, const size_t start, const size_t stop )
         pos += 32;
         count -= 32;
         result += CountBitsIntParallel( intTable[index] );
+        index++;
+    }
+    
+    // remaining partial int
+    // can't use int table without chance of reading over end of array
+    while (count--) {
+        T bitValue = table[ pos / (8*sizeof(T)) ] & T(T(1) << (pos % (8*sizeof(T))));
+        if (bitValue != 0)
+            result++;
+        pos++;
+    }
+    
+    return result;
+}
+
+/******************************************************************************/
+
+// this runs a little faster under some compilers
+inline
+uint32_t CountBitsIntParallel2( uint32_t value ) {
+    uint32_t x = value;
+    x = ((x & 0xaaaaaaaa) >> 1) + (x & 0x55555555);
+    x = ((x & 0xccccccccc) >> 2) + (x & 0x33333333);
+    x = ((x & 0xf0f0f0f0f0) >> 4) + (x & 0x0f0f0f0f);
+    x = ((x & 0xff00ff00) >> 8) + (x & 0x00ff00ff);
+    x = ((x & 0xffff0000) >> 16) + (x & 0x0000ffff);
+    return x;
+}
+
+// treat the array as 32 bit ints, count using bit ops
+template<typename T>
+size_t CountBits32Parallel2 ( T *table, const size_t start, const size_t stop )
+{
+    size_t count = stop - start;
+    size_t pos = start;
+    size_t result = 0;
+    
+    if (stop < start)
+        return 0;
+    
+    InitializeBitCountTable();
+    
+    // align to int boundary
+    while (count && ((pos % 32) != 0)) {
+        T bitValue = table[ pos / (8*sizeof(T)) ] & T(T(1) << (pos % (8*sizeof(T))));
+        if (bitValue != 0)
+            result++;
+        pos++;
+        count--;
+    }
+    
+    // whole ints
+    uint32_t *intTable = (uint32_t *)table;
+    size_t index = pos / 32;
+    while ( count >= 32 ) {
+        pos += 32;
+        count -= 32;
+        result += CountBitsIntParallel2( intTable[index] );
         index++;
     }
     
@@ -1865,9 +1924,11 @@ int main(int argc, char** argv) {
     test_blitbits( data8unsigned3, data8unsigned2, data8unsigned, 3, BITSIZE - 3, valueExpected8, StencilBitTablesShift<uint8_t>, "uint8_t stencil bit tables shift");
     test_blitbits( data8unsigned3, data8unsigned2, data8unsigned, 3, BITSIZE - 3, valueExpected8, StencilBitTables<uint8_t>, "uint8_t stencil bit tables");
 
+
     SetBitsOptimized( data8unsigned, 3, BITSIZE- 3);
     test_countbits( data8unsigned, 3, BITSIZE - 3, CountBits32Multiply<uint8_t>, "uint8_t count bits 32Multiply");
     test_countbits( data8unsigned, 3, BITSIZE - 3, CountBits32Parallel<uint8_t>, "uint8_t count bits 32Parallel");
+    test_countbits( data8unsigned, 3, BITSIZE - 3, CountBits32Parallel2<uint8_t>, "uint8_t count bits 32Parallel2");
     test_countbits( data8unsigned, 3, BITSIZE - 3, CountBitsByteTable<uint8_t>, "uint8_t count bits ByteTable");
     test_countbits( data8unsigned, 3, BITSIZE - 3, CountBitsByteDirect<uint8_t>, "uint8_t count bits ByteDirect");
     test_countbits( data8unsigned, 3, BITSIZE - 3, CountBitsByteDirect2<uint8_t>, "uint8_t count bits ByteDirect2");
@@ -1877,7 +1938,6 @@ int main(int argc, char** argv) {
     test_countbits( data8unsigned, 3, BITSIZE - 3, CountBits<uint8_t>, "uint8_t count bits");
 
     summarize("uint8_t bitarrays", BITSIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-
 
 
 // uint16_t
@@ -1929,6 +1989,7 @@ int main(int argc, char** argv) {
     SetBitsOptimized( data16unsigned, 3, BITSIZE- 3);
     test_countbits( data16unsigned, 3, BITSIZE - 3, CountBits32Multiply<uint16_t>, "uint16_t count bits 32Multiply");
     test_countbits( data16unsigned, 3, BITSIZE - 3, CountBits32Parallel<uint16_t>, "uint16_t count bits 32Parallel");
+    test_countbits( data16unsigned, 3, BITSIZE - 3, CountBits32Parallel2<uint16_t>, "uint16_t count bits 32Parallel2");
     test_countbits( data16unsigned, 3, BITSIZE - 3, CountBitsByteTable<uint16_t>, "uint16_t count bits ByteTable");
     test_countbits( data16unsigned, 3, BITSIZE - 3, CountBitsByteDirect<uint16_t>, "uint16_t count bits ByteDirect");
     test_countbits( data16unsigned, 3, BITSIZE - 3, CountBitsByteDirect2<uint16_t>, "uint16_t count bits ByteDirect2");
@@ -1989,6 +2050,7 @@ int main(int argc, char** argv) {
     SetBitsOptimized( data32unsigned, 3, BITSIZE- 3);
     test_countbits( data32unsigned, 3, BITSIZE - 3, CountBits32Multiply<uint32_t>, "uint32_t count bits 32Multiply");
     test_countbits( data32unsigned, 3, BITSIZE - 3, CountBits32Parallel<uint32_t>, "uint32_t count bits 32Parallel");
+    test_countbits( data32unsigned, 3, BITSIZE - 3, CountBits32Parallel2<uint32_t>, "uint32_t count bits 32Parallel2");
     test_countbits( data32unsigned, 3, BITSIZE - 3, CountBitsByteTable<uint32_t>, "uint32_t count bits ByteTable");
     test_countbits( data32unsigned, 3, BITSIZE - 3, CountBitsByteDirect<uint32_t>, "uint32_t count bits ByteDirect");
     test_countbits( data32unsigned, 3, BITSIZE - 3, CountBitsByteDirect2<uint32_t>, "uint32_t count bits ByteDirect2");
@@ -2049,6 +2111,7 @@ int main(int argc, char** argv) {
     SetBitsOptimized( data64unsigned, 3, BITSIZE- 3);
     test_countbits( data64unsigned, 3, BITSIZE - 3, CountBits32Multiply<uint64_t>, "uint64_t count bits 32Multiply");
     test_countbits( data64unsigned, 3, BITSIZE - 3, CountBits32Parallel<uint64_t>, "uint64_t count bits 32Parallel");
+    test_countbits( data32unsigned, 3, BITSIZE - 3, CountBits32Parallel2<uint32_t>, "uint32_t count bits 32Parallel2");
     test_countbits( data64unsigned, 3, BITSIZE - 3, CountBitsByteTable<uint64_t>, "uint64_t count bits ByteTable");
     test_countbits( data64unsigned, 3, BITSIZE - 3, CountBitsByteDirect<uint64_t>, "uint64_t count bits ByteDirect");
     test_countbits( data64unsigned, 3, BITSIZE - 3, CountBitsByteDirect2<uint64_t>, "uint64_t count bits ByteDirect2");
@@ -2106,7 +2169,6 @@ int main(int argc, char** argv) {
     test_countbitsStdLoop( dataStd, "std bitset count bits loop");
 
     summarize("std bitset", BITSIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-
 
             
     return 0;

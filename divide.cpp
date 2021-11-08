@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -26,12 +26,22 @@ Assumptions:
 
     5) The compiler will recognize integer division or modulo by a loop invariant value and substitute a reciprocal multiply.
             Do any compilers do this correctly yet?
+ 
+    6) The compiler really should use remainder code from
+            "Faster Remainder by Direct Computation: Applications to Compilers and Software Libraries"
+            by Daniel Lemire, Owen Kaser, and Nathan Kurz
 
 
 
 NOTE: At present, no good optimizations for floating point constant divides or modulus are known.
     Some vector algorithms for division do exist, but they are not expressible directly in C,
     and are processor family specific.
+
+
+TODO -
+Stephan T. Lavavej 2019-03-20 15:43:09 PDT
+New algorithms can improve the performance of remainder and divisibility. See "Faster remainders when the divisor is a constant: beating compilers and libdivide" at https://lemire.me/blog/2019/02/08/faster-remainders-when-the-divisor-is-a-constant-beating-compilers-and-libdivide/
+and the paper "Faster Remainder by Direct Computation: Applications to Compilers and Software Libraries" by Daniel Lemire, Owen Kaser, and Nathan Kurz at https://arxiv.org/pdf/1902.01961.pdf .
 
 */
 
@@ -41,14 +51,20 @@ NOTE: At present, no good optimizations for floating point constant divides or m
 #include <time.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string>
+#include <deque>
 #include "benchmark_results.h"
 #include "benchmark_timer.h"
+#include "benchmark_algorithms.h"
+#include "benchmark_typenames.h"
+
 
 /******************************************************************************/
 
 // this constant may need to be adjusted to give reasonable minimum times
 // For best results, times should be about 1.0 seconds for the minimum test run
 int iterations = 2000000;
+//int iterations = 20000;
 
 
 // 4000 items, or between 4k and 32k of data
@@ -57,22 +73,6 @@ int iterations = 2000000;
 
 // initial value for filling our arrays, may be changed from the command line
 double init_value = 16000.0;
-
-/******************************************************************************/
-
-// our global arrays of numbers to be operated upon
-
-double dataDouble[SIZE];
-float dataFloat[SIZE];
-
-uint64_t data64unsigned[SIZE];
-int64_t data64[SIZE];
-
-uint32_t data32unsigned[SIZE];
-int32_t data32[SIZE];
-
-uint16_t data16unsigned[SIZE];
-int16_t data16[SIZE];
 
 /******************************************************************************/
 
@@ -99,8 +99,14 @@ int32_t Max32(int32_t a, int32_t b) {
 // Multiply 2 x 32 bit numbers into a 64 bit intermediate and return high 32 bits of result,
 // These may be handled by special instructions on some CPUs.
 
-#define MULSH(x,y)    (int32_t)(((x) * (int64_t)(y)) >> 32)
-#define MULUH(x,y)    (uint32_t)(((x) * (uint64_t)(y)) >> 32)
+#define MULSH(x,y)    (int32_t)( ((x) * (int64_t)(y)) >> 32 )
+#define MULUH(x,y)    (uint32_t)( ((x) * (uint64_t)(y)) >> 32 )
+
+// Multiply 2 x 32 bit numbers into a 64 bit intermediate and return low 32 bits of result,
+// These may be handled by special instructions on some CPUs.
+
+#define MULSL(x,y)    (int32_t)( (x) * (int64_t)(y) )
+#define MULUL(x,y)    (uint32_t)( (x) * (uint64_t)(y) )
 
 /******************************************************************************/
 
@@ -227,6 +233,29 @@ inline int32_t SMod360( int32_t n ) {
     return n - 360 * SDiv360(n);
 }
 
+
+/******************************************************************************/
+/******************************************************************************/
+
+#if 0
+
+uint32_t d = 360; // your divisor > 0
+
+uint64_t c = (uint64_t(0xFFFFFFFFFFFFFFFFULL) / d) + 1;
+
+// fastmod computes (n mod d) given precomputed c
+uint32_t fastmod(uint32_t n) {
+  uint64_t lowbits = c * n;
+  return ((__uint128_t)lowbits * d) >> 64;
+}
+
+// given precomputed c, checks whether n % d == 0
+bool is_divisible(uint32_t n) {
+  return (n * c) <= (c - 1);
+}
+
+#endif
+
 /******************************************************************************/
 /******************************************************************************/
 
@@ -291,8 +320,28 @@ template <typename T>
 
 /******************************************************************************/
 
+template <typename T, typename Shifter>
+inline void check_shifted_sum(T result, const std::string label) {
+    T temp = (T)SIZE * Shifter::do_shift((T)init_value);
+    if (!tolerance_equal<T>(result,temp))
+        printf("test %s failed\n", label.c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+inline void check_shifted_variable_sum(T result, T var, const std::string &label) {
+    T temp = (T)SIZE * Shifter::do_shift((T)init_value, var);
+    if (!tolerance_equal<T>(result,temp))
+        printf("test %s failed\n", label.c_str() );
+}
+
+/******************************************************************************/
+
+static std::deque<std::string> gLabels;
+
 template <typename T>
-void test_variable_divide_unsigned(T* first, int count, T v1, const char *label) {
+void test_variable_divide_unsigned(T* first, int count, T v1, const std::string label) {
   int i;
   DECLARE_RECIP_UNSIGNED;
   
@@ -307,16 +356,17 @@ void test_variable_divide_unsigned(T* first, int count, T v1, const char *label)
     for (int n = 0; n < count; ++n) {
         result += DoUnsignedRecip( first[n] );
     }
-   check_shifted_variable_sum<T, custom_divide_variable<T> >(result, v1);
+   check_shifted_variable_sum<T, custom_divide_variable<T> >(result, v1, label);
   }
-  
-  record_result( timer(), label );
+    
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
 }
 
 /******************************************************************************/
 
 template <typename T>
-void test_variable_divide_signed(T* first, int count, T v1, const char *label) {
+void test_variable_divide_signed(T* first, int count, T v1, const std::string label) {
   int i;
   DECLARE_RECIP_SIGNED;
   
@@ -331,16 +381,17 @@ void test_variable_divide_signed(T* first, int count, T v1, const char *label) {
     for (int n = 0; n < count; ++n) {
         result += DoSignedRecip( first[n] );
     }
-   check_shifted_variable_sum<T, custom_divide_variable<T> >(result, v1);
+   check_shifted_variable_sum<T, custom_divide_variable<T> >(result, v1, label);
   }
-  
-  record_result( timer(), label );
+    
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
 }
 
 /******************************************************************************/
 
 template <typename T>
-void test_variable_modulo_unsigned(T* first, int count, T v1, const char *label) {
+void test_variable_modulo_unsigned(T* first, int count, T v1, const std::string label) {
   int i;
   DECLARE_RECIP_UNSIGNED;
   
@@ -355,16 +406,17 @@ void test_variable_modulo_unsigned(T* first, int count, T v1, const char *label)
     for (int n = 0; n < count; ++n) {
         result += DoUnsignedModulus( first[n], v1 );
     }
-   check_shifted_variable_sum<T, custom_modulo_variable<T> >(result, v1);
+   check_shifted_variable_sum<T, custom_modulo_variable<T> >(result, v1, label);
   }
-  
-  record_result( timer(), label );
+    
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
 }
 
 /******************************************************************************/
 
 template <typename T>
-void test_variable_modulo_signed(T* first, int count, T v1, const char *label) {
+void test_variable_modulo_signed(T* first, int count, T v1, const std::string label) {
   int i;
   DECLARE_RECIP_SIGNED;
   
@@ -379,10 +431,127 @@ void test_variable_modulo_signed(T* first, int count, T v1, const char *label) {
     for (int n = 0; n < count; ++n) {
         result += DoSignedModulus( first[n], v1 );
     }
-   check_shifted_variable_sum<T, custom_modulo_variable<T> >(result, v1);
+   check_shifted_variable_sum<T, custom_modulo_variable<T> >(result, v1, label);
   }
+    
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_variable1(T* first, int count, T v1, const std::string label) {
+  start_timer();
   
-  record_result( timer(), label );
+  for(int i = 0; i < iterations; ++i) {
+    T result = 0;
+    for (int n = 0; n < count; ++n) {
+        result += Shifter::do_shift( first[n], v1 );
+    }
+    check_shifted_variable_sum<T, Shifter>(result, v1, label);
+  }
+    
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+template <typename T, typename Shifter>
+void test_constant(T* first, int count, const std::string label) {
+  start_timer();
+  
+  for(int i = 0; i < iterations; ++i) {
+    T result = 0;
+    for (int n = 0; n < count; ++n) {
+        result += Shifter::do_shift( first[n] );
+    }
+    check_shifted_sum<T, Shifter>(result, label);
+  }
+    
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+/******************************************************************************/
+
+template <typename T>
+void TestOneType(double temp)
+{
+    std::string myTypeName( getTypeName<T>() );
+    bool typeIsSigned = isSigned<T>();
+
+    T data[SIZE];
+
+    ::fill(data, data+SIZE, T(init_value));
+    T var (temp);
+
+
+    test_variable1<T, custom_divide_variable<T> >(data,SIZE,var,myTypeName + " variable divide");
+    
+    if (typeIsSigned)
+        test_variable_divide_signed(data,SIZE,var,myTypeName + " variable reciprocal divide");
+    else
+        test_variable_divide_unsigned(data,SIZE,var,myTypeName + " variable reciprocal divide");
+    
+    test_constant<T, custom_divide_360<T> >(data,SIZE,myTypeName + " constant divide");
+    
+    if (typeIsSigned)
+        test_constant<T, custom_recip_signed360<T> >(data,SIZE,myTypeName + " constant reciprocal divide");
+    else
+        test_constant<T, custom_recip_unsigned360<T> >(data,SIZE,myTypeName + " constant reciprocal divide");
+    
+    test_variable1<T, custom_modulo_variable<T> >(data,SIZE,var,myTypeName + " variable modulo");
+    
+    if (typeIsSigned)
+        test_variable_modulo_signed(data,SIZE,var,myTypeName + " variable reciprocal modulo");
+    else
+        test_variable_modulo_unsigned(data,SIZE,var,myTypeName + " variable reciprocal modulo");
+    
+    test_constant<T, custom_modulo_360<T> >(data,SIZE,myTypeName + " constant modulo");
+    
+    if (typeIsSigned)
+        test_constant<T, custom_recip_modulo_signed360<T> >(data,SIZE,myTypeName + " constant reciprocal modulo");
+    else
+        test_constant<T, custom_recip_modulo_unsigned360<T> >(data,SIZE,myTypeName + " constant reciprocal modulo");
+    
+    test_variable1<T, custom_divplusmod_variable<T> >(data,SIZE,var,myTypeName + " variable div plus mod");
+    
+    if (typeIsSigned)
+        test_constant<T, custom_recip_divplusmod_signed360<T> >(data,SIZE,myTypeName + " constant reciprocal div plus mod");
+    else
+        test_constant<T, custom_recip_divplusmod_unsigned360<T> >(data,SIZE,myTypeName + " constant reciprocal div plus mod");
+    
+    test_constant<T, custom_divplusmod_360<T> >(data,SIZE,myTypeName + " constant div plus mod");
+
+
+    std::string temp1 = myTypeName + " division";
+    summarize(temp1.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+    gLabels.clear();
+}
+
+/******************************************************************************/
+
+template <typename T>
+void TestOneTypeFloat(double temp)
+{
+    std::string myTypeName( getTypeName<T>() );
+
+    T data[SIZE];
+
+    ::fill(data, data+SIZE, T(init_value));
+    T var (temp);
+
+
+    test_variable1<T, custom_divide_variable<T> >(data,SIZE,var,myTypeName + " variable divide");
+    test_constant<T, custom_divide_360<T> >(data,SIZE,myTypeName + " constant divide");
+    
+    
+    std::string temp1 = myTypeName + " division";
+    summarize(temp1.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+    gLabels.clear();
 }
 
 /******************************************************************************/
@@ -403,119 +572,18 @@ int main(int argc, char** argv) {
     if (argc > 3) temp = (double)atof(argv[3]);
 
 
-
-// int16_t
-    ::fill(data16, data16+SIZE, int16_t(init_value));
-    int16_t var1int16_t_1(temp);
-
-    test_variable1<int16_t, custom_divide_variable<int16_t> >(data16,SIZE,var1int16_t_1,"int16_t variable divide");
-    test_constant<int16_t, custom_divide_360<int16_t> >(data16,SIZE,"int16_t constant divide");
-    test_variable1<int16_t, custom_modulo_variable<int16_t> >(data16,SIZE,var1int16_t_1,"int16_t variable modulo");
-    test_constant<int16_t, custom_modulo_360<int16_t> >(data16,SIZE,"int16_t constant modulo");
-    test_variable1<int16_t, custom_divplusmod_variable<int16_t> >(data16,SIZE,var1int16_t_1,"int16_t variable div plus mod");
-    test_constant<int16_t, custom_divplusmod_360<int16_t> >(data16,SIZE,"int16_t constant div plus mod");
-
-    summarize("int16_t division", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+// TODO - unit test custom code!
 
 
-// uint16_t
-    ::fill(data16unsigned, data16unsigned+SIZE, uint16_t(init_value));
-    uint16_t var1uint16_t_1(temp);
-
-    test_variable1<uint16_t, custom_divide_variable<uint16_t> >(data16unsigned,SIZE,var1uint16_t_1,"uint16_t variable divide");
-    test_constant<uint16_t, custom_divide_360<uint16_t> >(data16unsigned,SIZE,"uint16_t constant divide");
-    test_variable1<uint16_t, custom_modulo_variable<uint16_t> >(data16unsigned,SIZE,var1uint16_t_1,"uint16_t variable modulo");
-    test_constant<uint16_t, custom_modulo_360<uint16_t> >(data16unsigned,SIZE,"uint16_t constant modulo");
-    test_variable1<uint16_t, custom_divplusmod_variable<uint16_t> >(data16unsigned,SIZE,var1uint16_t_1,"uint16_t variable div plus mod");
-    test_constant<uint16_t, custom_divplusmod_360<uint16_t> >(data16unsigned,SIZE,"uint16_t constant div plus mod");
-        
-    summarize("uint16_t division", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-
-
-// int32_t
-    ::fill(data32, data32+SIZE, int32_t(init_value));
-    int32_t var1int32_t_1(temp);
-
-    test_variable1<int32_t, custom_divide_variable<int32_t> >(data32,SIZE,var1int32_t_1,"int32_t variable divide");
-    test_variable_divide_signed(data32,SIZE,var1int32_t_1,"int32_t variable reciprocal divide");
-    test_constant<int32_t, custom_divide_360<int32_t> >(data32,SIZE,"int32_t constant divide");
-    test_constant<int32_t, custom_recip_signed360<int32_t> >(data32,SIZE,"int32_t constant reciprocal divide");
-    test_variable1<int32_t, custom_modulo_variable<int32_t> >(data32,SIZE,var1int32_t_1,"int32_t variable modulo");
-    test_variable_modulo_signed(data32,SIZE,var1int32_t_1,"int32_t variable reciprocal modulo");
-    test_constant<int32_t, custom_modulo_360<int32_t> >(data32,SIZE,"int32_t constant modulo");
-    test_constant<int32_t, custom_recip_modulo_signed360<int32_t> >(data32,SIZE,"int32_t constant reciprocal modulo");
-    test_variable1<int32_t, custom_divplusmod_variable<int32_t> >(data32,SIZE,var1int32_t_1,"int32_t variable div plus mod");
-    test_constant<int32_t, custom_recip_divplusmod_signed360<int32_t> >(data32,SIZE,"int32_t constant reciprocal div plus mod");
-    test_constant<int32_t, custom_divplusmod_360<int32_t> >(data32,SIZE,"int32_t constant div plus mod");
-
-    summarize("int32_t division", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-    
-
-// uint32_t
-    ::fill(data32unsigned, data32unsigned+SIZE, uint32_t(init_value));
-    uint32_t var1uint32_t_1(temp);
-
-    test_variable1<uint32_t, custom_divide_variable<uint32_t> >(data32unsigned,SIZE,var1uint32_t_1,"uint32_t variable divide");
-    test_variable_divide_unsigned(data32unsigned,SIZE,var1uint32_t_1,"uint32_t variable reciprocal divide");
-    test_constant<uint32_t, custom_divide_360<uint32_t> >(data32unsigned,SIZE,"uint32_t constant divide");
-    test_constant<uint32_t, custom_recip_unsigned360<int32_t> >(data32unsigned,SIZE,"uint32_t constant reciprocal divide");
-    test_variable1<uint32_t, custom_modulo_variable<uint32_t> >(data32unsigned,SIZE,var1uint32_t_1,"uint32_t variable modulo");
-    test_variable_modulo_unsigned(data32unsigned,SIZE,var1uint32_t_1,"uint32_t variable reciprocal modulo");
-    test_constant<uint32_t, custom_modulo_360<uint32_t> >(data32unsigned,SIZE,"uint32_t constant modulo");
-    test_constant<uint32_t, custom_recip_modulo_unsigned360<uint32_t> >(data32unsigned,SIZE,"uint32_t constant reciprocal modulo");
-    test_variable1<uint32_t, custom_divplusmod_variable<uint32_t> >(data32unsigned,SIZE,var1uint32_t_1,"uint32_t variable div plus mod");
-    test_constant<uint32_t, custom_recip_divplusmod_unsigned360<uint32_t> >(data32unsigned,SIZE,"uint32_t constant reciprocal div plus mod");
-    test_constant<uint32_t, custom_divplusmod_360<uint32_t> >(data32unsigned,SIZE,"uint32_t constant div plus mod");
-        
-    summarize("uint32_t division", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-
-
-// int64_t
-    ::fill(data64, data64+SIZE, int64_t(init_value));
-    int64_t var1int64_t_1(temp);
-
-    test_variable1<int64_t, custom_divide_variable<int64_t> >(data64,SIZE,var1int64_t_1,"int64_t variable divide");
-    test_constant<int64_t, custom_divide_360<int64_t> >(data64,SIZE,"int64_t constant divide");
-    test_variable1<int64_t, custom_modulo_variable<int64_t> >(data64,SIZE,var1int64_t_1,"int64_t variable modulo");
-    test_constant<int64_t, custom_modulo_360<int64_t> >(data64,SIZE,"int64_t constant modulo");
-    test_variable1<int64_t, custom_divplusmod_variable<int64_t> >(data64,SIZE,var1int64_t_1,"int64_t variable div plus mod");
-    test_constant<int64_t, custom_divplusmod_360<int64_t> >(data64,SIZE,"int64_t constant div plus mod");
-
-    summarize("int64_t division", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-
-
-// uint64_t
-    ::fill(data64unsigned, data64unsigned+SIZE, uint64_t(init_value));
-    uint64_t var1uint64_t_1(temp);
-
-    test_variable1<uint64_t, custom_divide_variable<uint64_t> >(data64unsigned,SIZE,var1uint64_t_1,"uint64_t variable divide");
-    test_constant<uint64_t, custom_divide_360<uint64_t> >(data64unsigned,SIZE,"uint64_t constant divide");
-    test_variable1<uint64_t, custom_modulo_variable<uint64_t> >(data64unsigned,SIZE,var1uint64_t_1,"uint64_t variable modulo");
-    test_constant<uint64_t, custom_modulo_360<uint64_t> >(data64unsigned,SIZE,"uint64_t constant modulo");
-    test_variable1<uint64_t, custom_divplusmod_variable<uint64_t> >(data64unsigned,SIZE,var1uint64_t_1,"uint64_t variable div plus mod");
-    test_constant<uint64_t, custom_divplusmod_360<uint64_t> >(data64unsigned,SIZE,"uint64_t constant div plus mod");
-        
-    summarize("uint64_t division", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-
-
-// float
-    ::fill(dataFloat, dataFloat+SIZE, float(init_value));
-    float var1float(temp);
-
-    test_variable1<float, custom_divide_variable<float> >(dataFloat,SIZE,var1float,"float variable divide");
-    test_constant<float, custom_divide_360<float> >(dataFloat,SIZE,"float constant divide");
-        
-    summarize("float division", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
-
-
-// double
-    ::fill(dataDouble, dataDouble+SIZE, float(init_value));
-    double var1double(temp);
-
-    test_variable1<double, custom_divide_variable<double> >(dataDouble,SIZE,var1double,"double variable divide");
-    test_constant<double, custom_divide_360<double> >(dataDouble,SIZE,"double constant divide");
-    
-    summarize("double division", SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+    TestOneType<int16_t>( temp );
+    TestOneType<uint16_t>( temp );
+    TestOneType<int32_t>( temp );
+    TestOneType<uint32_t>( temp );
+    TestOneType<int64_t>( temp );
+    TestOneType<uint64_t>( temp );
+    TestOneTypeFloat<float>( temp );
+    TestOneTypeFloat<double>( temp );
+    TestOneTypeFloat<long double>( temp );
 
             
     return 0;
