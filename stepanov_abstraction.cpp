@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018-2019 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -522,7 +522,7 @@ void TestOneType()
 
 
     // the sorting tests are much slower than the accumulation tests - O(N^2)
-    iterations = iterations / 2000;
+    iterations = iterations / 1000;
     
     // fill one set of random numbers
     fill_random( dMpb, dMpe );
@@ -601,9 +601,10 @@ int main(int argc, char** argv) {
 #endif
 
 
-    iterations *= 3;
+    iterations *= 8;
     TestOneType<int32_t>();
     TestOneType<uint64_t>();
+
 
 #ifdef THESE_WORK_BUT_ARE_NOT_NEEDED_YET
     TestOneType<int8_t>();

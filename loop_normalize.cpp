@@ -1,6 +1,6 @@
 /*
     Copyright 2008 Adobe Systems Incorporated
-    Copyright 2018-2019 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -45,6 +45,7 @@ TODO - when/if compilers get better:  flesh out the rest of the while, do, and g
 // For best results, times should be about 1.0 seconds for the minimum test run
 int iterations = 800000;
 
+
 // 4000 items, or about 4k - 32k of data
 // this is intended to remain within the L2 cache of most common CPUs
 const int SIZE = 4000;
@@ -57,6 +58,7 @@ int init_value = 3;
 /******************************************************************************/
 
 // An unoptimizable case (because it depends on finding a NULL in the data)
+// (more or less strlen)
 template <typename T>
 size_t count_half_for_uncountable( T* begin, const size_t count ) {
     
@@ -1952,6 +1954,7 @@ template <typename T>
 size_t count_half_forrange_opt(const T &values, const size_t count ) {
 
     size_t result = values.size() / 2;
+    // assert (count == values.size() );
     return result;
 }
 
@@ -1961,6 +1964,7 @@ template <typename T>
 size_t count_half_forrange_opt2(const T &values, const size_t count ) {
 
     size_t result = count / 2;
+    // assert (count == values.size() );
     return result;
 }
 
@@ -1993,7 +1997,6 @@ size_t count_half_forrange1(const T &values, const size_t /* count */ ) {
         if (result == loop_limit)
             break;
     }
-    
     return result;
 }
 
@@ -2006,7 +2009,26 @@ size_t count_half_forrange2(const T &values, const size_t /* count */ ) {
     for( auto x: values ) {
         ++result;
     }
+    // assert( result == values.size() );
     return result / 2;
+}
+
+/******************************************************************************/
+
+// this probably falls under value range propagation
+// but could hit several optimizations to remove the loop, since the exit is a fixed value
+template <typename T>
+size_t count_half_forrange3(const T &values, const size_t /* count */ ) {
+
+    const size_t loop_limit = values.size();
+    
+    size_t result = 0;
+    for( auto x: values ) {
+        ++result;
+        if ((2*result) == loop_limit)
+            break;
+    }
+    return result;
 }
 
 /******************************************************************************/
@@ -2211,13 +2233,14 @@ void TestLoops()
     std::string temp8( myTypeName + " goto4 loop_normalize count_half" );
     summarize( temp8.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
-    
+
     
     test_count_half( myVectorValues, SIZE, count_half_forrange_opt<intVector>, myTypeName + " for range count_half opt" );
     test_count_half( myVectorValues, SIZE, count_half_forrange_opt2<intVector>, myTypeName + " for range count_half opt2" );
     test_count_half( myVectorValues, SIZE, count_half_forrange_uncountable<intVector>, myTypeName + " for range no_opt" );
     test_count_half( myVectorValues, SIZE, count_half_forrange1<intVector>, myTypeName + " for range count_half vector1" );
     test_count_half( myVectorValues, SIZE, count_half_forrange2<intVector>, myTypeName + " for range count_half vector2" );
+    test_count_half( myVectorValues, SIZE, count_half_forrange3<intVector>, myTypeName + " for range count_half vector3" );
     
     std::string temp5( myTypeName + " for range loop_normalize count_half" );
     summarize( temp5.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );

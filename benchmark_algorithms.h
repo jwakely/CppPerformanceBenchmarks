@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018-2019 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
     
@@ -107,6 +107,16 @@ void fill_random(ForwardIterator first, ForwardIterator last) {
     using T = typename std::iterator_traits<ForwardIterator>::value_type;
     while (first != last) {
         *first++ = static_cast<T>( crand64() >> 3 );
+    }
+}
+
+/******************************************************************************/
+
+template <typename ForwardIterator, typename R>
+void fill_random_range(ForwardIterator first, ForwardIterator last, const R range) {
+    using T = typename std::iterator_traits<ForwardIterator>::value_type;
+    while (first != last) {
+        *first++ = ( T(crand64() >> 3) ) % range;
     }
 }
 
@@ -232,7 +242,7 @@ template<typename RandomIterator>
 void random_shuffle(RandomIterator first, RandomIterator last) {
     auto count = last - first;
     for (RandomIterator i = first + 1; i != last; ++i) {
-        size_t offset = crand64() % count;
+        size_t offset( size_t(crand64()) % count );
         auto temp = *i;
         *i = first[ offset ];
         first[ offset ] = temp;
@@ -245,7 +255,7 @@ template<typename RandomIterator, class RNG>
 void random_shuffle(RandomIterator first, RandomIterator last, RNG &rngfunc) {
     auto count = last - first;
     for (RandomIterator i = first + 1; i != last; ++i) {
-        size_t offset = rngfunc(count);
+        size_t offset( rngfunc(count) );
         auto temp = *i;
         *i = first[ offset ];
         first[ offset ] = temp;
@@ -358,6 +368,7 @@ void quicksort( RandomAccessIterator begin, RandomAccessIterator end, Swapper do
 // https://en.wikipedia.org/wiki/Bogosort
 // Just to see if you're paying attention...
 
+// approximately O(
 template <class RandomAccessIterator>
 void bogosort( RandomAccessIterator begin, RandomAccessIterator end )
 {
@@ -368,6 +379,7 @@ void bogosort( RandomAccessIterator begin, RandomAccessIterator end )
 
 /******************************************************************************/
 
+// approximately O(N^2)
 template <class RandomAccessIterator, typename T>
 RandomAccessIterator bogosearch( RandomAccessIterator begin, RandomAccessIterator end, T value )
 {

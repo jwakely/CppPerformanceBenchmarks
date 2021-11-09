@@ -1,5 +1,5 @@
 /*
-    Copyright 2019 Chris Cox
+    Copyright 2019-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -11,18 +11,17 @@ Goal:  Test compiler optimizations related to box filter convolution operations.
 Assumptions:
 
     1) Most likely, there will be no single best implementation for all types.
-        "Best" performance depends a lot on cache organization, instruction latencies, and register availability.
+        "Best" performance will depend a lot on cache organization, instruction latencies, vectorization, and register availability.
 
 
 
 
 
-TODO - find best buffer sizes
+TODO - find best buffer sizes for vertical iteration, see if it varies with data size
         need to test in and out of cache
 
 TODO -
     3D box filters
-    iterated box filters
 
 */
 
@@ -38,6 +37,7 @@ TODO -
 #include <numeric>
 #include <iostream>
 #include <algorithm>
+#include <utility>
 #include "benchmark_results.h"
 #include "benchmark_timer.h"
 #include "benchmark_typenames.h"
@@ -46,18 +46,28 @@ TODO -
 
 // this constant may need to be adjusted to give reasonable minimum times
 // For best results, times should be about 1.0 seconds for the minimum test run
-int iterations = 400;
+int iterations = 50;
 
 
-// ~ 2 million items (src plus dest), intended to be larger than L2 cache on common CPUs
-const int WIDTH = 1200;
-const int HEIGHT = 900;
+// repeat count for itereted filters, can be changed from command line
+int repeats = 10;
+
+
+// length of edges for boxes, can be changed from command line
+int edge_length = 21;
+
+
+// ~ 8 million items, intended to be larger than L2 cache on common CPUs
+// and a 4K video frame size
+const int WIDTH = 3840;
+const int HEIGHT = 2160;
 
 const int SIZE = HEIGHT*WIDTH;
 
 
 // initial value for filling our arrays, may be changed from the command line
-double init_value = 3.0;
+double init_value = 2.0;
+
 
 /******************************************************************************/
 
@@ -77,7 +87,7 @@ inline void check_add(const T* out, const int rows, const int cols, const int ro
         for(int x = 0; x < cols; ++x)
             sum += out[y*rowStep+x];
     
-    T temp = (T)(cols*rows) * (T)init_value;
+    T temp = T( (cols*rows) * T(init_value) );
     if (!tolerance_equal<T>(sum,temp))
         std::cout << "test " << label << " failed, got " << sum << " expected " << temp << "\n";
 }
@@ -402,6 +412,105 @@ void box_horiz_opt4(const T *src, T *dest, int rows, int cols, int rowStep, int 
 }
 
 /******************************************************************************/
+
+// Simple horizontal box filter with edge replication
+// break out edge conditions into larger loops
+// stop doing redundant adds
+// unroll some loops
+
+// O(1)
+template<typename T, typename TS>
+void box_horiz_opt4_inner(T *dest, T *dest2, int rows, int cols, int rowStep, int edge, int repeats ) {
+    const bool isFloat = (T(2.9) > T(2.0));
+    const TS half = isFloat ? TS(0) : TS(edge/2);
+    const int halfEdge = edge / 2;
+    const int remainEdge = edge - halfEdge;
+    const int start_edge = std::min(halfEdge,cols-1);
+    const int end_edge = (cols-1) - std::min(remainEdge,cols-1);
+    
+    // assert( cols >= edge );
+    
+    for (int y = 0; y < rows; ++y) {
+        for (int r = 0; r < repeats; ++r) {
+            const T *srcRow;
+            T *destRow;
+            int x, k;
+            TS sum = half;
+            
+            if ( (r & 1) == 0 ) {
+                srcRow = dest2 + y*rowStep;
+                destRow = dest + y*rowStep;
+            } else {
+                srcRow = dest + y*rowStep;
+                destRow = dest2 + y*rowStep;
+            }
+            
+            // sum for first pixel
+            sum += halfEdge * srcRow[0];
+            k = 0;
+            for (; k < remainEdge; ++k) {
+                sum += srcRow[k];
+            }
+            
+            for (x = 0; x < start_edge; ++x) {
+                TS result = sum / edge;
+                destRow[x] = T(result);
+                
+                // subtract old value, add new value
+                // assert( (x - halfEdge) <= 0 );
+                sum += srcRow[x+remainEdge];
+                sum -= srcRow[0];
+            }
+
+            for (; x < (end_edge-3); x += 4) {
+                TS result0 = sum / edge;
+                sum += srcRow[x+0+remainEdge];
+                sum -= srcRow[x+0-halfEdge];
+                TS result1 = sum / edge;
+                sum += srcRow[x+1+remainEdge];
+                sum -= srcRow[x+1-halfEdge];
+                TS result2 = sum / edge;
+                sum += srcRow[x+2+remainEdge];
+                sum -= srcRow[x+2-halfEdge];
+                TS result3 = sum / edge;
+                sum += srcRow[x+3+remainEdge];
+                sum -= srcRow[x+3-halfEdge];
+                
+                destRow[x+0] = T(result0);
+                destRow[x+1] = T(result1);
+                destRow[x+2] = T(result2);
+                destRow[x+3] = T(result3);
+            }
+            
+            for (; x < end_edge; ++x) {
+                TS result = sum / edge;
+                destRow[x] = T(result);
+                
+                // subtract old value, add new value
+                sum += srcRow[x+remainEdge];
+                sum -= srcRow[x-halfEdge];
+            }
+            
+            for (; x < (cols-1); ++x) {
+                TS result = sum / edge;
+                destRow[x] = T(result);
+                
+                // subtract old value, add new value
+                // assert( (x+remainEdge) >= (cols-1) );
+                sum += srcRow[(cols-1)];
+                sum -= srcRow[x-halfEdge];
+            }
+            
+            
+            // output last pixel
+                sum = sum / edge;
+                destRow[(cols-1)] = T(sum);
+        }
+        
+    }
+}
+
+/******************************************************************************/
 /******************************************************************************/
 
 // Simple horizontal box filter without edge conditions (prepadded buffer)
@@ -575,7 +684,6 @@ void box_horiz_pad_opt4(const T *src, T *dest, int rows, int cols, int rowStep, 
     
     for (int y = 0; y < rows; ++y) {
         TS sum = half;
-        //TS temp[4] = { 0,0,0,0 };
         
         // sum for first pixel
         int k = 0;
@@ -625,6 +733,81 @@ void box_horiz_pad_opt4(const T *src, T *dest, int rows, int cols, int rowStep, 
         
         srcRow += rowStep;
         destRow += rowStep;
+    }
+
+}
+
+/******************************************************************************/
+
+// Simple horizontal box filter without edge conditions (prepadded buffer)
+// stop doing redundant adds
+// unroll inner loops
+
+// O(1)
+template<typename T, typename TS>
+void box_horiz_pad_opt4_inner(T *dest, T *dest2, int rows, int cols, int rowStep, int edge, int repeats ) {
+    const bool isFloat = (T(2.9) > T(2.0));
+    const TS half = isFloat ? TS(0) : TS(edge/2);
+    T *srcRow;
+    T *destRow;
+    
+    // assert( cols >= edge );
+    
+    for (int y = 0; y < rows; ++y) {
+        srcRow = dest + y*rowStep;
+        destRow = dest2 + y*rowStep;
+        
+        for (int r = 0; r < repeats; ++r) {
+            TS sum = half;
+            
+            std::swap(srcRow,destRow);
+            
+            // sum for first pixel
+            int k = 0;
+            for (; k < (edge-3); k += 4) {
+                sum += srcRow[k+0];
+                sum += srcRow[k+1];
+                sum += srcRow[k+2];
+                sum += srcRow[k+3];
+            }
+            for (; k < edge; ++k) {
+                sum += srcRow[k];
+            }
+        
+            // middle pixel values
+            int x = 0;
+            for (; x < (cols-4); x += 4) {
+                TS result0 = sum / edge;
+                sum += srcRow[x+0+edge];
+                sum -= srcRow[x+0];
+                TS result1 = sum / edge;
+                sum += srcRow[x+1+edge];
+                sum -= srcRow[x+1];
+                TS result2 = sum / edge;
+                sum += srcRow[x+2+edge];
+                sum -= srcRow[x+2];
+                TS result3 = sum / edge;
+                sum += srcRow[x+3+edge];
+                sum -= srcRow[x+3];
+            
+                destRow[x+0] = T(result0);
+                destRow[x+1] = T(result1);
+                destRow[x+2] = T(result2);
+                destRow[x+3] = T(result3);
+            }
+            
+            for (; x < (cols-1); ++x) {
+                TS result = sum / edge;
+                destRow[x] = T(result);
+                
+                sum += srcRow[x+edge];
+                sum -= srcRow[x];
+            }
+            
+            // output last value
+            TS result = sum / edge;
+            destRow[(cols-1)] = T(result);
+        }
     }
 
 }
@@ -1366,6 +1549,141 @@ void box_vert_opt7(const T *src, T *dest, int rows, int cols, int rowStep, int e
 }
 
 /******************************************************************************/
+
+// Simple vertical box filter with edge replication
+// break out edge conditions into larger loops, only test edge conditions near edges
+// stop doing redundant adds
+// swap loops and iterate over a stack temporary array to get much better cache usage
+// unroll some inner loops
+
+// O(1)
+template<typename T, typename TS>
+void box_vert_opt7_inner(T *dest1, T *dest2, int rows, int cols, int rowStep, int edge, int repeats ) {
+    const bool isFloat = (T(2.9) > T(2.0));
+    const TS half = isFloat ? TS(0) : TS(edge/2);
+    const int halfEdge = edge / 2;
+    const int remainEdge = edge - halfEdge;
+    const int start_edge = std::min(halfEdge,(rows-1));
+    const int end_edge = (rows-1) - std::min(remainEdge,(rows-1));
+    const int bufferSize = 256;
+    TS buffer[ bufferSize ];
+    int xx;
+    T *src, *dest;
+    
+    // assert( rows >= edge );
+
+    for (xx = 0; xx < cols; xx += bufferSize) {
+        int endx = xx + bufferSize;
+        if (endx > cols)
+            endx = cols;
+        
+        src = dest1;
+        dest = dest2;
+        
+        for (int r = 0; r < repeats; ++r) {
+            int y, x, i, k;
+
+            x = xx;
+            i = 0;
+            
+            std::swap( src, dest );
+            
+            for (; x < (endx-3); x += 4, i += 4) {
+                buffer[i+0] = half + halfEdge * src[0*rowStep+x+0];
+                buffer[i+1] = half + halfEdge * src[0*rowStep+x+1];
+                buffer[i+2] = half + halfEdge * src[0*rowStep+x+2];
+                buffer[i+3] = half + halfEdge * src[0*rowStep+x+3];
+            }
+
+            for (; x < endx; ++x, ++i)
+                buffer[i] = half + halfEdge * src[0*rowStep+x];
+            
+            k = 0;
+
+            for (; k < (remainEdge-1); k += 2)
+                for (x = xx, i = 0; x < endx; ++x, ++i)
+                    buffer[i] += src[(k+0)*rowStep+x]
+                              + src[(k+1)*rowStep+x];
+
+            for (; k < remainEdge; ++k)
+                for (x = xx, i = 0; x < endx; ++x, ++i)
+                    buffer[i] += src[k*rowStep+x];
+            
+            for (y = 0; y < start_edge; ++y) {
+            
+                // assert( (y - halfEdge) <= 0 );
+                for (x = xx, i = 0; x < endx; ++x, ++i) {
+                    TS result = buffer[i] / edge;
+                    dest[y*rowStep+x] = T(result);
+                    
+                    buffer[i] += src[(y+remainEdge)*rowStep+x]
+                            - src[0*rowStep+x];
+                }
+            }
+
+            for (; y < end_edge; ++y) {
+                T *destRow = dest + y*rowStep;
+            
+                x = xx; i = 0;
+
+                for (; x < (endx-3); x += 4, i += 4) {
+                    TS result[4];
+                    result[0] = buffer[i+0] / edge;
+                    result[1] = buffer[i+1] / edge;
+                    result[2] = buffer[i+2] / edge;
+                    result[3] = buffer[i+3] / edge;
+                    
+                    destRow[x+0] = T(result[0]);
+                    destRow[x+1] = T(result[1]);
+                    destRow[x+2] = T(result[2]);
+                    destRow[x+3] = T(result[3]);
+                    
+                    // subtract old value, add new value
+                    buffer[i+0] += src[(y+remainEdge)*rowStep+x+0]
+                                - src[(y-halfEdge)*rowStep+x+0];
+                    buffer[i+1] += src[(y+remainEdge)*rowStep+x+1]
+                                - src[(y-halfEdge)*rowStep+x+1];
+                    buffer[i+2] += src[(y+remainEdge)*rowStep+x+2]
+                                - src[(y-halfEdge)*rowStep+x+2];
+                    buffer[i+3] += src[(y+remainEdge)*rowStep+x+3]
+                                - src[(y-halfEdge)*rowStep+x+3];
+                }
+
+    // NOTE - LLVM does better with tight loop than unrolled, seems to get confused
+                for (; x < endx; ++x, ++i) {
+                    TS result = buffer[i] / edge;
+                    
+                    dest[y*rowStep+x] = T(result);
+                    
+                    buffer[i] += src[(y+remainEdge)*rowStep+x]
+                            - src[(y-halfEdge)*rowStep+x];
+                }
+                
+            }
+        
+            for (; y < (rows-1); ++y) {
+            
+                for (x = xx, i = 0; x < endx; ++x, ++i) {
+                    TS result = buffer[i] / edge;
+                    
+                    dest[y*rowStep+x] = T(result);
+                    
+                    buffer[i] += src[(rows-1)*rowStep+x]
+                            - src[(y-halfEdge)*rowStep+x];
+                }
+            }
+        
+            // write last row of pixels
+            for (x = xx, i = 0; x < endx; ++x, ++i) {
+                TS result = buffer[i] / edge;
+                dest[(rows-1)*rowStep+x] = T(result);
+            }
+        }
+
+    }   // xx block looop
+}
+
+/******************************************************************************/
 /******************************************************************************/
 
 // Simple vertical box filter without edge conditions (prepadded buffer)
@@ -1766,6 +2084,134 @@ void box_vert_pad_opt6(const T *src, T *dest, int rows, int cols, int rowStep, i
 }
 
 /******************************************************************************/
+
+// Simple vertical box filter without edge conditions (prepadded buffer)
+// stop doing redundant adds
+// reorder loops and iterate over a stack temporary array to get much better cache usage
+// unroll some inner loops - helps some compilers, and confuses others
+
+template<typename T, typename TS>
+void box_vert_pad_opt6_inner(T *dest1, T *dest2, int rows, int cols, int rowStep, int edge, int repeats ) {
+    const bool isFloat = (T(2.9) > T(2.0));
+    const TS half = isFloat ? TS(0) : TS(edge/2);
+    const int bufferSize = 256;
+    TS buffer[ bufferSize ];
+    T *src, *dest;
+
+    for (int xx = 0; xx < cols; xx += bufferSize) {
+        int endx = xx + bufferSize;
+        if (endx > cols)
+            endx = cols;
+        
+        src = dest1;
+        dest = dest2;
+        
+        for (int r = 0; r < repeats; ++r) {
+
+            int y, x, i, k;
+            // sum initial rows into temporary buffer
+            x = xx;
+            i = 0;
+            
+            std::swap( src, dest );
+
+            k = 0;
+                for (; x < (endx-3); x += 4, i += 4) {
+                    buffer[i+0] = half + src[0*rowStep+x+0];
+                    buffer[i+1] = half + src[0*rowStep+x+1];
+                    buffer[i+2] = half + src[0*rowStep+x+2];
+                    buffer[i+3] = half + src[0*rowStep+x+3];
+                }
+
+                for (; x < endx; ++x, ++i)
+                    buffer[i] = half + src[0*rowStep+x];
+            
+            k = 1;
+
+            for (; k < (edge-1); k += 2) {
+                x = xx; i = 0;
+                for (; x < (endx-3); x += 4, i += 4) {
+                    buffer[i+0] += src[(k+0)*rowStep+x+0]
+                                + src[(k+1)*rowStep+x+0];
+                    buffer[i+1] += src[(k+0)*rowStep+x+1]
+                                + src[(k+1)*rowStep+x+1];
+                    buffer[i+2] += src[(k+0)*rowStep+x+2]
+                                + src[(k+1)*rowStep+x+2];
+                    buffer[i+3] += src[(k+0)*rowStep+x+3]
+                                + src[(k+1)*rowStep+x+3];
+                }
+                for (; x < endx; ++x, ++i)
+                    buffer[i] += src[(k+0)*rowStep+x]
+                              + src[(k+1)*rowStep+x];
+            }
+
+            for (; k < edge; ++k)
+                for (x = xx, i = 0; x < endx; ++x, ++i)
+                    buffer[i] += src[k*rowStep+x];
+
+            for (y = 0; y < (rows-1); ++y) {
+                T *destRow = dest + y*rowStep;
+                
+                x = xx; i = 0;
+
+                for (; x < (endx-3); x += 4, i += 4) {
+                    TS result[4];
+                    result[0] = buffer[i+0] / edge;
+                    result[1] = buffer[i+1] / edge;
+                    result[2] = buffer[i+2] / edge;
+                    result[3] = buffer[i+3] / edge;
+                    
+                    buffer[i+0] += src[(y+edge)*rowStep+x+0]
+                                - src[(y)*rowStep+x+0];
+                    buffer[i+1] += src[(y+edge)*rowStep+x+1]
+                                - src[(y)*rowStep+x+1];
+                    buffer[i+2] += src[(y+edge)*rowStep+x+2]
+                                - src[(y)*rowStep+x+2];
+                    buffer[i+3] += src[(y+edge)*rowStep+x+3]
+                                - src[(y)*rowStep+x+3];
+                    
+                    destRow[x+0] = T(result[0]);
+                    destRow[x+1] = T(result[1]);
+                    destRow[x+2] = T(result[2]);
+                    destRow[x+3] = T(result[3]);
+                }
+
+                for (; x < endx; ++x, ++i) {
+                    TS result = buffer[i] / edge;
+                    
+                    destRow[x] = T(result);
+                    
+                    buffer[i] += src[(y+edge)*rowStep+x]
+                            - src[(y)*rowStep+x];
+                }
+            }
+        
+            // write last row of pixels
+            x = xx; i = 0;
+
+            for (; x < (endx-3); x += 4, i += 4) {
+                TS result[4];
+                result[0] = buffer[i+0] / edge;
+                result[1] = buffer[i+1] / edge;
+                result[2] = buffer[i+2] / edge;
+                result[3] = buffer[i+3] / edge;
+            
+                dest[(rows-1)*rowStep+x+0] = T(result[0]);
+                dest[(rows-1)*rowStep+x+1] = T(result[1]);
+                dest[(rows-1)*rowStep+x+2] = T(result[2]);
+                dest[(rows-1)*rowStep+x+3] = T(result[3]);
+            }
+
+            for (; x < endx; ++x, ++i) {
+                TS result = buffer[i] / edge;
+                dest[(rows-1)*rowStep+x] = T(result);
+            }
+        }
+
+    }   // xx
+}
+
+/******************************************************************************/
 /******************************************************************************/
 
 // Simple 2D box filter without edge conditions (prepadded buffer)
@@ -2064,11 +2510,66 @@ void test_conv(const T *src, T *dest, int rows, int cols, int rowStep, int edge,
 /******************************************************************************/
 /******************************************************************************/
 
+template <typename T, typename Summer>
+void test_conv_repeated(const T *src, T *dest, T *dest2, int rows, int cols, int rowStep, int edge, int repeats, Summer func, const std::string label) {
+
+    std::copy_n( src, SIZE, dest );
+    std::copy_n( src, SIZE, dest2 );
+    
+    start_timer();
+
+    for(int i = 0; i < iterations; ++i) {
+        for (int k = 0; k < repeats/2; ++k) {
+            func( dest2, dest, rows, cols, rowStep, edge );
+            func( dest, dest2, rows, cols, rowStep, edge );
+        }
+        if ( (repeats&1) != 0)
+            func( dest2, dest, rows, cols, rowStep, edge );
+    }
+    
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+    
+    if ( (repeats&1) != 0)
+        check_add( dest, rows, cols, rowStep, label);
+    else
+        check_add( dest2, rows, cols, rowStep, label);
+}
+
+/******************************************************************************/
+/******************************************************************************/
+
+template <typename T, typename Summer>
+void test_conv_repeated_inner(const T *src, T *dest, T *dest2, int rows, int cols, int rowStep, int edge, int repeats, Summer func, const std::string label) {
+
+    std::copy_n( src, SIZE, dest );
+    std::copy_n( src, SIZE, dest2 );
+    
+    start_timer();
+
+    for(int i = 0; i < iterations; ++i) {
+        func( dest, dest2, rows, cols, rowStep, edge, repeats );
+    }
+    
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
+    
+    if ( (repeats&1) == 0)
+        check_add( dest, rows, cols, rowStep, label);
+    else
+        check_add( dest2, rows, cols, rowStep, label);
+}
+
+/******************************************************************************/
+/******************************************************************************/
+
 template< typename T, typename TS >
 void TestOneType()
 {
     const int base_iterations = iterations;
-    int edge = 21;
+    int edge = edge_length;
 
     std::string myTypeName( getTypeName<T>() );
     std::string myTypeNameA( getTypeName<TS>() );
@@ -2076,52 +2577,53 @@ void TestOneType()
     gLabels.clear();
 
     // work around MSVC bugs
-    std::unique_ptr<T> data_flat_unique( new T[ HEIGHT*WIDTH ] );
-    std::unique_ptr<T> data_flatDst_unique( new T[ HEIGHT*WIDTH ] );
+    std::unique_ptr<T> data_flat_unique( new T[ SIZE ] );
+    std::unique_ptr<T> data_flatDst_unique( new T[ SIZE ] );
+    std::unique_ptr<T> data_flatDst2_unique( new T[ SIZE ] );
     T *data_flatSrc = data_flat_unique.get();
     T *data_flatDst = data_flatDst_unique.get();
+    T *data_flatDst2 = data_flatDst2_unique.get();
 
 
     std::fill_n( data_flatSrc, SIZE, T(init_value) );
 
 
-
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz<T,TS>, myTypeName + " box horiz 1D");
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz_opt1<T,TS>, myTypeName + " box horiz 1D opt1");
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz_opt2<T,TS>, myTypeName + " box horiz 1D opt2");
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz_opt3<T,TS>, myTypeName + " box horiz 1D opt3");
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz_opt4<T,TS>, myTypeName + " box horiz 1D opt4");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz<T,TS>, myTypeName + " box_horiz 1D");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz_opt1<T,TS>, myTypeName + " box_horiz 1D opt1");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz_opt2<T,TS>, myTypeName + " box_horiz 1D opt2");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz_opt3<T,TS>, myTypeName + " box_horiz 1D opt3");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE, SIZE, edge, box_horiz_opt4<T,TS>, myTypeName + " box_horiz 1D opt4");
     
     std::string temp1( myTypeName + " convolution_box Horizontal 1D" );
     summarize( temp1.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
 
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz<T,TS>, myTypeName + " box horiz 2D");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz_opt1<T,TS>, myTypeName + " box horiz 2D opt1");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz_opt2<T,TS>, myTypeName + " box horiz 2D opt2");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz_opt3<T,TS>, myTypeName + " box horiz 2D opt3");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz_opt4<T,TS>, myTypeName + " box horiz 2D opt4");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz<T,TS>, myTypeName + " box_horiz 2D");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz_opt1<T,TS>, myTypeName + " box_horiz 2D opt1");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz_opt2<T,TS>, myTypeName + " box_horiz 2D opt2");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz_opt3<T,TS>, myTypeName + " box_horiz 2D opt3");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_horiz_opt4<T,TS>, myTypeName + " box_horiz 2D opt4");
     
     std::string temp2( myTypeName + " convolution_box Horizontal 2D" );
     summarize( temp2.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
     
     
     
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad<T,TS>, myTypeName + " box horiz 1D padded");
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad_opt1<T,TS>, myTypeName + " box horiz 1D padded opt1");
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad_opt2<T,TS>, myTypeName + " box horiz 1D padded opt2");
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad_opt3<T,TS>, myTypeName + " box horiz 1D padded opt3");
-    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad_opt4<T,TS>, myTypeName + " box horiz 1D padded opt4");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad<T,TS>, myTypeName + " box_horiz 1D padded");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad_opt1<T,TS>, myTypeName + " box_horiz 1D padded opt1");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad_opt2<T,TS>, myTypeName + " box_horiz 1D padded opt2");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad_opt3<T,TS>, myTypeName + " box_horiz 1D padded opt3");
+    test_conv( data_flatSrc, data_flatDst, 1, SIZE-edge, SIZE-edge, edge, box_horiz_pad_opt4<T,TS>, myTypeName + " box_horiz 1D padded opt4");
     
     std::string temp3( myTypeName + " convolution_box Horizontal 1D padded" );
     summarize( temp3.c_str(), (SIZE-edge), iterations, kDontShowGMeans, kDontShowPenalty );
 
 
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad<T,TS>, myTypeName + " box horiz 2D padded");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad_opt1<T,TS>, myTypeName + " box horiz 2D padded opt1");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad_opt2<T,TS>, myTypeName + " box horiz 2D padded opt2");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad_opt3<T,TS>, myTypeName + " box horiz 2D padded opt3");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad_opt4<T,TS>, myTypeName + " box horiz 2D padded opt4");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad<T,TS>, myTypeName + " box_horiz 2D padded");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad_opt1<T,TS>, myTypeName + " box_horiz 2D padded opt1");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad_opt2<T,TS>, myTypeName + " box_horiz 2D padded opt2");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad_opt3<T,TS>, myTypeName + " box_horiz 2D padded opt3");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH-edge, WIDTH, edge, box_horiz_pad_opt4<T,TS>, myTypeName + " box_horiz 2D padded opt4");
     
     std::string temp4( myTypeName + " convolution_box Horizontal 2D padded" );
     summarize( temp4.c_str(), (HEIGHT*(WIDTH-edge)), iterations, kDontShowGMeans, kDontShowPenalty );
@@ -2129,27 +2631,27 @@ void TestOneType()
 
 
 
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert<T,TS>, myTypeName + " box vert 2D");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt1<T,TS>, myTypeName + " box vert 2D opt1");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt2<T,TS>, myTypeName + " box vert 2D opt2");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt3<T,TS>, myTypeName + " box vert 2D opt3");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt4<T,TS>, myTypeName + " box vert 2D opt4");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt5<T,TS>, myTypeName + " box vert 2D opt5");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt6<T,TS>, myTypeName + " box vert 2D opt6");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt7<T,TS>, myTypeName + " box vert 2D opt7");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert<T,TS>, myTypeName + " box_vert 2D");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt1<T,TS>, myTypeName + " box_vert 2D opt1");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt2<T,TS>, myTypeName + " box_vert 2D opt2");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt3<T,TS>, myTypeName + " box_vert 2D opt3");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt4<T,TS>, myTypeName + " box_vert 2D opt4");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt5<T,TS>, myTypeName + " box_vert 2D opt5");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt6<T,TS>, myTypeName + " box_vert 2D opt6");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT, WIDTH, WIDTH, edge, box_vert_opt7<T,TS>, myTypeName + " box_vert 2D opt7");
     
     std::string temp5( myTypeName + " convolution_box Vertical 2D" );
     summarize( temp5.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 
 
 
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad<T,TS>, myTypeName + " box vert 2D padded");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt1<T,TS>, myTypeName + " box vert 2D padded opt1");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt2<T,TS>, myTypeName + " box vert 2D padded opt2");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt3<T,TS>, myTypeName + " box vert 2D padded opt3");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt4<T,TS>, myTypeName + " box vert 2D padded opt4");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt5<T,TS>, myTypeName + " box vert 2D padded opt5");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt6<T,TS>, myTypeName + " box vert 2D padded opt6");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad<T,TS>, myTypeName + " box_vert 2D padded");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt1<T,TS>, myTypeName + " box_vert 2D padded opt1");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt2<T,TS>, myTypeName + " box_vert 2D padded opt2");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt3<T,TS>, myTypeName + " box_vert 2D padded opt3");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt4<T,TS>, myTypeName + " box_vert 2D padded opt4");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt5<T,TS>, myTypeName + " box_vert 2D padded opt5");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH, WIDTH, edge, box_vert_pad_opt6<T,TS>, myTypeName + " box_vert 2D padded opt6");
     
     std::string temp6( myTypeName + " convolution_box Vertical 2D padded" );
     summarize( temp6.c_str(), (HEIGHT-edge)*WIDTH, iterations, kDontShowGMeans, kDontShowPenalty );
@@ -2158,15 +2660,109 @@ void TestOneType()
 
     // 2D managing edge conditions - is kind of insane
 
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH-edge, WIDTH, edge, box_2D_pad<T,TS>, myTypeName + " box 2D padded");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH-edge, WIDTH, edge, box_2D_pad_opt1<T,TS>, myTypeName + " box 2D padded opt1");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH-edge, WIDTH, edge, box_2D_pad_opt2<T,TS>, myTypeName + " box 2D padded opt2");
-    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH-edge, WIDTH, edge, box_2D_pad_opt3<T,TS>, myTypeName + " box 2D padded opt3");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH-edge, WIDTH, edge, box_2D_pad<T,TS>, myTypeName + " box_2D padded");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH-edge, WIDTH, edge, box_2D_pad_opt1<T,TS>, myTypeName + " box_2D padded opt1");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH-edge, WIDTH, edge, box_2D_pad_opt2<T,TS>, myTypeName + " box_2D padded opt2");
+    test_conv( data_flatSrc, data_flatDst, HEIGHT-edge, WIDTH-edge, WIDTH, edge, box_2D_pad_opt3<T,TS>, myTypeName + " box_2D padded opt3");
     
     std::string temp9( myTypeName + " convolution_box 2D" );
     summarize( temp9.c_str(), (HEIGHT-edge)*(WIDTH-edge), iterations, kDontShowGMeans, kDontShowPenalty );
 
+    
+    
+    iterations /= repeats;
+    
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE, SIZE, edge, repeats, box_horiz<T,TS>, myTypeName + " box_horiz_repeated 1D");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE, SIZE, edge, repeats, box_horiz_opt1<T,TS>, myTypeName + " box_horiz_repeated 1D opt1");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE, SIZE, edge, repeats, box_horiz_opt2<T,TS>, myTypeName + " box_horiz_repeated 1D opt2");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE, SIZE, edge, repeats, box_horiz_opt3<T,TS>, myTypeName + " box_horiz_repeated 1D opt3");
 
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE, SIZE, edge, repeats, box_horiz_opt4<T,TS>, myTypeName + " box_horiz_repeated 1D opt4");
+    test_conv_repeated_inner( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE, SIZE, edge, repeats, box_horiz_opt4_inner<T,TS>, myTypeName + " box_horiz_repeated_inner 1D opt4");
+    
+    std::string temp1a( myTypeName + " convolution_box_repeated Horizontal 1D" );
+    summarize( temp1a.c_str(), SIZE, iterations*repeats, kDontShowGMeans, kDontShowPenalty );
+
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_horiz<T,TS>, myTypeName + " box_horiz_repeated 2D");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_horiz_opt1<T,TS>, myTypeName + " box_horiz_repeated 2D opt1");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_horiz_opt2<T,TS>, myTypeName + " box_horiz_repeated 2D opt2");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_horiz_opt3<T,TS>, myTypeName + " box_horiz_repeated 2D opt3");
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_horiz_opt4<T,TS>, myTypeName + " box_horiz_repeated 2D opt4");
+    test_conv_repeated_inner( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_horiz_opt4_inner<T,TS>, myTypeName + " box_horiz_repeated_inner 2D opt4");
+    
+    std::string temp2a( myTypeName + " convolution_box_repeated Horizontal 2D" );
+    summarize( temp2a.c_str(), SIZE, iterations*repeats, kDontShowGMeans, kDontShowPenalty );
+    
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE-edge, SIZE-edge, edge, repeats, box_horiz_pad<T,TS>, myTypeName + " box_horiz_repeated 1D padded");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE-edge, SIZE-edge, edge, repeats, box_horiz_pad_opt1<T,TS>, myTypeName + " box_horiz_repeated 1D padded opt1");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE-edge, SIZE-edge, edge, repeats, box_horiz_pad_opt2<T,TS>, myTypeName + " box_horiz_repeated 1D padded opt2");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE-edge, SIZE-edge, edge, repeats, box_horiz_pad_opt3<T,TS>, myTypeName + " box_horiz_repeated 1D padded opt3");
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE-edge, SIZE-edge, edge, repeats, box_horiz_pad_opt4<T,TS>, myTypeName + " box_horiz_repeated 1D padded opt4");
+    test_conv_repeated_inner( data_flatSrc, data_flatDst, data_flatDst2, 1, SIZE-edge, SIZE-edge, edge, repeats, box_horiz_pad_opt4_inner<T,TS>, myTypeName + " box_horiz_repeated_inner 1D padded opt4");
+    
+    std::string temp3a( myTypeName + " convolution_box_repeated Horizontal 1D padded" );
+    summarize( temp3a.c_str(), (SIZE-edge), iterations*repeats, kDontShowGMeans, kDontShowPenalty );
+
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH-edge, WIDTH, edge, repeats, box_horiz_pad<T,TS>, myTypeName + " box_horiz_repeated 2D padded");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH-edge, WIDTH, edge, repeats, box_horiz_pad_opt1<T,TS>, myTypeName + " box_horiz_repeated 2D padded opt1");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH-edge, WIDTH, edge, repeats, box_horiz_pad_opt2<T,TS>, myTypeName + " box_horiz_repeated 2D padded opt2");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH-edge, WIDTH, edge, repeats, box_horiz_pad_opt3<T,TS>, myTypeName + " box_horiz_repeated 2D padded opt3");
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH-edge, WIDTH, edge, repeats, box_horiz_pad_opt4<T,TS>, myTypeName + " box_horiz_repeated 2D padded opt4");
+    test_conv_repeated_inner( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH-edge, WIDTH, edge, repeats, box_horiz_pad_opt4_inner<T,TS>, myTypeName + " box_horiz_repeated_inner 2D padded opt4");
+    
+    std::string temp4a( myTypeName + " convolution_box_repeated Horizontal 2D padded" );
+    summarize( temp4a.c_str(), (HEIGHT*(WIDTH-edge)), iterations*repeats, kDontShowGMeans, kDontShowPenalty );
+
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_vert<T,TS>, myTypeName + " box_vert_repeated 2D");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_vert_opt1<T,TS>, myTypeName + " box_vert_repeated 2D opt1");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_vert_opt2<T,TS>, myTypeName + " box_vert_repeated 2D opt2");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_vert_opt3<T,TS>, myTypeName + " box_vert_repeated 2D opt3");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_vert_opt4<T,TS>, myTypeName + " box_vert_repeated 2D opt4");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_vert_opt5<T,TS>, myTypeName + " box_vert_repeated 2D opt5");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_vert_opt6<T,TS>, myTypeName + " box_vert_repeated 2D opt6");
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_vert_opt7<T,TS>, myTypeName + " box_vert_repeated 2D opt7");
+    test_conv_repeated_inner( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT, WIDTH, WIDTH, edge, repeats, box_vert_opt7_inner<T,TS>, myTypeName + " box_vert_repeated_inner 2D opt7");
+    
+    std::string temp5a( myTypeName + " convolution_box_repeated Vertical 2D" );
+    summarize( temp5a.c_str(), SIZE, iterations*repeats, kDontShowGMeans, kDontShowPenalty );
+
+
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH, WIDTH, edge, repeats, box_vert_pad<T,TS>, myTypeName + " box_vert_repeated 2D padded");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH, WIDTH, edge, repeats, box_vert_pad_opt1<T,TS>, myTypeName + " box_vert_repeated 2D padded opt1");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH, WIDTH, edge, repeats, box_vert_pad_opt2<T,TS>, myTypeName + " box_vert_repeated 2D padded opt2");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH, WIDTH, edge, repeats, box_vert_pad_opt3<T,TS>, myTypeName + " box_vert_repeated 2D padded opt3");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH, WIDTH, edge, repeats, box_vert_pad_opt4<T,TS>, myTypeName + " box_vert_repeated 2D padded opt4");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH, WIDTH, edge, repeats, box_vert_pad_opt5<T,TS>, myTypeName + " box_vert_repeated 2D padded opt5");
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH, WIDTH, edge, repeats, box_vert_pad_opt6<T,TS>, myTypeName + " box_vert_repeated 2D padded opt6");
+    test_conv_repeated_inner( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH, WIDTH, edge, repeats, box_vert_pad_opt6_inner<T,TS>, myTypeName + " box_vert_repeated_inner 2D padded opt6");
+    
+    std::string temp6a( myTypeName + " convolution_box_repeated Vertical 2D padded" );
+    summarize( temp6a.c_str(), (HEIGHT-edge)*WIDTH, iterations*repeats, kDontShowGMeans, kDontShowPenalty );
+    
+    
+
+    // 2D managing edge conditions - is kind of insane
+
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH-edge, WIDTH, edge, repeats, box_2D_pad<T,TS>, myTypeName + " box_2D_repeated padded");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH-edge, WIDTH, edge, repeats, box_2D_pad_opt1<T,TS>, myTypeName + " box_2D_repeated padded opt1");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH-edge, WIDTH, edge, repeats, box_2D_pad_opt2<T,TS>, myTypeName + " box_2D_repeated padded opt2");
+    test_conv_repeated( data_flatSrc, data_flatDst, data_flatDst2, HEIGHT-edge, WIDTH-edge, WIDTH, edge, repeats, box_2D_pad_opt3<T,TS>, myTypeName + " box_2D_repeated padded opt3");
+    
+    std::string temp9a( myTypeName + " convolution_box_repeated 2D" );
+    summarize( temp9a.c_str(), (HEIGHT-edge)*(WIDTH-edge), iterations*repeats, kDontShowGMeans, kDontShowPenalty );
+
+    
+    
     
     iterations = base_iterations;
 
@@ -2185,7 +2781,8 @@ int main(int argc, char** argv) {
 
     if (argc > 1) iterations = atoi(argv[1]);
     if (argc > 2) init_value = (double) atof(argv[2]);
-
+    if (argc > 3) repeats = atoi(argv[3]);
+    if (argc > 4) edge_length = atoi(argv[4]);
 
 
     TestOneType<uint8_t, uint16_t>();
@@ -2200,7 +2797,6 @@ int main(int argc, char** argv) {
     
     TestOneType<uint64_t, uint64_t>();
     TestOneType<int64_t, int64_t>();
-
 
     // here float and double are about the same speed as small ints
     iterations *= 2;

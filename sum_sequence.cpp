@@ -1,6 +1,6 @@
 /*
     Copyright 2008 Adobe Systems Incorporated
-    Copyright 2019 Chris Cox
+    Copyright 2019-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -17,9 +17,14 @@ Assumptions:
 
 
 
-NOTE - MSVC generates dozens of bogus precision loss error messages about std::accumulate
-    LLVM and gcc are fine.
-    Looks like a problem in header source <numeric>, or possibly with compiler handling if statements in template
+NOTE - MSVC generates dozens of bogus precision loss error messages about std::accumulate.
+        MSVC may take a LONG time to compile this file.
+    Looks like a problem in header source <numeric>,
+        or with compiler handling of if statements in templates.
+
+NOTE - gcc can generate bogus warnings about high iteration numbers in loops
+        causing undefined behavior. But the numbers given are *much* higher
+        than defined in the code.
 
 
 
@@ -97,7 +102,7 @@ struct accumulate_std {
 /******************************************************************************/
 /******************************************************************************/
 
-#if _LIBCPP_STD_VER > 14
+#if _LIBCPP_STD_VER >= 17
 template <typename Iter, typename T>
 struct reduce_add_std {
     T operator()( Iter first, const size_t count )
@@ -721,36 +726,50 @@ void TestOneFunc( Iter data, const size_t count, std::string label )
 {
     std::string myTypeName( getTypeName<T>() );
     
-    const bool isFloat = benchmark::isFloat<T>();
-    const bool isSigned = benchmark::isSigned<T>();
+    // we can always accumulate to our own size and type
+    test_accumulate( data, count, func<Iter, T>(), label + " to " + myTypeName );
     
-    test_accumulate( data, SIZE, func<Iter, T>(), label + " to " + myTypeName );
-    if (isFloat) {
-        if (sizeof(T) < sizeof(float))
-            test_accumulate( data, SIZE, func<Iter, float>(), label + " to float" );
-        if (sizeof(T) < sizeof(double))
-            test_accumulate( data, SIZE, func<Iter, double>(), label + " to double" );
-        /*      Nobody is optimizing long double - painful performance.
-        if (sizeof(T) < sizeof(long double))
-            test_accumulate( data, SIZE, func<Iter, double>(), label + " to long double" );
-        */
+    // but then we need to make sure we accumulate only to sizes larger than the sequence values
+    if (benchmark::isSigned<T>()) {
+        if (sizeof(T) < sizeof(int16_t))
+            test_accumulate( data, count, func<Iter, int16_t>(), label + " to int16_t" );
+        if (sizeof(T) < sizeof(int32_t))
+            test_accumulate( data, count, func<Iter, int32_t>(), label + " to int32_t" );
+        if (sizeof(T) < sizeof(int64_t))
+            test_accumulate( data, count, func<Iter, int64_t>(), label + " to int64_t" );
     } else {
-        if (isSigned) {
-            if (sizeof(T) < sizeof(int16_t))
-                test_accumulate( data, SIZE, func<Iter, int16_t>(), label + " to int16_t" );
-            if (sizeof(T) < sizeof(int32_t))
-                test_accumulate( data, SIZE, func<Iter, int32_t>(), label + " to int32_t" );
-            if (sizeof(T) < sizeof(int64_t))
-                test_accumulate( data, SIZE, func<Iter, int64_t>(), label + " to int64_t" );
-        } else {
-            if (sizeof(T) < sizeof(uint16_t))
-                test_accumulate( data, SIZE, func<Iter, uint16_t>(), label + " to uint16_t" );
-            if (sizeof(T) < sizeof(uint32_t))
-                test_accumulate( data, SIZE, func<Iter, uint32_t>(), label + " to uint32_t" );
-            if (sizeof(T) < sizeof(uint64_t))
-                test_accumulate( data, SIZE, func<Iter, uint64_t>(), label + " to uint64_t" );
-        }
+        if (sizeof(T) < sizeof(uint16_t))
+            test_accumulate( data, count, func<Iter, uint16_t>(), label + " to uint16_t" );
+        if (sizeof(T) < sizeof(uint32_t))
+            test_accumulate( data, count, func<Iter, uint32_t>(), label + " to uint32_t" );
+        if (sizeof(T) < sizeof(uint64_t))
+            test_accumulate( data, count, func<Iter, uint64_t>(), label + " to uint64_t" );
     }
+}
+
+/******************************************************************************/
+/******************************************************************************/
+
+// requires functions converted to classes, but greatly simplifies testing
+// broken out seprate from int, because MSVC was hanging while compiling (did not compile after 4 hours)
+template<typename Iter, typename T, template<typename, typename > class func >
+void TestOneFuncFloat( Iter data, const size_t count, std::string label )
+{
+    std::string myTypeName( getTypeName<T>() );
+    
+    // we can always accumulate to our own size and type
+    test_accumulate( data, count, func<Iter, T>(), label + " to " + myTypeName );
+    
+    // but then we need to make sure we accumulate only to sizes larger than the sequence values
+    if (sizeof(T) < sizeof(float))
+        test_accumulate( data, count, func<Iter, float>(), label + " to float" );
+    if (sizeof(T) < sizeof(double))
+        test_accumulate( data, count, func<Iter, double>(), label + " to double" );
+    /*      Nobody is optimizing long double - painful performance.
+    if (sizeof(T) < sizeof(long double))
+        test_accumulate( data, count, func<Iter, double>(), label + " to long double" );
+    */
+
 }
 
 /******************************************************************************/
@@ -769,7 +788,7 @@ void TestOneType()
 
 
     TestOneFunc< const T*, T, accumulate_std >( data, SIZE, myTypeName + " std::accumulate" );
-#if _LIBCPP_STD_VER > 14
+#if _LIBCPP_STD_VER >= 17
     TestOneFunc< const T*, T, reduce_add_std >( data, SIZE, myTypeName + " std::reduce" );
 #endif
     TestOneFunc< const T*, T, accumulate1 >( data, SIZE, myTypeName + " accumulate1" );
@@ -792,7 +811,47 @@ void TestOneType()
     
     std::string temp1( myTypeName + " sum_sequence" );
     summarize(temp1.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
+}
 
+/******************************************************************************/
+
+// broken out seprate from int, because MSVC was hanging while compiling (did not compile after 4 hours)
+template<typename T>
+void TestOneTypeFloat()
+{
+    std::string myTypeName( getTypeName<T>() );
+    
+    gLabels.clear();
+    
+    T data[SIZE];
+
+    fill(data, data+SIZE, T(init_value));
+
+
+    TestOneFuncFloat< const T*, T, accumulate_std >( data, SIZE, myTypeName + " std::accumulate" );
+#if _LIBCPP_STD_VER >= 17
+    TestOneFuncFloat< const T*, T, reduce_add_std >( data, SIZE, myTypeName + " std::reduce" );
+#endif
+    TestOneFuncFloat< const T*, T, accumulate1 >( data, SIZE, myTypeName + " accumulate1" );
+    TestOneFuncFloat< const T*, T, accumulate2 >( data, SIZE, myTypeName + " accumulate2" );
+    TestOneFuncFloat< const T*, T, accumulate3 >( data, SIZE, myTypeName + " accumulate3" );
+    TestOneFuncFloat< const T*, T, accumulate4 >( data, SIZE, myTypeName + " accumulate4" );
+    TestOneFuncFloat< const T*, T, accumulate5 >( data, SIZE, myTypeName + " accumulate5" );
+    TestOneFuncFloat< const T*, T, accumulate6 >( data, SIZE, myTypeName + " accumulate6" );
+    TestOneFuncFloat< const T*, T, accumulate7 >( data, SIZE, myTypeName + " accumulate7" );
+    TestOneFuncFloat< const T*, T, accumulate8 >( data, SIZE, myTypeName + " accumulate8" );
+    TestOneFuncFloat< const T*, T, accumulate9 >( data, SIZE, myTypeName + " accumulate9" );
+    TestOneFuncFloat< const T*, T, accumulate10 >( data, SIZE, myTypeName + " accumulate10" );
+    TestOneFuncFloat< const T*, T, accumulate11 >( data, SIZE, myTypeName + " accumulate11" );
+    TestOneFuncFloat< const T*, T, accumulate12 >( data, SIZE, myTypeName + " accumulate12" );
+    TestOneFuncFloat< const T*, T, accumulate13 >( data, SIZE, myTypeName + " accumulate13" );
+    TestOneFuncFloat< const T*, T, accumulate14 >( data, SIZE, myTypeName + " accumulate14" );
+    TestOneFuncFloat< const T*, T, accumulate15 >( data, SIZE, myTypeName + " accumulate15" );
+    TestOneFuncFloat< const T*, T, accumulate16 >( data, SIZE, myTypeName + " accumulate16" );
+    
+    
+    std::string temp1( myTypeName + " sum_sequence" );
+    summarize(temp1.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
 }
 
 /******************************************************************************/
@@ -820,8 +879,8 @@ int main(int argc, char** argv) {
     iterations /= 4;
     TestOneType<int64_t>();
     TestOneType<uint64_t>();
-    TestOneType<float>();
-    TestOneType<double>();
+    TestOneTypeFloat<float>();
+    TestOneTypeFloat<double>();
 //    TestOneType<long double>();   // nobody appears to be generating good code for long double
 
 

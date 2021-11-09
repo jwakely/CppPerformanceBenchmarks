@@ -105,6 +105,13 @@ inline bool tolerance_equal(const float &a, const float &b) {
 
 /******************************************************************************/
 
+template <typename T>
+inline void check_simple_sum(T result) {
+    T temp = (T)SIZE * (T)init_value;
+    if (!tolerance_equal<T>(result,temp))
+        printf("test %i failed\n", current_test);
+}
+
 template <typename T, typename Shifter>
 inline void check_shifted_sum(T result) {
     T temp = (T)SIZE * Shifter::do_shift((T)init_value);

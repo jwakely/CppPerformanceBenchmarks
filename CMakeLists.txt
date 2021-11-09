@@ -147,6 +147,10 @@ set(test_cases
 	binary_search
 	loop_unswitching
 	template_unroll
+	interleave
+	matrix_flip
+	matrix_multiply
+	rotate_sequence
 )
 
 foreach(test_case IN LISTS test_cases)

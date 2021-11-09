@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018-2019 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -27,22 +27,28 @@ Assumptions:
     5) Further optimizations will be applied after CSE (algebraic simplification, vectorization, etc.).
 
 
-Current compilers do OK on simple tests, but fail when the code gets more complicated.
+Current compilers do OK on simplest tests, but fail when the code gets more complicated.
 We need to spend time getting the basics working well in our compilers.
 
 
 
 
+NOTE: found several cases like this in a couple of common vision libraries.
 
-NOTE - declaring test function arguments const, so far has no effect on performance results.
+
+
 
 
 TODO - move most of this test code into shared tests so I can test custom types
-TODO - logic ops for integer types ( | & ^ >> << )
+TODO - add logic ops for integer types ( | & ^ >> << )
     need a good way to separate int and float tests without duplicating code, or generating errors!
+    C++17 might be able to do it, once compilers get the bugs out
 TODO - does the compiler recognize builtin functions (sin, log, abs) as returning a const value and subject to CSE?
     floating point rules may hinder further optimization
     but cos(x) + cos(x) + cos(x) + cos(x) should only call cos() once.
+    
+
+TODO - ccox - investigate FP CSE
 
 */
 
@@ -102,7 +108,7 @@ inline void check_shifted_variable_sum_CSE(T result, const std::string &label) {
 std::deque<std::string> gLabels;
 
 template <typename T, typename Shifter>
-void test_CSE1_fullopt(T* first, int count, T v1, const std::string label) {
+void test_CSE1_fullopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     // This is about as far as most compilers can optmize the code.
@@ -126,7 +132,7 @@ void test_CSE1_fullopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE1_halfopt(T* first, int count, T v1, const std::string label) {
+void test_CSE1_halfopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     // Just CSE, without algebraic simplification applied.
@@ -153,7 +159,7 @@ void test_CSE1_halfopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE1(T* first, int count, T v1, const std::string label) {
+void test_CSE1(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -176,7 +182,7 @@ void test_CSE1(T* first, int count, T v1, const std::string label) {
 
 // inline the work, to test template versus inline CSE (shouldn't be different, but apparently is)
 template <typename T, typename Shifter>
-void test_CSE1_add_inline(T* first, int count, T v1, const std::string label) {
+void test_CSE1_add_inline(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -200,7 +206,7 @@ void test_CSE1_add_inline(T* first, int count, T v1, const std::string label) {
 // inline the work, to test template versus inline CSE (shouldn't be different, but apparently is)
 // flip order of some arguments, but remain equivalent expressions
 template <typename T, typename Shifter>
-void test_CSE1_add_inline_flipped(T* first, int count, T v1, const std::string label) {
+void test_CSE1_add_inline_flipped(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -222,7 +228,7 @@ void test_CSE1_add_inline_flipped(T* first, int count, T v1, const std::string l
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE2_fullopt(T* first, int count, T v1, const std::string label) {
+void test_CSE2_fullopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     // This is about as far as most compilers can optmize the code.
@@ -248,7 +254,7 @@ void test_CSE2_fullopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE2_halfopt(T* first, int count, T v1, const std::string label) {
+void test_CSE2_halfopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -276,7 +282,7 @@ void test_CSE2_halfopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE2(T* first, int count, T v1, const std::string label) {
+void test_CSE2(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -303,7 +309,7 @@ void test_CSE2(T* first, int count, T v1, const std::string label) {
 
 // inline the work, to test template versus inline CSE
 template <typename T, typename Shifter>
-void test_CSE2_add_inline(T* first, int count, T v1, const std::string label) {
+void test_CSE2_add_inline(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -357,7 +363,7 @@ void test_CSE2_add_inline_flipped( const T* first, const int count, const T v1, 
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE4_fullopt(T* first, int count, T v1, const std::string label) {
+void test_CSE4_fullopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     // This is about as far as most compilers can optmize the code.
@@ -389,7 +395,7 @@ void test_CSE4_fullopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE4_halfopt(T* first, int count, T v1, const std::string label) {
+void test_CSE4_halfopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -421,7 +427,7 @@ void test_CSE4_halfopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE4(T* first, int count, T v1, const std::string label) {
+void test_CSE4(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -456,7 +462,7 @@ void test_CSE4(T* first, int count, T v1, const std::string label) {
 
 // inline the work, to test template versus inline CSE
 template <typename T, typename Shifter>
-void test_CSE4_add_inline(T* first, int count, T v1, const std::string label) {
+void test_CSE4_add_inline(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -492,7 +498,7 @@ void test_CSE4_add_inline(T* first, int count, T v1, const std::string label) {
 // inline the work, to test template versus inline CSE
 // flip order of some arguments, but remain equivalent expressions
 template <typename T, typename Shifter>
-void test_CSE4_add_inline_flipped(T* first, int count, T v1, const std::string label) {
+void test_CSE4_add_inline_flipped(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -526,7 +532,7 @@ void test_CSE4_add_inline_flipped(T* first, int count, T v1, const std::string l
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE8_fullopt(T* first, int count, T v1, const std::string label) {
+void test_CSE8_fullopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     // This is about as far as most compilers can optmize the code.
@@ -564,7 +570,7 @@ void test_CSE8_fullopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE8_halfopt(T* first, int count, T v1, const std::string label) {
+void test_CSE8_halfopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -604,7 +610,7 @@ void test_CSE8_halfopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter>
-void test_CSE8(T* first, int count, T v1, const std::string label) {
+void test_CSE8(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -655,7 +661,7 @@ void test_CSE8(T* first, int count, T v1, const std::string label) {
 
 // inline the work, to test template versus inline CSE
 template <typename T, typename Shifter>
-void test_CSE8_add_inline(T* first, int count, T v1, const std::string label) {
+void test_CSE8_add_inline(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -707,7 +713,7 @@ void test_CSE8_add_inline(T* first, int count, T v1, const std::string label) {
 // inline the work, to test template versus inline CSE
 // flip order of some arguments, but remain equivalent expressions
 template <typename T, typename Shifter>
-void test_CSE8_add_inline_flipped(T* first, int count, T v1, const std::string label) {
+void test_CSE8_add_inline_flipped(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -831,7 +837,7 @@ struct loop_inner_body4<0,T,Shifter> {
 /******************************************************************************/
 
 template <typename T, typename Shifter, int F>
-void test_CSEN_fullopt(T* first, int count, T v1, const std::string label) {
+void test_CSEN_fullopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     // This is about as far as most compilers can optmize the code.
@@ -855,7 +861,7 @@ void test_CSEN_fullopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter, int F>
-void test_CSEN_halfopt(T* first, int count, T v1, const std::string label) {
+void test_CSEN_halfopt(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -883,7 +889,7 @@ void test_CSEN_halfopt(T* first, int count, T v1, const std::string label) {
 /******************************************************************************/
 
 template <typename T, typename Shifter, int F>
-void test_CSEN(T* first, int count, T v1, const std::string label) {
+void test_CSEN(const T* first, const int count, const T v1, const std::string label) {
     start_timer();
 
     for(int i = 0; i < iterations; ++i) {
@@ -905,35 +911,35 @@ void test_CSEN(T* first, int count, T v1, const std::string label) {
 
 template <typename T>
     struct custom_cse_mix {
-      static T do_shift(T v1, T v2, T v3) { return (v1 * (v2 - v3) + (v2 / v1) ); }
+       static inline constexpr T do_shift(const T v1, const T v2, const T v3) { return (v1 * (v2 - v3) + (v2 / v1) ); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_cse_add {
-      static T do_shift(T v1, T v2, T v3) { return (v1 + (v2 + v3) ); }
+      static inline constexpr T do_shift(const T v1, const T v2, const T v3) { return (v1 + (v2 + v3) ); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_cse_sub {
-      static T do_shift(T v1, T v2, T v3) { return (v1 + (v2 - v3) ); }
+      static inline constexpr T do_shift(const T v1, const T v2, const T v3) { return (v1 + (v2 - v3) ); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_cse_mul {
-      static T do_shift(T v1, T v2, T v3) { return (v1 + (v2 * v3) ); }
+      static inline constexpr T do_shift(const T v1, const T v2, const T v3) { return (v1 + (v2 * v3) ); }
     };
 
 /******************************************************************************/
 
 template <typename T>
     struct custom_cse_div {
-      static T do_shift(T v1, T v2, T v3) { return (v1 + (v2 / v3) ); }
+      static inline constexpr T do_shift(const T v1, const T v2, const T v3) { return (v1 + (v2 / v3) ); }
     };
 
 /******************************************************************************/
@@ -1069,9 +1075,9 @@ void TestOneType(double temp) {
 
 
 
-    TestUnrolledType<T,4>(data, var1, myTypeName + " CSE4X_unroll");        // int8 283 sec
-    TestUnrolledType<T,8>(data, var1, myTypeName + " CSE8X_unroll");        // int8 281 sec
-        // unroll2,4: mix fails CSE takes 1175 seconds!
+    TestUnrolledType<T,4>(data, var1, myTypeName + " CSE4X_unroll");
+    TestUnrolledType<T,8>(data, var1, myTypeName + " CSE8X_unroll");
+
 
 #if WORKS_BUT_COMPILERS_FAIL_TO_OPTIMIZE
 // TODO - something is going wrong with the more highly unrolled versions.
@@ -1109,6 +1115,7 @@ int main(int argc, char** argv) {
     
     
     TestOneType<int8_t>(temp);
+
     TestOneType<uint8_t>(temp);
     //TestOneType<int16_t>(temp);
     //TestOneType<uint16_t>(temp);
@@ -1123,7 +1130,7 @@ int main(int argc, char** argv) {
     TestOneType<float>(temp);
     //TestOneType<double>(temp);
     //TestOneType<long double>(temp);
-
+    
     
     return 0;
 }

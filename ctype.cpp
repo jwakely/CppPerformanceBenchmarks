@@ -1,6 +1,6 @@
 /*
     Copyright 2008-2010 Adobe Systems Incorporated
-    Copyright 2018 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -637,7 +637,7 @@ int main(int argc, char** argv) {
     uint8_t data[SIZE];
 
     // seed the random number generator, so we get repeatable results
-    srand( iterations + 123 );
+    scrand( iterations + 123 );
     
     init_char_types_table();
 
