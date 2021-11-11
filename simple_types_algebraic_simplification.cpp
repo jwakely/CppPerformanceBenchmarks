@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018 Chris Cox
+    Copyright 2018-2019 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -256,12 +256,10 @@ static std::deque<std::string> gLabels;
 
 template <typename T, typename Shifter>
 void test_2term(T* first, int count, const std::string label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
-    T result = 0;
+  for(int i = 0; i < iterations; ++i) {
+    T result(0);
     result += Shifter::do_shift( first[0], first[1] );
     for (int n = 1; n < count; ++n) {
         result += Shifter::do_shift( first[n-1], first[n] );
@@ -278,12 +276,10 @@ void test_2term(T* first, int count, const std::string label) {
 
 template <typename T, typename Shifter>
 void test_constantS(T* first, int count, const std::string label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
-    T result = 0;
+  for(int i = 0; i < iterations; ++i) {
+    T result(0);
     for (int n = 0; n < count; ++n) {
         result += Shifter::do_shift( first[n] );
     }
@@ -299,16 +295,97 @@ void test_constantS(T* first, int count, const std::string label) {
 
 template <typename T, typename Shifter>
 void test_variable4S(T* first, int count, T v1, T v2, T v3, T v4, const std::string label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
-    T result = 0;
+  for(int i = 0; i < iterations; ++i) {
+    T result(0);
     for (int n = 0; n < count; ++n) {
         result += Shifter::do_shift( first[n], v1, v2, v3, v4 );
     }
     check_shifted_variable_sum<T, Shifter>(result, v1, v2, v3, v4);
+  }
+
+  // need the labels to remain valid until we print the summary
+  gLabels.push_back( label );
+  record_result( timer(), gLabels.back().c_str() );
+}
+
+/******************************************************************************/
+
+// see also:  simple_types_cse.cpp
+template <typename T, typename Shifter>
+void test_constantSRepeated(T* first, int count, const std::string label) {
+  start_timer();
+  
+  for(int i = 0; i < iterations; ++i) {
+    T result(0);
+    for (int n = 1; n < count; ++n) {
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result += Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+        result -= Shifter::do_shift( first[n-1] ) + Shifter::do_shift( first[n]*first[n] );
+    }
+    check_shifted_sum_CSE<T, Shifter>(result);
   }
 
   // need the labels to remain valid until we print the summary
@@ -371,6 +448,10 @@ void TestOneType( double temp ) {
         test_constantS<T, custom_and_zero<T> >(data,SIZE,myTypeName + " and zero");
     }
     test_constantS<T, custom_algebra_mixed_constant<T> >(data,SIZE,myTypeName + " mixed constant");
+    test_constantSRepeated<T, custom_sub_zero<T> >(data,SIZE,myTypeName + " subtract_zero_repeated");
+    test_constantSRepeated<T, custom_algebra_mixed<T> >(data,SIZE,myTypeName + " mixed_algebra_repeated");
+    test_constantSRepeated<T, custom_subtract_self<T> >(data,SIZE,myTypeName + " subtract_self_repeated");
+    test_constantSRepeated<T, custom_algebra_mixed_constant<T> >(data,SIZE,myTypeName + " mixed_constant_repeated");
     
     std::string temp2( myTypeName + " algebraic simplification to constant");
     summarize(temp2.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );
@@ -454,6 +535,10 @@ void TestOneTypeFloat( double temp ) {
     test_constantS<T, custom_times_zero<T> >(data,SIZE,myTypeName + " times zero");
     test_constantS<T, custom_subtract_self<T> >(data,SIZE,myTypeName + " subtract self");
     test_constantS<T, custom_algebra_mixed_constant<T> >(data,SIZE,myTypeName + " mixed constant");
+    test_constantSRepeated<T, custom_sub_zero<T> >(data,SIZE,myTypeName + " subtract_zero_repeated");
+    test_constantSRepeated<T, custom_algebra_mixed<T> >(data,SIZE,myTypeName + " mixed_algebra_repeated");
+    test_constantSRepeated<T, custom_subtract_self<T> >(data,SIZE,myTypeName + " subtract_self_repeated");
+    test_constantSRepeated<T, custom_algebra_mixed_constant<T> >(data,SIZE,myTypeName + " mixed_constant_repeated");
     
     std::string temp2( myTypeName + " algebraic simplification to constant");
     summarize(temp2.c_str(), SIZE, iterations, kDontShowGMeans, kDontShowPenalty );

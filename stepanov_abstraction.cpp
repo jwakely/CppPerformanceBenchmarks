@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018-2019 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -362,7 +362,7 @@ void test_insertion_sort(Iterator firstSource, Iterator lastSource, Iterator fir
 
     for(i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        insertionSort< Iterator, T>( firstDest, lastDest );
+        insertionSort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -380,7 +380,7 @@ void test_quicksort(Iterator firstSource, Iterator lastSource, Iterator firstDes
 
     for(i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        quicksort< Iterator, T>( firstDest, lastDest );
+        quicksort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -398,7 +398,7 @@ void test_heap_sort(Iterator firstSource, Iterator lastSource, Iterator firstDes
 
     for(i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        heapsort< Iterator, T>( firstDest, lastDest );
+        heapsort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -501,7 +501,7 @@ void TestOneType()
     int base_iterations = iterations;
 
     // seed the random number generator so we get repeatable results
-    srand( (int)init_value + 123 );
+    scrand( (int)init_value + 123 );
 
     fill(dpb, dpe, T(init_value));
     fill(DVpb, DVpe, TypeValueWrapper(init_value));
@@ -522,10 +522,10 @@ void TestOneType()
 
 
     // the sorting tests are much slower than the accumulation tests - O(N^2)
-    iterations = iterations / 2000;
+    iterations = iterations / 1000;
     
     // fill one set of random numbers
-    fill_random<T *, T>( dMpb, dMpe );
+    fill_random( dMpb, dMpe );
     // copy to the other sets, so we have the same numbers
     ::copy( dMpb, dMpe, DVMpb );
     ::copy( dMpb, dMpe, DV10Mpb );
@@ -601,9 +601,10 @@ int main(int argc, char** argv) {
 #endif
 
 
-    iterations *= 3;
+    iterations *= 8;
     TestOneType<int32_t>();
     TestOneType<uint64_t>();
+
 
 #ifdef THESE_WORK_BUT_ARE_NOT_NEEDED_YET
     TestOneType<int8_t>();

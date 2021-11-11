@@ -1,6 +1,6 @@
 /*
     Copyright 2008-2009 Adobe Systems Incorporated
-    Copyright 2018 Chris Cox
+    Copyright 2018-2019 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 
@@ -15,6 +15,9 @@ Assumptions:
 
 
 See also: https://graphics.stanford.edu/~seander/bithacks.html#IntegerMinOrMax
+
+NOTE - removed the unsafe branchless calculations (hence some odd numbering)
+
 
 
 
@@ -37,13 +40,14 @@ TODO - C++ 17 std::clamp
 #include "benchmark_results.h"
 #include "benchmark_timer.h"
 #include "benchmark_typenames.h"
+#include "benchmark_algorithms.h"
 
 /******************************************************************************/
 /******************************************************************************/
 
 // this constant may need to be adjusted to give reasonable minimum times
 // For best results, times should be about 1.0 seconds for the minimum test run
-int iterations = 5500000;
+int iterations = 6000000;
 
 
 // 4000 items, or about 32k of data
@@ -109,101 +113,12 @@ struct max_functor3 {
 
 /******************************************************************************/
 
-// this will only work for types where arithmatic right shift, and bitwise and work (signed integers)
-template <typename T>
-struct max_functor4 {
-    static inline T do_shift(T a, T b)
-        {
-        const T mask = T(a - b) >> ((8*sizeof(T)) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        return a - ((a - b) & mask);
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where right shift, and bitwise and work (integers)
-// sadly, some compilers do not optimize out the type based branch!
-template <typename T>
-struct max_functor4U {
-    static inline T do_shift(T a, T b)
-        {
-        T mask = T(a - b) >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        if (T(-1) > T(0))       // handle unsigned values, currently 0x1 or 0x0, condition should be optimized away as constant
-            mask = ~(mask - 1); // now 0xFF and 0x00
-        return a - ((a - b) & mask);
-        }
-};
-
-/******************************************************************************/
-
 // this will only work for types where bitwise and, negation, and assignment of a bool work (integers)
 template <typename T>
 struct max_functor5 {
     static inline T do_shift(T a, T b)
         {
         return a ^ ((a ^ b) & -T(a < b));
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where arithmatic right shift, and bitwise and work (signed integers)
-// functor 4 with an explicit temporary variable, in case the compiler fails CSE
-template <typename T>
-struct max_functor6 {
-    static inline T do_shift(T a, T b)
-        {
-        const T diff = a - b;
-        const T mask = diff >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        return a - (diff & mask);
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where right shift, and bitwise and work (integers)
-// functor 4 with an explicit temporary variable, in case the compiler fails CSE
-// sadly, some compilers do not optimize out the type based branch!
-template <typename T>
-struct max_functor6U {
-    static inline T do_shift(T a, T b)
-        {
-        const T diff = a - b;
-        T mask = diff >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        if (T(-1) > T(0))       // handle unsigned values, currently 0x1 or 0x0, condition should be optimized away as constant
-            mask = ~(mask - 1); // now 0xFF and 0x00
-        return a - (diff & mask);
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where arithmatic right shift, and bitwise and work (signed integers)
-// functor 5 with explicit mask variables
-template <typename T>
-struct max_functor7 {
-    static inline T do_shift(T a, T b)
-        {
-        const T diff = a - b;
-        const T mask = diff >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        return a ^ ((a ^ b) & mask);
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where right shift, and bitwise and work (integers)
-// functor 5 with explicit mask variables
-// sadly, some compilers do not optimize out the type based branch!
-template <typename T>
-struct max_functor7U {
-    static inline T do_shift(T a, T b)
-        {
-        const T diff = a - b;
-        T mask = diff >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        if (T(-1) > T(0))       // handle unsigned values, currently 0x1 or 0x0, condition should be optimized away as constant
-            mask = ~(mask - 1); // now 0xFF and 0x00
-        return a ^ ((a ^ b) & mask);
         }
 };
 
@@ -226,10 +141,9 @@ struct max_functor8 {
 // reverse
 template <typename T>
 struct max_functor9 {
-    static inline T do_shift(T a, T b)
-        {
+    static inline T do_shift(T a, T b)  {
         return ( a < b ) ? b : a;
-        }
+    }
 };
 
 /******************************************************************************/
@@ -237,8 +151,7 @@ struct max_functor9 {
 
 template <typename T>
 struct min_std_functor {
-    static inline T do_shift(T a, T b)
-        {
+    static inline T do_shift(T a, T b) {
         return std::min(a,b);
         }
 };
@@ -248,13 +161,12 @@ struct min_std_functor {
 // TODO - need reverse!
 template <typename T>
 struct min_functor1 {
-    static inline T do_shift(T a, T b)
-        {
+    static inline T do_shift(T a, T b)  {
         if (a < b)
             return a;
         else
             return b;
-        }
+    }
 };
 
 /******************************************************************************/
@@ -262,10 +174,9 @@ struct min_functor1 {
 // TODO - need reverse!
 template <typename T>
 struct min_functor2 {
-    static inline T do_shift(T a, T b)
-        {
+    static inline T do_shift(T a, T b) {
         return ( a < b ) ? a : b;
-        }
+    }
 };
 
 /******************************************************************************/
@@ -273,37 +184,9 @@ struct min_functor2 {
 // this will only work for types where bitwise and, negation, and assignment of a bool work (integers)
 template <typename T>
 struct min_functor3 {
-    static inline T do_shift(T a, T b)
-        {
+    static inline T do_shift(T a, T b) {
         return b + ((a - b) & -T(a < b));
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where arithmatic right shift, and bitwise and work (signed integers)
-template <typename T>
-struct min_functor4 {
-    static inline T do_shift(T a, T b)
-        {
-        T mask = (a - b) >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        return b + ((a - b) & mask);
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where right shift, and bitwise and work (integers)
-// sadly, some compilers do not optimize out the type based branch!
-template <typename T>
-struct min_functor4U {
-    static inline T do_shift(T a, T b)
-        {
-        T mask = T(a - b) >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        if (T(-1) > T(0))       // handle unsigned values, currently 0x1 or 0x0, condition should be optimized away as constant
-            mask = ~(mask - 1); // now 0xFF and 0x00
-        return b + ((a - b) & mask);
-        }
+    }
 };
 
 /******************************************************************************/
@@ -314,68 +197,6 @@ struct min_functor5 {
     static inline T do_shift(T a, T b)
         {
         return b ^ ((a ^ b) & -T(a < b));
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where arithmatic right shift, and bitwise and work (signed integers)
-// functor 4 with an explicit temporary variable, in case the compiler fails CSE
-template <typename T>
-struct min_functor6 {
-    static inline T do_shift(T a, T b)
-        {
-        T diff = a - b;
-        T mask = diff >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        return b + (diff & mask);
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where right shift, and bitwise and work (integers)
-// functor 4 with an explicit temporary variable, in case the compiler fails CSE
-// sadly, some compilers do not optimize out the type based branch!
-template <typename T>
-struct min_functor6U {
-    static inline T do_shift(T a, T b)
-        {
-        T diff = a - b;
-        T mask = diff >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        if (T(-1) > T(0))       // handle unsigned values, currently 0x1 or 0x0, condition should be optimized away as constant
-            mask = ~(mask - 1); // now 0xFF and 0x00
-        return b + (diff & mask);
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where bitwise and, negation, and assignment of a bool work (integers)
-// functor 5 with explicit mask variables
-template <typename T>
-struct min_functor7 {
-    static inline T do_shift(T a, T b)
-        {
-        T diff = a - b;
-        T mask = diff >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        return b ^ ((a ^ b) & mask);
-        }
-};
-
-/******************************************************************************/
-
-// this will only work for types where right shift, and bitwise and work (integers)
-// functor 5 with explicit mask variables
-// sadly, some compilers do not optimize out the type based branch!
-template <typename T>
-struct min_functor7U {
-    static inline T do_shift(T a, T b)
-        {
-        T diff = a - b;
-        T mask = diff >> (8*sizeof(T) - 1);     // 0x00 (a >= b) or 0xFF (a < b)
-        if (T(-1) > T(0))       // handle unsigned values, currently 0x1 or 0x0, condition should be optimized away as constant
-            mask = ~(mask - 1); // now 0xFF and 0x00
-        return b ^ ((a ^ b) & mask);
         }
 };
 
@@ -449,70 +270,10 @@ struct pin_functor3 {
 /******************************************************************************/
 
 template <typename T>
-struct pin_functor4 {
-    static inline T do_shift(T low, T value, T high)
-        {
-        return max_functor4<T>::do_shift( low, min_functor4<T>::do_shift( value, high ) );
-        }
-};
-
-/******************************************************************************/
-
-template <typename T>
-struct pin_functor4U {
-    static inline T do_shift(T low, T value, T high)
-        {
-        return max_functor4U<T>::do_shift( low, min_functor4U<T>::do_shift( value, high ) );
-        }
-};
-
-/******************************************************************************/
-
-template <typename T>
 struct pin_functor5 {
     static inline T do_shift(T low, T value, T high)
         {
         return max_functor5<T>::do_shift( low, min_functor5<T>::do_shift( value, high ) );
-        }
-};
-
-/******************************************************************************/
-
-template <typename T>
-struct pin_functor6 {
-    static inline T do_shift(T low, T value, T high)
-        {
-        return max_functor6<T>::do_shift( low, min_functor6<T>::do_shift( value, high ) );
-        }
-};
-
-/******************************************************************************/
-
-template <typename T>
-struct pin_functor6U {
-    static inline T do_shift(T low, T value, T high)
-        {
-        return max_functor6U<T>::do_shift( low, min_functor6U<T>::do_shift( value, high ) );
-        }
-};
-
-/******************************************************************************/
-
-template <typename T>
-struct pin_functor7 {
-    static inline T do_shift(T low, T value, T high)
-        {
-        return max_functor7<T>::do_shift( low, min_functor7<T>::do_shift( value, high ) );
-        }
-};
-
-/******************************************************************************/
-
-template <typename T>
-struct pin_functor7U {
-    static inline T do_shift(T low, T value, T high)
-        {
-        return max_functor7U<T>::do_shift( low, min_functor7U<T>::do_shift( value, high ) );
         }
 };
 
@@ -578,6 +339,10 @@ void validate_minmax(T a, T b, T expected, std::string &label) {
 
 template <typename T, typename Shifter>
 void validate_max(std::string &label) {
+    if (isSigned<T>())
+        validate_minmax<T,Shifter>(80,-100,80,label);
+    if (isSigned<T>())
+        validate_minmax<T,Shifter>(127,-127,127,label);
     validate_minmax<T,Shifter>(1,2,2,label);
     validate_minmax<T,Shifter>(127,0,127,label);
     validate_minmax<T,Shifter>(0,1,1,label);
@@ -594,6 +359,10 @@ void validate_max(std::string &label) {
 
 template <typename T, typename Shifter>
 void validate_min(std::string &label) {
+    if (isSigned<T>())
+        validate_minmax<T,Shifter>(80,-100,-100,label);
+    if (isSigned<T>())
+        validate_minmax<T,Shifter>(127,-127,-127,label);
     validate_minmax<T,Shifter>(1,2,1,label);
     validate_minmax<T,Shifter>(127,0,0,label);
     validate_minmax<T,Shifter>(0,1,0,label);
@@ -656,9 +425,9 @@ void test_maximum(T* first, T* first2, int count, std::string label) {
         check_max_sum(result, label);
     }
 
-  // need the labels to remain valid until we print the summary
-  gLabels.push_back( label );
-  record_result( timer(), gLabels.back().c_str() );
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
 }
 
 /******************************************************************************/
@@ -679,9 +448,9 @@ void test_minimum(T* first, T* first2, int count, std::string label) {
         check_min_sum(result, label);
     }
 
-  // need the labels to remain valid until we print the summary
-  gLabels.push_back( label );
-  record_result( timer(), gLabels.back().c_str() );
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
 }
 
 /******************************************************************************/
@@ -702,9 +471,9 @@ void test_pin(T* first, T* first2, T* first3, int count, std::string label) {
         check_sum(result, label);
     }
 
-  // need the labels to remain valid until we print the summary
-  gLabels.push_back( label );
-  record_result( timer(), gLabels.back().c_str() );
+    // need the labels to remain valid until we print the summary
+    gLabels.push_back( label );
+    record_result( timer(), gLabels.back().c_str() );
 }
 
 /******************************************************************************/
@@ -725,25 +494,11 @@ void TestInts()
     ::fill( data_larger, data_larger+SIZE, T(init_value2) );
     ::fill( data_smaller, data_smaller+SIZE, T(init_value3) );
     
-    const bool isUnsignedType = T(-1) > T(0);
-    
     test_maximum<T, max_std_functor<T> >( data, data_larger, SIZE, myTypeName + " std::max");
     test_maximum<T, max_functor1<T> >( data, data_larger, SIZE, myTypeName + " maximum1");
     test_maximum<T, max_functor2<T> >( data, data_larger, SIZE, myTypeName + " maximum2");
-    test_maximum<T, max_functor3<T> >( data, data_larger, SIZE, myTypeName + " maximum3");
-    if (isUnsignedType)
-        test_maximum<T, max_functor4U<T> >( data, data_larger, SIZE, myTypeName + " maximum4U");
-    else
-        test_maximum<T, max_functor4<T> >( data, data_larger, SIZE, myTypeName + " maximum4");
-    test_maximum<T, max_functor5<T> >( data, data_larger, SIZE, myTypeName + " maximum5");
-    if (isUnsignedType)
-        test_maximum<T, max_functor6U<T> >( data, data_larger, SIZE, myTypeName + " maximum6U");
-    else
-        test_maximum<T, max_functor6<T> >( data, data_larger, SIZE, myTypeName + " maximum6");
-    if (isUnsignedType)
-        test_maximum<T, max_functor7U<T> >( data, data_larger, SIZE, myTypeName + " maximum7U");
-    else
-        test_maximum<T, max_functor7U<T> >( data, data_larger, SIZE, myTypeName + " maximum7");
+    test_maximum<T, max_functor3<T> >( data, data_larger, SIZE, myTypeName + " maximum3");    // int only
+    test_maximum<T, max_functor5<T> >( data, data_larger, SIZE, myTypeName + " maximum5");    // int only
     test_maximum<T, max_functor8<T> >( data, data_larger, SIZE, myTypeName + " maximum8");
     test_maximum<T, max_functor9<T> >( data, data_larger, SIZE, myTypeName + " maximum9");
     
@@ -751,20 +506,8 @@ void TestInts()
     test_minimum<T, min_std_functor<T> >( data, data_larger, SIZE, myTypeName + " std::min");
     test_minimum<T, min_functor1<T> >( data, data_larger, SIZE, myTypeName + " minimum1");
     test_minimum<T, min_functor2<T> >( data, data_larger, SIZE, myTypeName + " minimum2");
-    test_minimum<T, min_functor3<T> >( data, data_larger, SIZE, myTypeName + " minimum3");
-    if (isUnsignedType)
-        test_minimum<T, min_functor4U<T> >( data, data_larger, SIZE, myTypeName + " minimum4U");
-    else
-        test_minimum<T, min_functor4<T> >( data, data_larger, SIZE, myTypeName + " minimum4");
-    test_minimum<T, min_functor5<T> >( data, data_larger, SIZE, myTypeName + " minimum5");
-    if (isUnsignedType)
-        test_minimum<T, min_functor6U<T> >( data, data_larger, SIZE, myTypeName + " minimum6U");
-    else
-        test_minimum<T, min_functor6<T> >( data, data_larger, SIZE, myTypeName + " minimum6");
-    if (isUnsignedType)
-        test_minimum<T, min_functor7U<T> >( data, data_larger, SIZE, myTypeName + " minimum7U");
-    else
-        test_minimum<T, min_functor7<T> >( data, data_larger, SIZE, myTypeName + " minimum7");
+    test_minimum<T, min_functor3<T> >( data, data_larger, SIZE, myTypeName + " minimum3");    // int only
+    test_minimum<T, min_functor5<T> >( data, data_larger, SIZE, myTypeName + " minimum5");    // int only
     test_minimum<T, min_functor8<T> >( data, data_larger, SIZE, myTypeName + " minimum8");
     test_minimum<T, min_functor9<T> >( data, data_larger, SIZE, myTypeName + " minimum9");
     
@@ -772,20 +515,8 @@ void TestInts()
     test_pin<T, pin_std_functor<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " std::min,max");
     test_pin<T, pin_functor1<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin1");
     test_pin<T, pin_functor2<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin2");
-    test_pin<T, pin_functor3<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin3");
-    if (isUnsignedType)
-        test_pin<T, pin_functor4U<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin4U");
-    else
-        test_pin<T, pin_functor4<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin4");
-    test_pin<T, pin_functor5<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin5");
-    if (isUnsignedType)
-        test_pin<T, pin_functor6U<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin6U");
-    else
-        test_pin<T, pin_functor6<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin6");
-    if (isUnsignedType)
-        test_pin<T, pin_functor7U<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin7U");
-    else
-        test_pin<T, pin_functor7<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin7");
+    test_pin<T, pin_functor3<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin3");    // int only
+    test_pin<T, pin_functor5<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin5");    // int only
     test_pin<T, pin_functor8<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin8");
     test_pin<T, pin_functor9<T> >( data, data_larger, data_smaller, SIZE, myTypeName + " pin9");
 
@@ -879,13 +610,18 @@ int main(int argc, char** argv) {
     TestInts<int8_t>();
     TestInts<uint16_t>();
     TestInts<int16_t>();
+    
+    iterations /= 2;
     TestInts<uint32_t>();
     TestInts<int32_t>();
+    
+    iterations /= 2;
     TestInts<uint64_t>();
     TestInts<int64_t>();
 
     TestFloats<float>();
     TestFloats<double>();
+    TestFloats<long double>();
 
     return 0;
 }

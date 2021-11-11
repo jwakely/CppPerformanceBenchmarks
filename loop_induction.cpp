@@ -1641,7 +1641,7 @@ template <typename T, typename Move >
 void test_copy(const T *source, T *dest, int count, Move copier, const char *label) {
     int i;
     
-    fill_random<T*,T>( dest, dest+count );
+    fill_random( dest, dest+count );
 
     start_timer();
 
@@ -1662,7 +1662,7 @@ void test_copyrange(const T *source, T *dest, int start, int stop, int count, Mo
     int i;
     
     copy(source,source+count,dest);
-    fill_random<T*,T>( dest+start, dest+stop );
+    fill_random( dest+start, dest+stop );
 
     start_timer();
 
@@ -1694,8 +1694,8 @@ int main(int argc, char** argv) {
     int32_t intDst[ SIZE ];
     
     
-    srand( init_value );
-    fill_random<int32_t*,int32_t>( intSrc, intSrc+SIZE );
+    scrand( init_value );
+    fill_random( intSrc, intSrc+SIZE );
 
 
 
