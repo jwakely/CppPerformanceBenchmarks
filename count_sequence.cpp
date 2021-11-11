@@ -356,11 +356,11 @@ void TestOneType()
     T data8[SIZE];
     
     // fill one set of random numbers
-    fill_random<T *, T>( data8, data8+SIZE );
+    fill_random( data8, data8+SIZE );
     // add several copies of our counted item
     fill( data8, data8+42, T(init_value) );
     // shuffle
-    std::random_shuffle( data8, data8+SIZE );
+    random_shuffle( data8, data8+SIZE );
     // and get our offical count (because the random values may include our item as well)
     gCount = std::count( data8, data8+SIZE, T(init_value) );
     

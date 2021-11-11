@@ -1,5 +1,5 @@
 /*  Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018-2019 Chris Cox
+    Copyright 2018-2021 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
 */
@@ -57,3 +57,5 @@ Windows users will need to make sure that the VC environment variables
 are set for their shell (command prompt), then use "nmake -f makefile.nt all"
 and "nmake -f makefile.nt report" from within that shell.
 
+A CMakeLists.txt file is provided for convenience, but not tested as thoroughly
+as the makefiles. (thanks to Denis Glazachev)

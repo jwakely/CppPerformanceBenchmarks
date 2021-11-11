@@ -18,19 +18,24 @@
 
 INCLUDE = -I.
 
-# GCC
+
+# GCC (defaults to Clang/LLVM on MacOS)
 #CC = gcc
 #CXX = g++
 
 
-# GCC 8.2
+# GCC 8
 #CC = gcc-8
 #CXX = g++-8
 
 
+# Clang/LLVM 8
+#CC = clang-8
+#CXX = clang++-8
+
 
 CFLAGS = $(INCLUDE) -O3
-CPPFLAGS = -std=c++11 $(INCLUDE) -O3
+CPPFLAGS = -std=c++14 $(INCLUDE) -O3
 
 CLIBS = -lm
 CPPLIBS = -lm
@@ -86,8 +91,30 @@ complex_type \
 custom_types_loop_invariant \
 loop_interchange \
 memcmp \
-simple_types_constant_propagation
-
+simple_types_constant_propagation \
+memcpy \
+simple_types_copy_propagation \
+simple_types_cse \
+simple_types_value_range \
+memmove \
+minmax_sequence \
+pointer_loop_invariant \
+smart_pointers \
+convolution \
+reverse_sequence \
+simple_types_strength_reduction \
+sum_sequence \
+convolution_box \
+logic_sequence \
+matrix_vector_product \
+product_sequence \
+binary_search \
+loop_unswitching \
+template_unroll \
+interleave \
+matrix_flip \
+matrix_multiply \
+rotate_sequence
 
 
 
@@ -191,6 +218,29 @@ report:  $(BINARIES)
 	./loop_interchange  >> $(REPORT_FILE)
 	./memcmp >> $(REPORT_FILE)
 	./simple_types_constant_propagation >> $(REPORT_FILE)
+	./memcpy >> $(REPORT_FILE)
+	./simple_types_copy_propagation >> $(REPORT_FILE)
+	./simple_types_cse >> $(REPORT_FILE)
+	./simple_types_value_range >> $(REPORT_FILE)
+	./memmove >> $(REPORT_FILE)
+	./minmax_sequence >> $(REPORT_FILE)
+	./pointer_loop_invariant >> $(REPORT_FILE)
+	./smart_pointers >> $(REPORT_FILE)
+	./convolution >> $(REPORT_FILE)
+	./reverse_sequence >> $(REPORT_FILE)
+	./simple_types_strength_reduction >> $(REPORT_FILE)
+	./sum_sequence >> $(REPORT_FILE)
+	./convolution_box >> $(REPORT_FILE)
+	./logic_sequence >> $(REPORT_FILE)
+	./matrix_vector_product >> $(REPORT_FILE)
+	./product_sequence >> $(REPORT_FILE)
+	./binary_search >> $(REPORT_FILE)
+	./loop_unswitching >> $(REPORT_FILE)
+	./template_unroll >> $(REPORT_FILE)
+	./interleave >> $(REPORT_FILE)
+	./matrix_flip >> $(REPORT_FILE)
+	./matrix_multiply >> $(REPORT_FILE)
+	./rotate_sequence >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

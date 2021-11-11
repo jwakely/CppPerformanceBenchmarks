@@ -1,6 +1,6 @@
 /*
     Copyright 2007-2008 Adobe Systems Incorporated
-    Copyright 2018 Chris Cox
+    Copyright 2018-2019 Chris Cox
     Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
     or a copy at http://stlab.adobe.com/licenses.html )
     
@@ -50,7 +50,7 @@ inline bool tolerance_equal(uint64_t &a, uint64_t &b) {
 }
 
 template<>
-inline bool tolerance_equal( double &a,  double &b) {
+inline bool tolerance_equal( double &a, double &b) {
     double diff = a - b;
     double reldiff = diff;
     if (fabs(a) > 1.0e-8)
@@ -59,7 +59,16 @@ inline bool tolerance_equal( double &a,  double &b) {
 }
 
 template<>
-inline bool tolerance_equal( float &a,  float &b) {
+inline bool tolerance_equal( long double &a, long double &b) {
+    double diff = a - b;
+    double reldiff = diff;
+    if (fabs(a) > 1.0e-8)
+        reldiff = diff / a;
+    return (fabs(reldiff) < 1.0e-6);
+}
+
+template<>
+inline bool tolerance_equal( float &a, float &b) {
     float diff = a - b;
     double reldiff = diff;
     if (fabs(a) > 1.0e-4)
@@ -69,6 +78,15 @@ inline bool tolerance_equal( float &a,  float &b) {
 
 template<>
 inline bool tolerance_equal(const double &a, const double &b) {
+    double diff = a - b;
+    double reldiff = diff;
+    if (fabs(a) > 1.0e-8)
+        reldiff = diff / a;
+    return (fabs(reldiff) < 1.0e-6);
+}
+
+template<>
+inline bool tolerance_equal(const long double &a, const long double &b) {
     double diff = a - b;
     double reldiff = diff;
     if (fabs(a) > 1.0e-8)
@@ -87,6 +105,13 @@ inline bool tolerance_equal(const float &a, const float &b) {
 
 /******************************************************************************/
 
+template <typename T>
+inline void check_simple_sum(T result) {
+    T temp = (T)SIZE * (T)init_value;
+    if (!tolerance_equal<T>(result,temp))
+        printf("test %i failed\n", current_test);
+}
+
 template <typename T, typename Shifter>
 inline void check_shifted_sum(T result) {
     T temp = (T)SIZE * Shifter::do_shift((T)init_value);
@@ -96,7 +121,7 @@ inline void check_shifted_sum(T result) {
 
 template <typename T, typename Shifter>
 inline void check_shifted_sum_CSE(T result) {
-    T temp = (T)0.0;
+    T temp(0.0);
     if (!tolerance_equal<T>(result,temp))
         printf("test %i failed\n", current_test);
 }
@@ -132,14 +157,14 @@ inline void check_shifted_variable_sum(T result, T var1, T var2, T var3, T var4)
 
 template <typename T, typename Shifter>
 inline void check_shifted_variable_sum_CSE(T result, T var) {
-    T temp = (T)0.0;
+    T temp(0.0);
     if (!tolerance_equal<T>(result,temp))
         printf("test %i failed\n", current_test);
 }
 
 template <typename T, typename Shifter>
 inline void check_shifted_variable_sum_CSE(T result, T var1, T var2, T var3, T var4) {
-    T temp = (T)0.0;
+    T temp(0.0);
     if (!tolerance_equal<T>(result,temp))
         printf("test %i failed\n", current_test);
 }
@@ -765,11 +790,9 @@ template <typename T>
 
 template <typename T, typename Shifter>
 void test_constant(T* first, int count, const char *label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
+  for(int i = 0; i < iterations; ++i) {
     T result = 0;
     for (int n = 0; n < count; ++n) {
         result += Shifter::do_shift( first[n] );
@@ -784,11 +807,9 @@ void test_constant(T* first, int count, const char *label) {
 
 template <typename T, typename Shifter>
 void test_variable1(T* first, int count, T v1, const char *label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
+  for(int i = 0; i < iterations; ++i) {
     T result = 0;
     for (int n = 0; n < count; ++n) {
         result += Shifter::do_shift( first[n], v1 );
@@ -803,11 +824,9 @@ void test_variable1(T* first, int count, T v1, const char *label) {
 
 template <typename T, typename Shifter>
 void test_variable4(T* first, int count, T v1, T v2, T v3, T v4, const char *label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
+  for(int i = 0; i < iterations; ++i) {
     T result = 0;
     for (int n = 0; n < count; ++n) {
         result += Shifter::do_shift( first[n], v1, v2, v3, v4 );
@@ -822,11 +841,9 @@ void test_variable4(T* first, int count, T v1, T v2, T v3, T v4, const char *lab
 
 template <typename T, typename Shifter>
 void test_CSE_opt(T* first, int count, T v1, const char *label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
+  for(int i = 0; i < iterations; ++i) {
     T result = 0;
     T temp = Shifter::do_shift( v1, first[0], first[1] );
     temp += temp;
@@ -848,11 +865,9 @@ void test_CSE_opt(T* first, int count, T v1, const char *label) {
 
 template <typename T, typename Shifter>
 void test_CSE(T* first, int count, T v1, const char *label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
+  for(int i = 0; i < iterations; ++i) {
     T result = 0;
     result += first[0] + Shifter::do_shift( v1, first[0], first[1] ) + Shifter::do_shift( v1, first[0], first[1] );
     result -= first[1] + Shifter::do_shift( v1, first[0], first[1] ) + Shifter::do_shift( v1, first[0], first[1] );
@@ -870,11 +885,9 @@ void test_CSE(T* first, int count, T v1, const char *label) {
 
 template <typename T, typename RT, class Shifter>
 void test_constant_result(T* first, int count, const char *label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
+  for(int i = 0; i < iterations; ++i) {
     RT result = 0;
     for (int n = 0; n < count; ++n) {
         result += Shifter::do_shift( first[n] );
@@ -889,11 +902,9 @@ void test_constant_result(T* first, int count, const char *label) {
 
 template <typename T, typename T2, typename Shifter>
 void test_variable1(T* first, int count, T2 v1, const char *label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
+  for(int i = 0; i < iterations; ++i) {
     T result = 0;
     for (int n = 0; n < count; ++n) {
         result += Shifter::do_shift( first[n], v1 );
@@ -908,11 +919,9 @@ void test_variable1(T* first, int count, T2 v1, const char *label) {
 
 template <typename T, typename T2, typename Shifter>
 void test_variable1ptr(T* first, int count, T2 v1, const char *label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
+  for(int i = 0; i < iterations; ++i) {
     T result = 0;
     for (int n = 0; n < count; ++n) {
         T2 temp = v1;
@@ -928,11 +937,9 @@ void test_variable1ptr(T* first, int count, T2 v1, const char *label) {
 
 template <typename T, typename RT, class Shifter>
 void test_variable_result(T* first, int count, T v1, const char *label) {
-  int i;
-  
   start_timer();
   
-  for(i = 0; i < iterations; ++i) {
+  for(int i = 0; i < iterations; ++i) {
     T result = 0;
     for (int n = 0; n < count; ++n) {
         result += (T)Shifter::do_shift( first[n], v1 );

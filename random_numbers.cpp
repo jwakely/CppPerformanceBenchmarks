@@ -105,16 +105,17 @@ int32_t randr32_local( uint32_t *seed )
     
     theSeed *= 1103515245;
     theSeed += 12345;
-    result = (uint32_t) (theSeed >> 16) & 2047;
-
-    theSeed *= 1103515245;
-    theSeed += 12345;
-    result ^= (uint32_t) (theSeed >> 16) & 1023;
+    result = (theSeed >> 16) & 2047;    // %2048 keeps this in positive territory
 
     theSeed *= 1103515245;
     theSeed += 12345;
     result <<= 10;
-    result ^= (uint32_t) (theSeed >> 16) & 1023;
+    result ^= (theSeed >> 16) & 1023;
+
+    theSeed *= 1103515245;
+    theSeed += 12345;
+    result <<= 10;
+    result ^= (theSeed >> 16) & 1023;
 
     *seed = theSeed;
     

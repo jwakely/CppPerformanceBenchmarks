@@ -207,7 +207,7 @@ void test_accumulate(Iterator first, Iterator last, T zero, const std::string la
     start_timer();
 
     for(i = 0; i < iterations; ++i)
-        check_sum( T( accumulate(first, last, zero) ), label );
+        check_sum( T( benchmark::accumulate(first, last, zero) ), label );
 
     record_std_result( timer(), label );
 }
@@ -223,7 +223,7 @@ void test_insertion_sort(Iterator firstSource, Iterator lastSource, Iterator fir
 
     for(i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        insertionSort< Iterator, T>( firstDest, lastDest );
+        insertionSort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -241,7 +241,7 @@ void test_quicksort(Iterator firstSource, Iterator lastSource, Iterator firstDes
 
     for(i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        quicksort< Iterator, T>( firstDest, lastDest );
+        quicksort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -259,7 +259,7 @@ void test_heap_sort(Iterator firstSource, Iterator lastSource, Iterator firstDes
 
     for(i = 0; i < iterations; ++i) {
         ::copy(firstSource, lastSource, firstDest);
-        heapsort< Iterator, T>( firstDest, lastDest );
+        heapsort( firstDest, lastDest );
         verify_sorted( firstDest, lastDest, label );
     }
     
@@ -315,7 +315,7 @@ void TestOneType()
     int base_iterations = iterations;
     
     // seed the random number generator so we get repeatable results
-    srand( (int)init_value + 456 );
+    scrand( (int)init_value + 456 );
     
     ::fill(dpb, dpe, T(init_value));
     
@@ -356,7 +356,7 @@ void TestOneType()
     std::array<T,SIZE>   vec_dataMaster;
     
     // fill one set of random numbers
-    fill_random<T *, T>( dMpb, dMpe );
+    fill_random( dMpb, dMpe );
     
     // copy to the other sets, so we have the same numbers
     ::copy( dMpb, dMpe, vec_dataMaster.begin() );
