@@ -1,6 +1,6 @@
 #
 #    Copyright 2007-2010 Adobe Systems Incorporated
-#    Copyright 2018-2019 Chris Cox
+#    Copyright 2018-2022 Chris Cox
 #    Distributed under the MIT License (see accompanying file LICENSE_1_0_0.txt
 #     or a copy at http://stlab.adobe.com/licenses.html )
 #
