@@ -9,13 +9,14 @@ Goal:  Test compiler optimizations related to interleaving multiple buffers.
 
 Assumptions:
 
-    1) 
+    1) The compiler will recognize and optimize data interleaving patterns.
+
 
 
 NOTE - these patterns occur pretty often in graphics and signal processing
-
-
-TODO - fix endian dependent code!
+    AAAA,GGGG --> AGAGAGAG
+    RRRR,GGGG,BBBB --> RGBRGBRGBRGB
+    AAAA,RRRR,GGGG,BBBB --> ARGBARGBARGBARGB
 
 */
 
@@ -27,6 +28,7 @@ TODO - fix endian dependent code!
 #include <cmath>
 #include <deque>
 #include <string>
+#include <memory>
 #include "benchmark_results.h"
 #include "benchmark_timer.h"
 #include "benchmark_algorithms.h"
@@ -36,10 +38,12 @@ TODO - fix endian dependent code!
 
 // this constant may need to be adjusted to give reasonable minimum times
 // For best results, times should be about 1.0 sources for the minimum test run
-int iterations = 120000;
+int iterations = 320000;
 
-// 80k to 640k of data, intended to be outside cache of most CPUs
+
+// 8*80k to 8*640k of data, intended to be outside cache of most CPUs
 const int SIZE = 80000;
+
 
 // initial value for filling our arrays, may be changed from the command line
 uint8_t init_value = 3;
@@ -79,16 +83,28 @@ void copy_with_stride( T *dest, const T *source, size_t count, size_t dest_strid
 
 bool isLittleEndian()       // Difficult More Much Debugging and Reading Makes Endian Little
 {
+#if defined(__LITTLE_ENDIAN__) || defined( _LIBCPP_LITTLE_ENDIAN )
+    return true;
+#elif defined(__BIG_ENDIAN__) || defined(_LIBCPP_BIG_ENDIAN)
+    return false;
+#else
     uint32_t pattern = 0x01020304;
     return ( *((uint8_t*)(&pattern)) == 0x04);
+#endif
 }
 
 /******************************************************************************/
 
 bool isBigEndian()          // Big Endian is Much Easier to Read and Debug
 {
+#if defined(__BIG_ENDIAN__) || defined(_LIBCPP_BIG_ENDIAN)
+    return true;
+#elif defined(__LITTLE_ENDIAN__) || defined( _LIBCPP_LITTLE_ENDIAN )
+    return false;
+#else
     static uint32_t pattern = 0x01020304;
     return ( *((uint8_t*)(&pattern)) == 0x01);
+#endif
 }
 
 /******************************************************************************/
@@ -236,9 +252,9 @@ template<>
 void interleave2to2_version7( uint8_t *dest, const uint8_t *source1,
                         const uint8_t *source2, int count ) {
     int i = 0;
-    const bool backwardBytes = isLittleEndian();
+    const bool backwardsBytes = isLittleEndian();
 
-    if (backwardBytes) {
+    if (backwardsBytes) {
         for (; i < (count-3); i+=4 ) {
             uint32_t src1 = *((uint32_t*)(source1+i));
             uint32_t src2 = *((uint32_t*)(source2+i));
@@ -289,9 +305,9 @@ template<>
 void interleave2to2_version7( uint16_t *dest, const uint16_t *source1,
                         const uint16_t *source2, int count ) {
     int i = 0;
-    const bool backwardBytes = isLittleEndian();
+    const bool backwardsBytes = isLittleEndian();
 
-    if (backwardBytes) {
+    if (backwardsBytes) {
         for (; i < (count-1); i+=2 ) {
             uint32_t src1 = *((uint32_t*)(source1+i));
             uint32_t src2 = *((uint32_t*)(source2+i));
@@ -368,9 +384,9 @@ template<>
 void interleave2to2_version8( uint8_t *dest, const uint8_t *source1,
                         const uint8_t *source2, int count ) {
     int i = 0;
-    const bool backwardBytes = isLittleEndian();
+    const bool backwardsBytes = isLittleEndian();
 
-    if (backwardBytes) {
+    if (backwardsBytes) {
         for (; i < (count-7); i+=8 ) {
             uint64_t src1 = *((uint64_t*)(source1+i));
             uint64_t src2 = *((uint64_t*)(source2+i));
@@ -437,9 +453,9 @@ template<>
 void interleave2to2_version8( uint16_t *dest, const uint16_t *source1,
                         const uint16_t *source2, int count ) {
     int i = 0;
-    const bool backwardBytes = isLittleEndian();
+    const bool backwardsBytes = isLittleEndian();
 
-    if (backwardBytes) {
+    if (backwardsBytes) {
         for (; i < (count-3); i+=4 ) {
             uint64_t src1 = *((uint64_t*)(source1+i));
             uint64_t src2 = *((uint64_t*)(source2+i));
@@ -490,9 +506,9 @@ template<>
 void interleave2to2_version8( uint32_t *dest, const uint32_t *source1,
                         const uint32_t *source2, int count ) {
     int i = 0;
-    const bool backwardBytes = isLittleEndian();
+    const bool backwardsBytes = isLittleEndian();
 
-    if (backwardBytes) {
+    if (backwardsBytes) {
         for (; i < (count-3); i+=4 ) {
             uint64_t src1 = *((uint64_t*)(source1+i));
             uint64_t src2 = *((uint64_t*)(source2+i));
@@ -1105,12 +1121,17 @@ void TestOneType()
     
     auto base_iterations = iterations;
 
-    T dataA[SIZE];
-    T dataB[SIZE];
-    T dataC[SIZE];
-    T dataD[SIZE];
-    T dataE[4*SIZE];
-
+    // too much data for the stack
+    std::unique_ptr<T> dA( new T[SIZE] );
+    std::unique_ptr<T> dB( new T[SIZE] );
+    std::unique_ptr<T> dC( new T[SIZE] );
+    std::unique_ptr<T> dD( new T[SIZE] );
+    std::unique_ptr<T> dE( new T[4*SIZE] );
+    T *dataA = dA.get();
+    T *dataB = dB.get();
+    T *dataC = dC.get();
+    T *dataD = dD.get();
+    T *dataE = dE.get();
 
     fill_random( dataA, dataA+SIZE );
     fill_random( dataB, dataB+SIZE );
@@ -1182,17 +1203,19 @@ int main(int argc, char** argv) {
     printf("\n");
 
     if (argc > 1) iterations = atoi(argv[1]);
-    if (argc > 2) init_value = (double) atof(argv[2]);
-
+    if (argc > 2) init_value = atoi(argv[2]);
 
     TestOneType<uint8_t>();
+    iterations /= 2;
     TestOneType<uint16_t>();
+    iterations /= 2;
     TestOneType<uint32_t>();
-    
-    
-    iterations /= 4;
+    iterations /= 2;
     TestOneType<uint64_t>();
+    
+    iterations *= 2;
     TestOneType<float>();
+    iterations /= 2;
     TestOneType<double>();
     TestOneType<long double>();
     
