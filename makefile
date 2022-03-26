@@ -114,7 +114,10 @@ template_unroll \
 interleave \
 matrix_flip \
 matrix_multiply \
-rotate_sequence
+rotate_sequence \
+containers \
+deinterleave \
+pde_laplace_jacobi
 
 
 
@@ -241,6 +244,9 @@ report:  $(BINARIES)
 	./matrix_flip >> $(REPORT_FILE)
 	./matrix_multiply >> $(REPORT_FILE)
 	./rotate_sequence >> $(REPORT_FILE)
+	./containers >> $(REPORT_FILE)
+	./deinterleave >> $(REPORT_FILE)
+	./pde_laplace_jacobi >> $(REPORT_FILE)
 	date >> $(REPORT_FILE)
 	echo "##END Version 1.0" >> $(REPORT_FILE)
 

@@ -111,6 +111,9 @@ interleave.exe \
 matrix_flip.exe \
 matrix_multiply.exe \
 rotate_sequence.exe
+containers.exe \
+deinterleave.exe \
+pde_laplace_jacobi.exe
 
 
 
@@ -228,6 +231,9 @@ report:  $(BINARIES)
 	.\matrix_flip.exe >> $(REPORT_FILE)
 	.\matrix_multiply.exe >> $(REPORT_FILE)
 	.\rotate_sequence.exe >> $(REPORT_FILE)
+	.\containers.exe >> $(REPORT_FILE)
+	.\deinterleave.exe >> $(REPORT_FILE)
+	.\pde_laplace_jacobi.exe >> $(REPORT_FILE)
 	@echo %%DATE%% %%TIME%% >>$(REPORT_FILE)
 	@echo "##END Version 1.0" >> $(REPORT_FILE)
 

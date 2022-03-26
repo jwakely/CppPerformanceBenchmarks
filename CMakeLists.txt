@@ -151,6 +151,9 @@ set(test_cases
 	matrix_flip
 	matrix_multiply
 	rotate_sequence
+	containers
+	deinterleave
+	pde_laplace_jacobi
 )
 
 foreach(test_case IN LISTS test_cases)
