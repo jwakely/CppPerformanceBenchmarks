@@ -728,31 +728,31 @@ int main(int argc, char** argv) {
 
 
     ::fill(data32_B, data32_B+HEIGHT, int32_t(init_value));
-    test_array_reduction_opt1( data32_A, data32_B, "int32_t scalar replacment of arrays reduction opt1");
-    test_array_reduction_opt2( data32_A, data32_B, "int32_t scalar replacment of arrays reduction opt2");
-    test_array_reduction_opt3( data32_A, data32_B, "int32_t scalar replacment of arrays reduction opt3");
-    test_array_reduction_opt4( data32_A, data32_B, "int32_t scalar replacment of arrays reduction opt4");
-    test_array_reduction( data32_A, data32_B, "int32_t scalar replacment of arrays reduction");
+    test_array_reduction_opt1( data32_A, data32_B, "int32_t scalar replacement of arrays reduction opt1");
+    test_array_reduction_opt2( data32_A, data32_B, "int32_t scalar replacement of arrays reduction opt2");
+    test_array_reduction_opt3( data32_A, data32_B, "int32_t scalar replacement of arrays reduction opt3");
+    test_array_reduction_opt4( data32_A, data32_B, "int32_t scalar replacement of arrays reduction opt4");
+    test_array_reduction( data32_A, data32_B, "int32_t scalar replacement of arrays reduction");
     
     summarize("int32_t scalar replacement of arrays reduction", WIDTH*HEIGHT, iterations, kDontShowGMeans, kDontShowPenalty );
 
 
     ::fill(data64_B, data64_B+HEIGHT, uint64_t(init_value));
-    test_array_reduction_opt1( data64_A, data64_B, "uint64_t scalar replacment of arrays reduction opt1");
-    test_array_reduction_opt2( data64_A, data64_B, "uint64_t scalar replacment of arrays reduction opt2");
-    test_array_reduction_opt3( data64_A, data64_B, "uint64_t scalar replacment of arrays reduction opt3");
-    test_array_reduction_opt4( data64_A, data64_B, "uint64_t scalar replacment of arrays reduction opt4");
-    test_array_reduction( data64_A, data64_B, "uint64_t scalar replacment of arrays reduction");
+    test_array_reduction_opt1( data64_A, data64_B, "uint64_t scalar replacement of arrays reduction opt1");
+    test_array_reduction_opt2( data64_A, data64_B, "uint64_t scalar replacement of arrays reduction opt2");
+    test_array_reduction_opt3( data64_A, data64_B, "uint64_t scalar replacement of arrays reduction opt3");
+    test_array_reduction_opt4( data64_A, data64_B, "uint64_t scalar replacement of arrays reduction opt4");
+    test_array_reduction( data64_A, data64_B, "uint64_t scalar replacement of arrays reduction");
     
     summarize("uint64_t scalar replacement of arrays reduction", WIDTH*HEIGHT, iterations, kDontShowGMeans, kDontShowPenalty );
     
     
     ::fill(dataDouble_B, dataDouble_B+HEIGHT, double(init_value));
-    test_array_reduction_opt1( dataDouble_A, dataDouble_B, "double scalar replacment of arrays reduction opt1");
-    test_array_reduction_opt2( dataDouble_A, dataDouble_B, "double scalar replacment of arrays reduction opt2");
-    test_array_reduction_opt3( dataDouble_A, dataDouble_B, "double scalar replacment of arrays reduction opt3");
-    test_array_reduction_opt4( dataDouble_A, dataDouble_B, "double scalar replacment of arrays reduction opt4");
-    test_array_reduction( dataDouble_A, dataDouble_B, "double scalar replacment of arrays reduction");
+    test_array_reduction_opt1( dataDouble_A, dataDouble_B, "double scalar replacement of arrays reduction opt1");
+    test_array_reduction_opt2( dataDouble_A, dataDouble_B, "double scalar replacement of arrays reduction opt2");
+    test_array_reduction_opt3( dataDouble_A, dataDouble_B, "double scalar replacement of arrays reduction opt3");
+    test_array_reduction_opt4( dataDouble_A, dataDouble_B, "double scalar replacement of arrays reduction opt4");
+    test_array_reduction( dataDouble_A, dataDouble_B, "double scalar replacement of arrays reduction");
     
     summarize("double scalar replacement of arrays reduction", WIDTH*HEIGHT, iterations, kDontShowGMeans, kDontShowPenalty );
 
@@ -760,45 +760,45 @@ int main(int argc, char** argv) {
 
     ::fill(data32_B, data32_B+HEIGHT, int32_t(init_value));
     ::fill( &data32_Matrix[0][0], &data32_Matrix[HEIGHT-1][WIDTH-1]+1, int32_t(init_value));
-    test_array_dmxpy_opt1( data32_A, data32_B, data32_Matrix, "int32_t scalar replacment of arrays dmxpy opt1");
-    test_array_dmxpy_opt2( data32_A, data32_B, data32_Matrix, "int32_t scalar replacment of arrays dmxpy opt2");
-    test_array_dmxpy_opt3( data32_A, data32_B, data32_Matrix, "int32_t scalar replacment of arrays dmxpy opt3");
-    test_array_dmxpy_opt4( data32_A, data32_B, data32_Matrix, "int32_t scalar replacment of arrays dmxpy opt4");
-    test_array_dmxpy_opt5( data32_A, data32_B, data32_Matrix, "int32_t scalar replacment of arrays dmxpy opt5");
-    test_array_dmxpy_opt6( data32_A, data32_B, data32_Matrix, "int32_t scalar replacment of arrays dmxpy opt6");
-    test_array_dmxpy_opt7( data32_A, data32_B, data32_Matrix, "int32_t scalar replacment of arrays dmxpy opt7");
-    test_array_dmxpy_opt8( data32_A, data32_B, data32_Matrix, "int32_t scalar replacment of arrays dmxpy opt8");
-    test_array_dmxpy( data32_A, data32_B, data32_Matrix, "int32_t scalar replacment of arrays dmxpy");
+    test_array_dmxpy_opt1( data32_A, data32_B, data32_Matrix, "int32_t scalar replacement of arrays dmxpy opt1");
+    test_array_dmxpy_opt2( data32_A, data32_B, data32_Matrix, "int32_t scalar replacement of arrays dmxpy opt2");
+    test_array_dmxpy_opt3( data32_A, data32_B, data32_Matrix, "int32_t scalar replacement of arrays dmxpy opt3");
+    test_array_dmxpy_opt4( data32_A, data32_B, data32_Matrix, "int32_t scalar replacement of arrays dmxpy opt4");
+    test_array_dmxpy_opt5( data32_A, data32_B, data32_Matrix, "int32_t scalar replacement of arrays dmxpy opt5");
+    test_array_dmxpy_opt6( data32_A, data32_B, data32_Matrix, "int32_t scalar replacement of arrays dmxpy opt6");
+    test_array_dmxpy_opt7( data32_A, data32_B, data32_Matrix, "int32_t scalar replacement of arrays dmxpy opt7");
+    test_array_dmxpy_opt8( data32_A, data32_B, data32_Matrix, "int32_t scalar replacement of arrays dmxpy opt8");
+    test_array_dmxpy( data32_A, data32_B, data32_Matrix, "int32_t scalar replacement of arrays dmxpy");
 
     summarize("int32_t scalar replacement of arrays dmxpy", WIDTH*HEIGHT, iterations, kDontShowGMeans, kDontShowPenalty );
 
 
     ::fill(data64_B, data64_B+HEIGHT, uint64_t(init_value));
     ::fill( &data64_Matrix[0][0], &data64_Matrix[HEIGHT-1][WIDTH-1]+1, uint64_t(init_value));
-    test_array_dmxpy_opt1( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacment of arrays dmxpy opt1");
-    test_array_dmxpy_opt2( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacment of arrays dmxpy opt2");
-    test_array_dmxpy_opt3( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacment of arrays dmxpy opt3");
-    test_array_dmxpy_opt4( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacment of arrays dmxpy opt4");
-    test_array_dmxpy_opt5( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacment of arrays dmxpy opt5");
-    test_array_dmxpy_opt6( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacment of arrays dmxpy opt6");
-    test_array_dmxpy_opt7( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacment of arrays dmxpy opt7");
-    test_array_dmxpy_opt8( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacment of arrays dmxpy opt8");
-    test_array_dmxpy( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacment of arrays dmxpy");
+    test_array_dmxpy_opt1( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacement of arrays dmxpy opt1");
+    test_array_dmxpy_opt2( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacement of arrays dmxpy opt2");
+    test_array_dmxpy_opt3( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacement of arrays dmxpy opt3");
+    test_array_dmxpy_opt4( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacement of arrays dmxpy opt4");
+    test_array_dmxpy_opt5( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacement of arrays dmxpy opt5");
+    test_array_dmxpy_opt6( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacement of arrays dmxpy opt6");
+    test_array_dmxpy_opt7( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacement of arrays dmxpy opt7");
+    test_array_dmxpy_opt8( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacement of arrays dmxpy opt8");
+    test_array_dmxpy( data64_A, data64_B, data64_Matrix, "uint64_t scalar replacement of arrays dmxpy");
 
     summarize("uint64_t scalar replacement of arrays dmxpy", WIDTH*HEIGHT, iterations, kDontShowGMeans, kDontShowPenalty );
 
 
     ::fill(dataDouble_B, dataDouble_B+HEIGHT, double(init_value));
     ::fill( &dataDouble_Matrix[0][0], &dataDouble_Matrix[HEIGHT-1][WIDTH-1]+1, double(init_value));
-    test_array_dmxpy_opt1( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacment of arrays dmxpy opt1");
-    test_array_dmxpy_opt2( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacment of arrays dmxpy opt2");
-    test_array_dmxpy_opt3( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacment of arrays dmxpy opt3");
-    test_array_dmxpy_opt4( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacment of arrays dmxpy opt4");
-    test_array_dmxpy_opt5( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacment of arrays dmxpy opt5");
-    test_array_dmxpy_opt6( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacment of arrays dmxpy opt6");
-    test_array_dmxpy_opt7( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacment of arrays dmxpy opt7");
-    test_array_dmxpy_opt8( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacment of arrays dmxpy opt8");
-    test_array_dmxpy( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacment of arrays dmxpy");
+    test_array_dmxpy_opt1( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacement of arrays dmxpy opt1");
+    test_array_dmxpy_opt2( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacement of arrays dmxpy opt2");
+    test_array_dmxpy_opt3( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacement of arrays dmxpy opt3");
+    test_array_dmxpy_opt4( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacement of arrays dmxpy opt4");
+    test_array_dmxpy_opt5( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacement of arrays dmxpy opt5");
+    test_array_dmxpy_opt6( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacement of arrays dmxpy opt6");
+    test_array_dmxpy_opt7( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacement of arrays dmxpy opt7");
+    test_array_dmxpy_opt8( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacement of arrays dmxpy opt8");
+    test_array_dmxpy( dataDouble_A, dataDouble_B, dataDouble_Matrix, "double scalar replacement of arrays dmxpy");
 
     summarize("double scalar replacement of arrays dmxpy", WIDTH*HEIGHT, iterations, kDontShowGMeans, kDontShowPenalty );
 

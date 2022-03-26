@@ -138,9 +138,18 @@ void ReportCompiler()
         printf("CLR version %s\n", __CLR_VER );
     #endif
 
-    /*
-    See http://msdn2.microsoft.com/en-us/library/b0084kay(VS.80).aspx#_predir_table_1..3
-    */
+    // See http://msdn2.microsoft.com/en-us/library/b0084kay(VS.80).aspx#_predir_table_1..3
+
+#elif __clang__
+
+// see https://clang.llvm.org/docs/LanguageExtensions.html
+
+    printf("Clang version %s\n", __VERSION__ );
+    // printf("Clang version %s\n", __clang_version__ ); // same as above
+
+    #if __LP64__
+        printf("Compiled for LP64\n");
+    #endif
 
 #elif __GNUC__
 
@@ -157,7 +166,6 @@ void ReportCompiler()
     #if __LP64__
         printf("Compiled for LP64\n");
     #endif
-    
     
     /*
     Other useful macros:
@@ -183,9 +191,31 @@ void ReportCompiler()
 #endif
 
 
-#if isLinux && !defined (__sun)
+#if defined( __cplusplus )
+    printf("__cplusplus = %ld\n", __cplusplus );
+#endif
+
+#if isLinux && !defined ( __sun )
     printf("glibc version: %s\n", gnu_get_libc_version());
 #endif
+
+#if defined( _LIBCPP_STD_VER )
+    printf("LIBCPP_STD_VER = %d\n", _LIBCPP_STD_VER );
+#endif
+
+#if defined( _LIBCPP_VERSION )
+    printf("LIBCPP_VERSION = %d\n", _LIBCPP_VERSION );
+#endif
+
+
+#if defined( __LITTLE_ENDIAN__ ) || defined( _LIBCPP_LITTLE_ENDIAN )
+    printf("LIBCPP is LITTLE_ENDIAN\n");
+#endif
+
+#if defined( __BIG_ENDIAN__ ) || defined( _LIBCPP_BIG_ENDIAN )
+    printf("LIBCPP is BIG_ENDIAN\n");
+#endif
+
 
 }
 

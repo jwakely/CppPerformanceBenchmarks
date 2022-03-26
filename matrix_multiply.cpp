@@ -5,7 +5,7 @@
     or a copy at http://stlab.adobe.com/licenses.html )
 
 
-Goal:  Test compiler optimizations related to matrix multiplication
+Goal:  Test compiler optimizations related to matrix multiplication.
 
 
 Assumptions:
@@ -61,14 +61,14 @@ TODO - threaded matrix multiplies ?
 
 // this constant may need to be adjusted to give reasonable minimum times
 // For best results, times should be about 1.0 seconds for the minimum test run
-int iterations = 450;
+size_t iterations = 450;
 
 
 // 60k items, or about 480k of data per matrix - intended to exceed the L1 cache
-const int WIDTH = 200;
-const int HEIGHT = 300;
+const size_t WIDTH = 200;
+const size_t HEIGHT = 300;
 
-const int SIZE = HEIGHT*WIDTH;
+const size_t SIZE = HEIGHT*WIDTH;
 
 
 // initial value for filling our arrays, may be changed from the command line
@@ -92,8 +92,8 @@ inline void check_sum(T result, const std::string &label) {
 
 template <typename T >
 struct matmul_KIJ {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( k = 0; k < cols; ++k ) {
             for ( i = 0; i < cols; ++i ) {
                 for ( j = 0 ; j < rows ; ++j ) {
@@ -108,8 +108,8 @@ struct matmul_KIJ {
 
 template <typename T >
 struct matmul_KJI {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( k = 0; k < cols; ++k ) {
             for ( j = 0 ; j < rows ; ++j ) {
                 for ( i = 0; i < cols; ++i ) {
@@ -124,8 +124,8 @@ struct matmul_KJI {
 
 template <typename T >
 struct matmul_JKI {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( j = 0 ; j < rows ; ++j ) {
             for ( k = 0; k < cols; ++k ) {
                 for ( i = 0; i < cols; ++i ) {
@@ -140,8 +140,8 @@ struct matmul_JKI {
 
 template <typename T >
 struct matmul_JIK {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( j = 0 ; j < rows ; ++j ) {
             for ( i = 0; i < cols; ++i ) {
                 for ( k = 0; k < cols; ++k ) {
@@ -156,8 +156,8 @@ struct matmul_JIK {
 
 template <typename T >
 struct matmul_IJK {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( i = 0; i < cols; ++i ) {
             for ( j = 0 ; j < rows ; ++j ) {
                 for ( k = 0; k < cols; ++k ) {
@@ -172,8 +172,8 @@ struct matmul_IJK {
 
 template <typename T >
 struct matmul_IKJ {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( i = 0; i < cols; ++i ) {
             for ( k = 0; k < cols; ++k ) {
                 for ( j = 0 ; j < rows ; ++j ) {
@@ -189,8 +189,8 @@ struct matmul_IKJ {
 // one value is constant in inner loop, pull it out
 template <typename T >
 struct matmul_KIJ_temp {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( k = 0; k < cols; ++k ) {
             for ( i = 0; i < cols; ++i ) {
                 T temp = yy[k*cols+i] ;
@@ -207,8 +207,8 @@ struct matmul_KIJ_temp {
 // one value is constant in inner loop, pull it out
 template <typename T >
 struct matmul_KJI_temp {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( k = 0; k < cols; ++k ) {
             for ( j = 0 ; j < rows ; ++j ) {
                 T temp = xx[j*cols+k];
@@ -225,8 +225,8 @@ struct matmul_KJI_temp {
 // one value is constant in inner loop, pull it out
 template <typename T >
 struct matmul_JKI_temp {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( j = 0 ; j < rows ; ++j ) {
             for ( k = 0; k < cols; ++k ) {
                 T temp = xx[j*cols+k];
@@ -243,8 +243,8 @@ struct matmul_JKI_temp {
 // summed term is constant in inner loop, pull it out
 template <typename T >
 struct matmul_JIK_temp {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( j = 0 ; j < rows ; ++j ) {
             for ( i = 0; i < cols; ++i ) {
                 T temp = 0;
@@ -262,8 +262,8 @@ struct matmul_JIK_temp {
 // summed term is constant in inner loop, pull it out
 template <typename T >
 struct matmul_IJK_temp {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( i = 0; i < cols; ++i ) {
             for ( j = 0 ; j < rows ; ++j ) {
                 T temp = 0;
@@ -281,8 +281,8 @@ struct matmul_IJK_temp {
 // one value is constant in inner loop, pull it out
 template <typename T >
 struct matmul_IKJ_temp {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         for ( i = 0; i < cols; ++i ) {
             for ( k = 0; k < cols; ++k ) {
                 T temp = yy[k*cols+i];
@@ -301,8 +301,8 @@ struct matmul_IKJ_temp {
 
 template <typename T >
 struct matmul_KJI_unrolled {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         
         for ( k = 0; k < (cols-3); k += 4 ) {
             for ( j = 0 ; j < rows ; ++j ) {
@@ -353,8 +353,8 @@ struct matmul_KJI_unrolled {
 
 template <typename T >
 struct matmul_JKI_unrolled {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k;
         
         for ( j = 0 ; j < rows ; ++j ) {
         
@@ -410,9 +410,9 @@ Note that cache issues (and thread mobility) will cause random slowdowns for cac
 blockSize ~= (int)sqrt(BLOCK_MEM/sizeof(T));
 */
 
-const int blockSize = 128;          // small, to fit in cache
+const size_t blockSize = 128;          // small, to fit in cache
 
-const int blockSizeINF = 900;       // huge, might be infinite...
+const size_t blockSizeINF = 900;       // huge, might be infinite...
 
 
 // summed term is constant in inner loop, pull it out
@@ -421,15 +421,15 @@ const int blockSizeINF = 900;       // huge, might be infinite...
 
 template <typename T >
 struct matmul_JIK_blocked {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, ii, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, ii, kk;
 
         for ( ii = 0; ii < cols; ii += blockSize ) {
-            int iend = ii + blockSize;
+            size_t iend = ii + blockSize;
             if (iend > cols)    iend = cols;
         
             for ( kk = 0; kk < cols; kk += blockSize ) {
-                int kend = kk + blockSize;
+                size_t kend = kk + blockSize;
                 if (kend > cols)    kend = cols;
                 
                 for ( j = 0 ; j < rows ; ++ j ) {
@@ -456,15 +456,15 @@ struct matmul_JIK_blocked {
 
 template <typename T >
 struct matmul_JKI_blocked {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, ii, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, ii, kk;
 
         for ( kk = 0; kk < cols; kk += blockSize ) {
-            int kend = kk + blockSize;
+            size_t kend = kk + blockSize;
             if (kend > cols)    kend = cols;
         
             for ( ii = 0; ii < cols; ii += blockSizeINF ) {
-                int iend = ii + blockSizeINF;
+                size_t iend = ii + blockSizeINF;
                 if (iend > cols)    iend = cols;
                 
                 for ( j = 0 ; j < rows ; ++ j ) {
@@ -490,15 +490,15 @@ struct matmul_JKI_blocked {
 
 template <typename T >
 struct matmul_IJK_blocked {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, jj, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, jj, kk;
 
         for ( jj = 0; jj < rows; jj += blockSize ) {
-            int jend = jj + blockSize;
+            size_t jend = jj + blockSize;
             if (jend > rows)    jend = rows;
             
             for ( kk = 0; kk < cols; kk += blockSize ) {
-                int kend = kk + blockSize;
+                size_t kend = kk + blockSize;
                 if (kend > cols)    kend = cols;
                 
                 for ( i = 0; i < cols; ++i ) {
@@ -526,15 +526,15 @@ struct matmul_IJK_blocked {
 
 template <typename T >
 struct matmul_JIK_blocked_unrolled1 {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, ii, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, ii, kk;
 
         for ( ii = 0; ii < cols; ii += blockSize ) {
-            int iend = ii + blockSize;
+            size_t iend = ii + blockSize;
             if (iend > cols)    iend = cols;
         
             for ( kk = 0; kk < cols; kk += blockSize ) {
-                int kend = kk + blockSize;
+                size_t kend = kk + blockSize;
                 if (kend > cols)    kend = cols;
 
                 for ( j = 0; j < rows; ++ j ) {
@@ -575,15 +575,15 @@ struct matmul_JIK_blocked_unrolled1 {
 
 template <typename T >
 struct matmul_JIK_blocked_unrolled2 {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, ii, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, ii, kk;
 
         for ( ii = 0; ii < cols; ii += blockSize ) {
-            int iend = ii + blockSize;
+            size_t iend = ii + blockSize;
             if (iend > cols)    iend = cols;
         
             for ( kk = 0; kk < cols; kk += blockSize ) {
-                int kend = kk + blockSize;
+                size_t kend = kk + blockSize;
                 if (kend > cols)    kend = cols;
 
                 for ( j = 0 ; j < (rows-3) ; j += 4 ) {
@@ -664,15 +664,15 @@ struct matmul_JIK_blocked_unrolled2 {
 
 template <typename T >
 struct matmul_JIK_blocked_unrolled3 {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, ii, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, ii, kk;
 
         for ( ii = 0; ii < cols; ii += blockSize ) {
-            int iend = ii + blockSize;
+            size_t iend = ii + blockSize;
             if (iend > cols)    iend = cols;
         
             for ( kk = 0; kk < cols; kk += blockSize ) {
-                int kend = kk + blockSize;
+                size_t kend = kk + blockSize;
                 if (kend > cols)    kend = cols;
                 
                 for ( j = 0; j < rows ; ++j ) {
@@ -751,16 +751,16 @@ struct matmul_JIK_blocked_unrolled3 {
 
 template <typename T >
 struct matmul_IJK_blocked_unrolled1 {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, jj, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, jj, kk;
 
         // small block in yy, strip in xx, strip in zz
         for ( jj = 0; jj < rows; jj += blockSize ) {
-            int jend = jj + blockSize;
+            size_t jend = jj + blockSize;
             if (jend > rows)    jend = rows;
             
             for ( kk = 0; kk < cols; kk += blockSize ) {
-                int kend = kk + blockSize;
+                size_t kend = kk + blockSize;
                 if (kend > cols)    kend = cols;
                 
                 for ( i = 0; i < cols; ++i ) {
@@ -801,16 +801,16 @@ struct matmul_IJK_blocked_unrolled1 {
 
 template <typename T >
 struct matmul_IJK_blocked_unrolled2 {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, jj, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, jj, kk;
 
         // small block in yy, strip in xx, strip in zz
         for ( jj = 0; jj < rows; jj += blockSize ) {
-            int jend = jj + blockSize;
+            size_t jend = jj + blockSize;
             if (jend > rows)    jend = rows;
             
             for ( kk = 0; kk < cols; kk += blockSize ) {
-                int kend = kk + blockSize;
+                size_t kend = kk + blockSize;
                 if (kend > cols)    kend = cols;
                 
                 for ( i = 0; i < (cols-3); i += 4 ) {
@@ -892,16 +892,16 @@ struct matmul_IJK_blocked_unrolled2 {
 
 template <typename T >
 struct matmul_IJK_blocked_unrolled3 {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, jj, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, jj, kk;
 
         // small block in yy, strip in xx, strip in zz
         for ( jj = 0; jj < rows; jj += blockSize ) {
-            int jend = jj + blockSize;
+            size_t jend = jj + blockSize;
             if (jend > rows)    jend = rows;
             
             for ( kk = 0; kk < cols; kk += blockSize ) {
-                int kend = kk + blockSize;
+                size_t kend = kk + blockSize;
                 if (kend > cols)    kend = cols;
                 
                 for ( i = 0; i < cols; ++i ) {
@@ -980,15 +980,15 @@ struct matmul_IJK_blocked_unrolled3 {
 
 template <typename T >
 struct matmul_JKI_blocked_unrolled1 {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, ii, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, ii, kk;
 
         for ( kk = 0; kk < cols; kk += blockSize ) {
-            int kend = kk + blockSize;
+            size_t kend = kk + blockSize;
             if (kend > cols)    kend = cols;
         
             for ( ii = 0; ii < cols; ii += blockSizeINF ) {
-                int iend = ii + blockSizeINF;
+                size_t iend = ii + blockSizeINF;
                 if (iend > cols)    iend = cols;
                 
                 for ( j = 0 ; j < rows ; ++ j ) {
@@ -1024,15 +1024,15 @@ struct matmul_JKI_blocked_unrolled1 {
 
 template <typename T >
 struct matmul_JKI_blocked_unrolled2 {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, ii, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, ii, kk;
 
         for ( kk = 0; kk < cols; kk += blockSize ) {
-            int kend = kk + blockSize;
+            size_t kend = kk + blockSize;
             if (kend > cols)    kend = cols;
         
             for ( ii = 0; ii < cols; ii += blockSizeINF ) {
-                int iend = ii + blockSizeINF;
+                size_t iend = ii + blockSizeINF;
                 if (iend > cols)    iend = cols;
                 
                 for ( j = 0 ; j < rows ; ++ j ) {
@@ -1074,15 +1074,15 @@ struct matmul_JKI_blocked_unrolled2 {
 
 template <typename T >
 struct matmul_JKI_blocked_unrolled3 {
-    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
-        int i, j, k, ii, kk;
+    void operator()(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
+        size_t i, j, k, ii, kk;
 
         for ( kk = 0; kk < cols; kk += blockSize ) {
-            int kend = kk + blockSize;
+            size_t kend = kk + blockSize;
             if (kend > cols)    kend = cols;
         
             for ( ii = 0; ii < cols; ii += blockSizeINF ) {
-                int iend = ii + blockSizeINF;
+                size_t iend = ii + blockSizeINF;
                 if (iend > cols)    iend = cols;
                 
                 for ( j = 0 ; j < rows ; ++ j ) {
@@ -1134,10 +1134,10 @@ struct matmul_JKI_blocked_unrolled3 {
 /******************************************************************************/
 
 template <typename T>
-void zero_matrix(T zz[HEIGHT*WIDTH], int rows, int cols) {
+void zero_matrix(T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
     T value = T(0);
-    for (int j = 0 ; j < rows ; ++j ) {
-        for (int k = 0; k < cols; ++k ) {
+    for (size_t j = 0 ; j < rows ; ++j ) {
+        for (size_t k = 0; k < cols; ++k ) {
             zz[j*cols+k] = value;
         }
     }
@@ -1146,10 +1146,10 @@ void zero_matrix(T zz[HEIGHT*WIDTH], int rows, int cols) {
 /******************************************************************************/
 
 template <typename T>
-T sum_matrix(const T zz[HEIGHT*WIDTH], int rows, int cols) {
+T sum_matrix(const T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
     T result = T(0);
-    for (int j = 0 ; j < rows ; ++j ) {
-        for (int k = 0; k < cols; ++k ) {
+    for (size_t j = 0 ; j < rows ; ++j ) {
+        for (size_t k = 0; k < cols; ++k ) {
             result += zz[j*cols+k];
         }
     }
@@ -1158,9 +1158,9 @@ T sum_matrix(const T zz[HEIGHT*WIDTH], int rows, int cols) {
 /******************************************************************************/
 
 template <typename T>
-bool matrix_equal(const T zz[HEIGHT*WIDTH], const T xx[HEIGHT*WIDTH], int rows, int cols) {
-    for (int j = 0 ; j < rows ; ++j ) {
-        for (int k = 0; k < cols; ++k ) {
+bool matrix_equal(const T zz[HEIGHT*WIDTH], const T xx[HEIGHT*WIDTH], size_t rows, size_t cols) {
+    for (size_t j = 0 ; j < rows ; ++j ) {
+        for (size_t k = 0; k < cols; ++k ) {
             if (!tolerance_equal(zz[j*cols+k], xx[j*cols+k]))
                 return false;
         }
@@ -1171,9 +1171,9 @@ bool matrix_equal(const T zz[HEIGHT*WIDTH], const T xx[HEIGHT*WIDTH], int rows, 
 /******************************************************************************/
 
 template <typename T>
-void fill_matrix_pattern1(T *zz, int rows, int cols) {
-    for (int j = 0 ; j < rows ; ++j ) {
-        for (int k = 0; k < cols; ++k ) {
+void fill_matrix_pattern1(T *zz, size_t rows, size_t cols) {
+    for (size_t j = 0 ; j < rows ; ++j ) {
+        for (size_t k = 0; k < cols; ++k ) {
             zz[j * cols + k] = T(j);
         }
     }
@@ -1183,9 +1183,9 @@ void fill_matrix_pattern1(T *zz, int rows, int cols) {
 /******************************************************************************/
 
 template <typename T>
-void fill_matrix_diagonal(T *zz, int rows, int cols) {
-    for (int j = 0 ; j < rows ; ++j ) {
-        for (int k = 0; k < cols; ++k ) {
+void fill_matrix_diagonal(T *zz, size_t rows, size_t cols) {
+    for (size_t j = 0 ; j < rows ; ++j ) {
+        for (size_t k = 0; k < cols; ++k ) {
             zz[j * cols + k] = ((k == j) ? T(1) : T(0));
         }
     }
@@ -1197,11 +1197,11 @@ static std::deque<std::string> gLabels;
 
 template <typename T, typename MM >
 void test_matmul(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT],
-                T zz[HEIGHT*WIDTH], int rows, int cols, MM multiplier, const std::string label) {
+                T zz[HEIGHT*WIDTH], size_t rows, size_t cols, MM multiplier, const std::string label) {
 
     start_timer();
 
-    for(int i = 0; i < iterations; ++i) {
+    for(size_t i = 0; i < iterations; ++i) {
 
         // zero the accumulator
         zero_matrix(zz, rows, cols);
@@ -1223,7 +1223,7 @@ void test_matmul(const T xx[HEIGHT*WIDTH], const T yy[WIDTH*HEIGHT],
 /******************************************************************************/
 
 template <typename T >
-void verify_matmul( T xx[HEIGHT*WIDTH], T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], int rows, int cols) {
+void verify_matmul( T xx[HEIGHT*WIDTH], T yy[WIDTH*HEIGHT], T zz[HEIGHT*WIDTH], size_t rows, size_t cols) {
 
     T master_result[HEIGHT*WIDTH];
     
@@ -1380,7 +1380,7 @@ void TestOneType()
     std::string myTypeName( getTypeName<T>() );
     
     gLabels.clear();
-
+    
     // if these are stack arrays, MSVC silently exits the app
     // while all other compilers work without a problem
     std::unique_ptr<T> dX( new T[HEIGHT * WIDTH] );
