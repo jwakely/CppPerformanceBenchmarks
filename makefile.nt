@@ -110,7 +110,7 @@ template_unroll.exe \
 interleave.exe \
 matrix_flip.exe \
 matrix_multiply.exe \
-rotate_sequence.exe
+rotate_sequence.exe \
 containers.exe \
 deinterleave.exe \
 pde_laplace_jacobi.exe
